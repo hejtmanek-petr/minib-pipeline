@@ -27,9 +27,12 @@
     return map[c] || c || '';
   }
 
+  const TUZEMSKO = new Set(['CZ', 'SK']);
+
   let allProjects = [];
   let sortCol = 'id';
   let sortDir = 'desc';
+  let activeRegion = '';
 
   function statusOf(p) {
     return p.status || 'lead';
@@ -61,7 +64,7 @@
         <td>${p.project_name || ''}</td>
         <td>${p.company || ''}</td>
         <td>${countryName(p.country)}</td>
-        <td>${p.project_value_eur != null ? Number(p.project_value_eur).toLocaleString('cs-CZ', {maximumFractionDigits:0}) + ' €' : '-'}</td>
+        <td>${p.project_value_eur != null ? Number(p.project_value_eur).toLocaleString('cs-CZ', {maximumFractionDigits:0}) + (TUZEMSKO.has(p.country) ? ' Kč' : ' €') : '-'}</td>
         <td>${p.project_value_local != null ? Number(p.project_value_local).toLocaleString('cs-CZ', {maximumFractionDigits:0}) + ' Kč' : '-'}</td>
         <td>${p.owner || ''}</td>
         <td><span class="${App.statusBadgeClass(p.status)}">${I18N.t('status.' + (p.status || 'lead'))}</span> <span class="text-muted">${p.phase ? I18N.t('phase.' + p.phase) : ''}</span></td>
@@ -108,6 +111,8 @@
     const year = document.getElementById('filter-year').value;
 
     let filtered = allProjects.filter((p) => {
+      if (activeRegion === 'tuzemsko' && !TUZEMSKO.has(p.country)) return false;
+      if (activeRegion === 'mea' && TUZEMSKO.has(p.country)) return false;
       if (sheet && p.sheet !== sheet) return false;
       if (country && p.country !== country) return false;
       if (owner && p.owner !== owner) return false;
@@ -158,6 +163,15 @@
   ['filter-search', 'filter-sheet', 'filter-country', 'filter-owner', 'filter-status', 'filter-year'].forEach((id) => {
     document.getElementById(id).addEventListener('input', applyFiltersAndRender);
     document.getElementById(id).addEventListener('change', applyFiltersAndRender);
+  });
+
+  document.querySelectorAll('.region-tab').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      activeRegion = btn.dataset.region;
+      document.querySelectorAll('.region-tab').forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      applyFiltersAndRender();
+    });
   });
 
   // Load data

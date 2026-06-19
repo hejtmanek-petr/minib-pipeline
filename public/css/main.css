@@ -139,6 +139,24 @@ h3 { font-size: 15px; text-transform: uppercase; letter-spacing: 0.04em; color: 
   padding: 20px 32px;
 }
 
+.region-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.region-tab {
+  padding: 7px 20px;
+  border-radius: var(--radius);
+  border: 1px solid var(--color-border);
+  background: #fff;
+  color: var(--color-text-muted);
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+}
+.region-tab:hover { background: var(--color-bg); color: var(--color-primary); }
+.region-tab.active { background: var(--color-accent); color: #2A2A2A; border-color: var(--color-accent); }
+
 .page-title {
   display: flex;
   justify-content: space-between;
