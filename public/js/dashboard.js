@@ -76,12 +76,14 @@
   function applyFiltersAndRender() {
     const search = document.getElementById('filter-search').value.toLowerCase();
     const sheet = document.getElementById('filter-sheet').value;
+    const country = document.getElementById('filter-country').value;
     const owner = document.getElementById('filter-owner').value;
     const status = document.getElementById('filter-status').value;
     const year = document.getElementById('filter-year').value;
 
     let filtered = allProjects.filter((p) => {
       if (sheet && p.sheet !== sheet) return false;
+      if (country && p.country !== country) return false;
       if (owner && p.owner !== owner) return false;
       if (status && p.status !== status) return false;
       if (year && !(p.estimated_decision_date && String(p.estimated_decision_date).includes(year))) return false;
@@ -127,7 +129,7 @@
     });
   });
 
-  ['filter-search', 'filter-sheet', 'filter-owner', 'filter-status', 'filter-year'].forEach((id) => {
+  ['filter-search', 'filter-sheet', 'filter-country', 'filter-owner', 'filter-status', 'filter-year'].forEach((id) => {
     document.getElementById(id).addEventListener('input', applyFiltersAndRender);
     document.getElementById(id).addEventListener('change', applyFiltersAndRender);
   });
@@ -139,6 +141,15 @@
       App.api('/projects/meta'),
     ]);
     allProjects = projectsRes.projects;
+
+    const countrySelect = document.getElementById('filter-country');
+    const countries = [...new Set(allProjects.map(p => p.country).filter(Boolean))].sort();
+    countries.forEach((c) => {
+      const opt = document.createElement('option');
+      opt.value = c;
+      opt.textContent = c;
+      countrySelect.appendChild(opt);
+    });
 
     const ownerSelect = document.getElementById('filter-owner');
     metaRes.owners.forEach((o) => {

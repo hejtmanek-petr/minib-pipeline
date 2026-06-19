@@ -42,6 +42,7 @@
   "dashboard.kpi.regionSplit": "TR vs CIS",
   "dashboard.kpi.noPriceNote": "{count} projektů bez ceny",
   "dashboard.filters.sheet": "Region",
+  "dashboard.filters.country": "Země",
   "dashboard.filters.owner": "Obchodník",
   "dashboard.filters.status": "Status",
   "dashboard.filters.year": "Rok rozhodnutí",

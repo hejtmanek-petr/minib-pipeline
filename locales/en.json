@@ -42,6 +42,7 @@
   "dashboard.kpi.regionSplit": "TR vs CIS",
   "dashboard.kpi.noPriceNote": "{count} projects without price",
   "dashboard.filters.sheet": "Region",
+  "dashboard.filters.country": "Country",
   "dashboard.filters.owner": "Owner",
   "dashboard.filters.status": "Status",
   "dashboard.filters.year": "Decision Year",
