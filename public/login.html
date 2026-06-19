@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MINIB Project Pipeline</title>
+  <link rel="stylesheet" href="/css/base.css">
+  <style>
+    body { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #F5F5F5; }
+    .login-card {
+      background: var(--color-card);
+      border-radius: var(--radius);
+      box-shadow: 0 2px 16px rgba(0,0,0,0.13);
+      width: 340px;
+      text-align: center;
+      overflow: hidden;
+    }
+    .login-header {
+      background: #FFC600;
+      padding: 28px 48px 22px;
+    }
+    .login-body { padding: 28px 40px 36px; }
+    .login-logo { font-size: 30px; font-weight: 900; color: #2A2A2A; letter-spacing: -1px; margin-bottom: 2px; }
+    .login-logo .dot { color: #2A2A2A; }
+    .login-sub { font-size: 12px; color: #5a5a5a; margin-bottom: 0; }
+    .login-card input {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 18px;
+      text-align: center;
+      letter-spacing: 4px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      margin-bottom: 16px;
+      box-sizing: border-box;
+    }
+    .login-card input:focus { outline: 2px solid var(--color-accent); border-color: transparent; }
+    .login-card .btn { width: 100%; padding: 11px; font-size: 15px; }
+    .error-msg { color: var(--color-danger); font-size: 13px; margin-top: 10px; min-height: 18px; }
+    .lang-switch {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      margin-bottom: 24px;
+    }
+    .lang-switch button {
+      padding: 4px 14px;
+      border: 1px solid #ccc;
+      border-radius: var(--radius);
+      background: #fff;
+      color: #000;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+    }
+    .lang-switch button.active {
+      background: #222;
+      color: #fff;
+      border-color: #222;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <div class="login-header">
+      <div class="login-logo">MINIB<span class="dot">.</span></div>
+      <div class="login-sub">Project Pipeline MEA</div>
+    </div>
+    <div class="login-body">
+    <div class="lang-switch">
+      <button id="lang-cs" class="active" onclick="setLang('cs')">CZ</button>
+      <button id="lang-en" onclick="setLang('en')">EN</button>
+    </div>
+    <input type="password" id="code-input" autocomplete="current-password">
+    <button class="btn btn-primary" id="login-btn"></button>
+    <div class="error-msg" id="error-msg"></div>
+    </div>
+  </div>
+  <script>
+    const T = {
+      cs: { placeholder: 'Přístupový kód', btn: 'Vstoupit', error: 'Nesprávný přístupový kód', connErr: 'Chyba spojení se serverem' },
+      en: { placeholder: 'Access code', btn: 'Enter', error: 'Incorrect access code', connErr: 'Connection error' },
+    };
+
+    let lang = localStorage.getItem('minib_lang') || 'cs';
+
+    function setLang(l) {
+      lang = l;
+      localStorage.setItem('minib_lang', l);
+      document.getElementById('lang-cs').classList.toggle('active', l === 'cs');
+      document.getElementById('lang-en').classList.toggle('active', l === 'en');
+      document.getElementById('code-input').placeholder = T[l].placeholder;
+      document.getElementById('login-btn').textContent = T[l].btn;
+      document.getElementById('error-msg').textContent = '';
+    }
+
+    setLang(lang);
+
+    async function doLogin() {
+      const code = document.getElementById('code-input').value;
+      const errEl = document.getElementById('error-msg');
+      errEl.textContent = '';
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code }),
+          credentials: 'include',
+        });
+        const data = await res.json();
+        if (!res.ok) { errEl.textContent = T[lang].error; return; }
+        window.location.href = '/dashboard.html';
+      } catch (e) {
+        errEl.textContent = T[lang].connErr;
+      }
+    }
+
+    document.getElementById('login-btn').addEventListener('click', doLogin);
+    document.getElementById('code-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') doLogin();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MINIB Project Pipeline - Project Detail</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+</head>
+<body>
+  <header id="app-header" class="app-header"></header>
+
+  <main class="app-main">
+    <div class="page-title">
+      <h1 id="project-title" data-i18n="project.title"></h1>
+    </div>
+
+    <!-- Section A: Basic info -->
+    <div class="card">
+      <h3 data-i18n="project.section.basic"></h3>
+      <div class="field-grid" id="basic-fields"></div>
+      <button class="btn btn-primary" id="save-basic-btn" data-i18n="common.save" style="margin-top:12px;"></button>
+    </div>
+
+    <!-- Section B: Commercial values -->
+    <div class="card" data-visibility="hq-only">
+      <h3 data-i18n="project.section.commercial"></h3>
+      <div class="field-grid" id="commercial-fields"></div>
+      <button class="btn btn-primary" id="save-commercial-btn" data-i18n="common.save" style="margin-top:12px;"></button>
+    </div>
+
+    <!-- Section C: Win probability -->
+    <div class="card">
+      <h3 data-i18n="project.section.winprob"></h3>
+      <div class="winprob-grid">
+        <div>
+          <div class="gauge-label" data-i18n="winprob.manual"></div>
+          <div class="gauge-bar"><div class="gauge-fill" id="manual-gauge-fill"></div></div>
+          <div id="manual-gauge-value" class="gauge-label">-</div>
+          <div class="field-grid" style="margin-top:10px;">
+            <div class="field-item">
+              <label data-i18n="winprob.percent"></label>
+              <input type="number" id="manual-prob" min="0" max="100">
+            </div>
+          </div>
+          <button class="btn btn-primary" id="save-manual-prob" data-i18n="common.save" style="margin-top:8px;"></button>
+        </div>
+        <div>
+          <div class="gauge-label" data-i18n="winprob.ai"></div>
+          <div class="gauge-bar"><div class="gauge-fill" id="ai-gauge-fill"></div></div>
+          <div id="ai-gauge-value" class="gauge-label">-</div>
+          <button class="btn btn-secondary" id="ask-ai-btn" style="margin-top:8px;">🤖 <span data-i18n="winprob.askAi"></span></button>
+          <div id="ai-spinner" class="text-muted" style="display:none; margin-top:8px;" data-i18n="winprob.aiThinking"></div>
+          <div id="ai-updated" class="text-muted" style="margin-top:8px; font-size:12px;"></div>
+          <div class="ai-reasoning" id="ai-reasoning" style="display:none;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section D: Comments pipeline -->
+    <div class="card">
+      <h3 data-i18n="project.section.comments"></h3>
+      <div class="comment-feed" id="comment-feed"></div>
+
+      <div class="form-group">
+        <label data-i18n="comments.add"></label>
+        <textarea id="comment-text" rows="3" data-i18n-placeholder="comments.placeholder"></textarea>
+        <button class="btn btn-primary" id="add-comment-btn" data-i18n="comments.addText" style="margin-top:8px;"></button>
+      </div>
+
+      <div id="voice-section">
+        <h3 data-i18n="comments.voiceInput"></h3>
+        <div class="voice-langs">
+          <button data-lang="cs">🇨🇿 CS</button>
+          <button data-lang="en" class="active">🇬🇧 EN</button>
+          <button data-lang="de">🇩🇪 DE</button>
+          <button data-lang="tr">🇹🇷 TR</button>
+        </div>
+        <div class="voice-input-area">
+          <button class="mic-button" id="mic-btn">🎤</button>
+          <div id="voice-status" class="text-muted" data-i18n="comments.startRecording"></div>
+          <div class="live-transcript" id="live-transcript"></div>
+        </div>
+        <div class="form-group" id="voice-result-area" style="display:none; margin-top:10px;">
+          <label data-i18n="comments.transcript"></label>
+          <textarea id="voice-transcript-text" rows="3"></textarea>
+          <button class="btn btn-primary" id="save-voice-comment" data-i18n="comments.saveVoice" style="margin-top:8px;"></button>
+        </div>
+        <div id="voice-not-supported" class="error-message" style="display:none;" data-i18n="comments.notSupported"></div>
+      </div>
+    </div>
+
+    <!-- Section E: Products -->
+    <div class="card">
+      <h3 data-i18n="project.section.products"></h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th data-i18n="products.model"></th>
+              <th data-i18n="products.quantity"></th>
+              <th data-i18n="products.unitPrice"></th>
+              <th data-i18n="products.totalPrice"></th>
+              <th data-i18n="common.actions"></th>
+            </tr>
+          </thead>
+          <tbody id="products-tbody"></tbody>
+          <tfoot>
+            <tr>
+              <td colspan="3" style="text-align:right; font-weight:700;" data-i18n="products.total"></td>
+              <td id="products-total" style="font-weight:700;"></td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <button class="btn btn-secondary" id="add-product-btn" data-i18n="products.addRow" style="margin-top:10px;"></button>
+    </div>
+
+    <!-- Section F: History -->
+    <div class="card">
+      <h3 data-i18n="project.section.history"></h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th data-i18n="history.field"></th>
+              <th data-i18n="history.oldValue"></th>
+              <th data-i18n="history.newValue"></th>
+              <th data-i18n="history.changedBy"></th>
+              <th data-i18n="history.changedAt"></th>
+            </tr>
+          </thead>
+          <tbody id="history-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/i18n.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/voice.js"></script>
+  <script src="/js/project-detail.js"></script>
+</body>
+</html>

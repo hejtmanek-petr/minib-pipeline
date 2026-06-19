@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MINIB Project Pipeline - Dashboard</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+</head>
+<body>
+  <header id="app-header" class="app-header"></header>
+
+  <main class="app-main">
+    <div class="page-title">
+      <h1 data-i18n="dashboard.title"></h1>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label" data-i18n="dashboard.kpi.activeProjects"></div>
+        <div class="kpi-value" id="kpi-active">-</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label" data-i18n="dashboard.kpi.pipelineValue"></div>
+        <div class="kpi-value" id="kpi-pipeline">-</div>
+        <div class="kpi-note" id="kpi-pipeline-note"></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label" data-i18n="dashboard.kpi.avgWinProb"></div>
+        <div class="kpi-value" id="kpi-winprob">-</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label" data-i18n="dashboard.kpi.regionSplit"></div>
+        <div class="kpi-value" id="kpi-region">-</div>
+      </div>
+    </div>
+
+    <div class="filters-bar">
+      <div class="form-group">
+        <input type="text" id="filter-search" data-i18n-placeholder="common.search">
+      </div>
+      <div class="form-group">
+        <label data-i18n="dashboard.filters.sheet"></label>
+        <select id="filter-sheet">
+          <option value="" data-i18n="common.all"></option>
+          <option value="TR">TR</option>
+          <option value="CIS">CIS</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label data-i18n="dashboard.filters.owner"></label>
+        <select id="filter-owner">
+          <option value="" data-i18n="common.all"></option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label data-i18n="dashboard.filters.status"></label>
+        <select id="filter-status">
+          <option value="" data-i18n="common.all"></option>
+          <option value="lead" data-i18n="status.lead"></option>
+          <option value="active" data-i18n="status.active"></option>
+          <option value="won" data-i18n="status.won"></option>
+          <option value="lost" data-i18n="status.lost"></option>
+          <option value="on_hold" data-i18n="status.on_hold"></option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label data-i18n="dashboard.filters.year"></label>
+        <select id="filter-year">
+          <option value="" data-i18n="common.all"></option>
+          <option value="2025">2025</option>
+          <option value="2026">2026</option>
+          <option value="2027">2027</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="status-bar-cell"></th>
+            <th data-sort="project_code" data-i18n="dashboard.table.code"></th>
+            <th data-sort="project_name" data-i18n="dashboard.table.name"></th>
+            <th data-sort="company" data-i18n="dashboard.table.company"></th>
+            <th data-sort="country" data-i18n="dashboard.table.country"></th>
+            <th data-sort="owner" data-i18n="dashboard.table.owner"></th>
+            <th data-sort="phase" data-i18n="dashboard.table.phase"></th>
+            <th data-i18n="dashboard.table.win"></th>
+            <th data-sort="estimated_decision_date" data-i18n="dashboard.table.decisionDate"></th>
+            <th data-sort="estimated_delivery_date" data-i18n="dashboard.table.deliveryDate"></th>
+          </tr>
+        </thead>
+        <tbody id="projects-tbody">
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <script src="/js/i18n.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/dashboard.js"></script>
+</body>
+</html>

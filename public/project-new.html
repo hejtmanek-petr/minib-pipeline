@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MINIB Project Pipeline - New Project</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+</head>
+<body>
+  <header id="app-header" class="app-header"></header>
+
+  <main class="app-main">
+    <div class="page-title">
+      <h1 data-i18n="newProject.title"></h1>
+      <button class="btn btn-secondary" id="import-btn" data-i18n="newProject.import"></button>
+    </div>
+
+    <div class="card">
+      <form id="new-project-form">
+        <div class="field-grid">
+          <div class="form-group">
+            <label data-i18n="project.field.sheet"></label>
+            <select id="f-sheet">
+              <option value="TR">TR</option>
+              <option value="CIS">CIS</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label data-i18n="project.field.country"></label>
+            <select id="f-country"></select>
+          </div>
+          <div class="form-group">
+            <label data-i18n="project.field.project_name"></label>
+            <input type="text" id="f-project_name">
+          </div>
+          <div class="form-group">
+            <label data-i18n="project.field.company"></label>
+            <input type="text" id="f-company">
+          </div>
+          <div class="form-group">
+            <label data-i18n="project.field.client_name"></label>
+            <input type="text" id="f-client_name">
+          </div>
+          <div class="form-group">
+            <label data-i18n="project.field.building_type"></label>
+            <select id="f-building_type"></select>
+          </div>
+          <div class="form-group">
+            <label data-i18n="project.field.owner"></label>
+            <input type="text" id="f-owner" list="owners-list">
+            <datalist id="owners-list"></datalist>
+          </div>
+          <div class="form-group">
+            <label data-i18n="project.field.status"></label>
+            <select id="f-status"></select>
+          </div>
+          <div class="form-group">
+            <label data-i18n="project.field.phase"></label>
+            <select id="f-phase"></select>
+          </div>
+          <div class="form-group">
+            <label data-i18n="project.field.minib_price_eur"></label>
+            <input type="number" id="f-minib_price_eur">
+          </div>
+          <div class="form-group">
+            <label data-i18n="project.field.estimated_decision_date"></label>
+            <input type="text" id="f-estimated_decision_date" placeholder="2026-Q1">
+          </div>
+          <div class="form-group">
+            <label data-i18n="project.field.estimated_delivery_date"></label>
+            <input type="text" id="f-estimated_delivery_date" placeholder="Q2">
+          </div>
+          <div class="form-group" style="grid-column: 1 / -1;">
+            <label data-i18n="project.field.products_and_quantity"></label>
+            <textarea id="f-products_and_quantity" rows="2"></textarea>
+          </div>
+          <div class="form-group" style="grid-column: 1 / -1;">
+            <label data-i18n="project.field.competition"></label>
+            <input type="text" id="f-competition">
+          </div>
+          <div class="form-group" style="grid-column: 1 / -1;">
+            <label data-i18n="project.field.current_status_note"></label>
+            <textarea id="f-current_status_note" rows="2"></textarea>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary" data-i18n="newProject.create" style="margin-top:10px;"></button>
+      </form>
+    </div>
+  </main>
+
+  <!-- Import Modal -->
+  <div class="modal-overlay" id="import-modal" style="display:none;">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 data-i18n="newProject.importTitle"></h2>
+        <button class="modal-close" id="close-import">&times;</button>
+      </div>
+      <div class="form-group">
+        <label data-i18n="newProject.selectFile"></label>
+        <input type="file" id="import-file" accept=".xlsx,.xls">
+      </div>
+      <div id="import-preview"></div>
+    </div>
+  </div>
+
+  <script src="/js/i18n.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/project-new.js"></script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+@media (max-width: 1024px) {
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .winprob-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+  .app-header { flex-wrap: wrap; height: auto; padding: 10px 12px; gap: 8px; }
+  .app-nav { order: 3; width: 100%; justify-content: flex-start; gap: 2px; }
+  .app-nav a { padding: 6px 8px; font-size: 12px; }
+  .app-main { padding: 12px; }
+
+  .kpi-grid { grid-template-columns: 1fr; }
+  .field-grid { grid-template-columns: 1fr; }
+
+  .filters-bar { flex-direction: column; align-items: stretch; }
+  .filters-bar .form-group { min-width: 0; }
+  .filters-bar input[type="text"] { min-width: 0; }
+
+  table { font-size: 12px; }
+  th, td { padding: 8px; }
+
+  .mic-button {
+    width: 84px;
+    height: 84px;
+    font-size: 36px;
+  }
+
+  .modal { max-width: 95vw; padding: 16px; }
+}

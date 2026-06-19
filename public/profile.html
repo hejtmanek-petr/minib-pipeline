@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MINIB Project Pipeline - Profile</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+</head>
+<body>
+  <header id="app-header" class="app-header"></header>
+
+  <main class="app-main">
+    <div class="page-title">
+      <h1 data-i18n="profile.title"></h1>
+    </div>
+
+    <div class="card">
+      <h3 data-i18n="profile.language"></h3>
+      <div class="form-group" style="max-width:200px;">
+        <select id="p-lang">
+          <option value="en">EN</option>
+          <option value="cs">CS</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" id="save-lang" data-i18n="common.save"></button>
+    </div>
+
+    <div class="card">
+      <h3 data-i18n="profile.changePassword"></h3>
+      <form id="password-form" style="max-width:340px;">
+        <div class="form-group">
+          <label data-i18n="profile.currentPassword"></label>
+          <input type="password" id="p-current" required>
+        </div>
+        <div class="form-group">
+          <label data-i18n="profile.newPassword"></label>
+          <input type="password" id="p-new" required minlength="8">
+        </div>
+        <button type="submit" class="btn btn-primary" data-i18n="common.save"></button>
+        <div id="pw-message" style="margin-top:8px;"></div>
+      </form>
+    </div>
+  </main>
+
+  <script src="/js/i18n.js"></script>
+  <script src="/js/app.js"></script>
+  <script>
+    (async () => {
+      const user = await App.init('profile');
+      if (!user) return;
+
+      document.getElementById('p-lang').value = user.preferred_language || 'en';
+
+      document.getElementById('save-lang').addEventListener('click', async () => {
+        const lang = document.getElementById('p-lang').value;
+        await App.api('/auth/preferred-language', { method: 'POST', body: { language: lang } });
+        await I18N.load(lang);
+        window.location.reload();
+      });
+
+      document.getElementById('password-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const msgEl = document.getElementById('pw-message');
+        msgEl.className = '';
+        msgEl.textContent = '';
+        try {
+          await App.api('/auth/change-password', {
+            method: 'POST',
+            body: {
+              currentPassword: document.getElementById('p-current').value,
+              newPassword: document.getElementById('p-new').value,
+            },
+          });
+          msgEl.className = 'success-message';
+          msgEl.textContent = I18N.t('profile.saved');
+          document.getElementById('password-form').reset();
+        } catch (err) {
+          msgEl.className = 'error-message';
+          msgEl.textContent = err.message;
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

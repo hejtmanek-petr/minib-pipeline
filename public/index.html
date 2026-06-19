@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>MINIB Project Pipeline</title>
+  <script>
+    (async () => {
+      try {
+        const res = await fetch('/api/auth/me', { credentials: 'include' });
+        if (res.ok) {
+          window.location.replace('/dashboard.html');
+        } else {
+          window.location.replace('/login.html');
+        }
+      } catch (e) {
+        window.location.replace('/login.html');
+      }
+    })();
+  </script>
+</head>
+<body>
+</body>
+</html>

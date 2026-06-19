@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MINIB Project Pipeline - Reports</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <header id="app-header" class="app-header"></header>
+
+  <main class="app-main">
+    <div class="page-title">
+      <h1 data-i18n="reports.title"></h1>
+      <div class="flex gap-8">
+        <button class="btn btn-secondary" id="export-csv" data-i18n="common.exportCsv"></button>
+        <button class="btn btn-secondary" id="export-xlsx" data-i18n="common.exportExcel"></button>
+      </div>
+    </div>
+
+    <div class="filters-bar">
+      <div class="form-group">
+        <label data-i18n="dashboard.filters.sheet"></label>
+        <select id="filter-sheet">
+          <option value="" data-i18n="common.all"></option>
+          <option value="TR">TR</option>
+          <option value="CIS">CIS</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label data-i18n="dashboard.filters.owner"></label>
+        <select id="filter-owner"><option value="" data-i18n="common.all"></option></select>
+      </div>
+      <div class="form-group">
+        <label data-i18n="dashboard.filters.status"></label>
+        <select id="filter-status">
+          <option value="" data-i18n="common.all"></option>
+          <option value="lead" data-i18n="status.lead"></option>
+          <option value="active" data-i18n="status.active"></option>
+          <option value="won" data-i18n="status.won"></option>
+          <option value="lost" data-i18n="status.lost"></option>
+          <option value="on_hold" data-i18n="status.on_hold"></option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label data-i18n="reports.filters.dateFrom"></label>
+        <input type="text" id="filter-date-from" placeholder="2026-01">
+      </div>
+      <div class="form-group">
+        <label data-i18n="reports.filters.dateTo"></label>
+        <input type="text" id="filter-date-to" placeholder="2026-12">
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="pipeline" data-i18n="reports.tab.pipeline"></button>
+      <button class="tab-btn" data-tab="winloss" data-i18n="reports.tab.winloss"></button>
+      <button class="tab-btn" data-tab="geography" data-i18n="reports.tab.geography"></button>
+      <button class="tab-btn" data-tab="owners" data-i18n="reports.tab.owners"></button>
+      <button class="tab-btn" data-tab="timeline" data-i18n="reports.tab.timeline"></button>
+      <button class="tab-btn" data-tab="value" data-i18n="reports.tab.value"></button>
+    </div>
+
+    <div class="tab-content active" id="tab-pipeline">
+      <div class="card"><div class="chart-wrap"><canvas id="chart-pipeline"></canvas></div></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th data-i18n="project.field.phase"></th><th>#</th><th data-i18n="dashboard.table.price"></th></tr></thead>
+          <tbody id="pipeline-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="tab-content" id="tab-winloss">
+      <div class="card"><div class="chart-wrap"><canvas id="chart-winloss"></canvas></div></div>
+      <div class="card" id="winloss-summary"></div>
+    </div>
+
+    <div class="tab-content" id="tab-geography">
+      <div class="card"><div class="chart-wrap"><canvas id="chart-geography"></canvas></div></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th data-i18n="project.field.country"></th><th>#</th><th data-i18n="dashboard.table.price"></th><th data-i18n="dashboard.table.win"></th></tr></thead>
+          <tbody id="geography-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="tab-content" id="tab-owners">
+      <div class="card"><div class="chart-wrap"><canvas id="chart-owners"></canvas></div></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th data-i18n="project.field.owner"></th><th>#</th><th data-i18n="dashboard.table.price"></th><th data-i18n="dashboard.table.win"></th><th data-i18n="status.won"></th><th data-i18n="status.lost"></th></tr></thead>
+          <tbody id="owners-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="tab-content" id="tab-timeline">
+      <div class="card"><div class="chart-wrap"><canvas id="chart-timeline"></canvas></div></div>
+      <div class="card">
+        <h3 data-i18n="reports.overdue"></h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th data-i18n="dashboard.table.code"></th><th data-i18n="dashboard.table.name"></th><th data-i18n="dashboard.table.decisionDate"></th><th data-i18n="project.field.owner"></th></tr></thead>
+            <tbody id="overdue-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-content" id="tab-value">
+      <div class="card"><div class="chart-wrap"><canvas id="chart-value"></canvas></div></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th data-i18n="project.field.region"></th><th>#</th><th data-i18n="dashboard.table.price"></th></tr></thead>
+          <tbody id="value-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/i18n.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/reports.js"></script>
+</body>
+</html>

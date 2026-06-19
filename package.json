@@ -1,0 +1,23 @@
+{
+  "name": "minib-pipeline",
+  "version": "1.0.0",
+  "description": "MINIB Project Pipeline - sales pipeline management for MINIB a.s.",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "seed": "node database/seed.js"
+  },
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
+    "bcrypt": "^5.1.1",
+    "better-sqlite3": "^12.10.0",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "express-rate-limit": "^7.4.1",
+    "jsonwebtoken": "^9.0.2",
+    "xlsx": "^0.18.5"
+  }
+}

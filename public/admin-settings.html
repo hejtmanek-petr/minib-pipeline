@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MINIB Project Pipeline - Settings</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+</head>
+<body>
+  <header id="app-header" class="app-header"></header>
+
+  <main class="app-main">
+    <div class="page-title">
+      <h1 data-i18n="admin.settings.title"></h1>
+    </div>
+
+    <div class="card">
+      <h3 data-i18n="admin.settings.countries"></h3>
+      <div class="form-group">
+        <input type="text" id="s-countries">
+      </div>
+      <button class="btn btn-primary save-list" data-key="countries" data-i18n="common.save"></button>
+    </div>
+
+    <div class="card">
+      <h3 data-i18n="admin.settings.buildingTypes"></h3>
+      <div class="form-group">
+        <input type="text" id="s-building_types">
+      </div>
+      <button class="btn btn-primary save-list" data-key="building_types" data-i18n="common.save"></button>
+    </div>
+
+    <div class="card">
+      <h3 data-i18n="admin.settings.phases"></h3>
+      <div class="form-group">
+        <input type="text" id="s-phases">
+      </div>
+      <button class="btn btn-primary save-list" data-key="phases" data-i18n="common.save"></button>
+    </div>
+
+    <div class="card">
+      <h3 data-i18n="admin.settings.statuses"></h3>
+      <div class="form-group">
+        <input type="text" id="s-statuses">
+      </div>
+      <button class="btn btn-primary save-list" data-key="statuses" data-i18n="common.save"></button>
+    </div>
+
+    <div class="card">
+      <h3 data-i18n="admin.settings.regions"></h3>
+      <div class="form-group">
+        <input type="text" id="s-regions">
+      </div>
+      <button class="btn btn-primary save-list" data-key="regions" data-i18n="common.save"></button>
+    </div>
+
+    <div class="card">
+      <h3 data-i18n="admin.settings.dealerVisibility"></h3>
+      <div class="form-group">
+        <label>
+          <input type="checkbox" id="s-hide-hq-only" style="width:auto; display:inline-block;">
+          <span data-i18n="admin.settings.hideHqOnly"></span>
+        </label>
+      </div>
+      <button class="btn btn-primary" id="save-visibility" data-i18n="common.save"></button>
+    </div>
+  </main>
+
+  <script src="/js/i18n.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/admin.js"></script>
+</body>
+</html>
