@@ -134,9 +134,9 @@ h3 { font-size: 15px; text-transform: uppercase; letter-spacing: 0.04em; color: 
 }
 
 .app-main {
-  max-width: 1280px;
+  max-width: 1920px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 20px 32px;
 }
 
 .page-title {

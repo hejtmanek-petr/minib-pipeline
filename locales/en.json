@@ -43,6 +43,7 @@
   "dashboard.kpi.noPriceNote": "{count} projects without price",
   "dashboard.filters.sheet": "Region",
   "dashboard.filters.country": "Country",
+  "dashboard.table.amount": "Amount EUR",
   "dashboard.filters.owner": "Owner",
   "dashboard.filters.status": "Status",
   "dashboard.filters.year": "Decision Year",
