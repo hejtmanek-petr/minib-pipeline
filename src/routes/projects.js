@@ -8,7 +8,8 @@ const ai = require('../services/ai');
 const router = express.Router();
 
 const EDITABLE_FIELDS = [
-  'project_name', 'company', 'client_name', 'building_type', 'country', 'sheet', 'region',
+  'project_name', 'company', 'client_name', 'investor', 'building_type', 'country', 'sheet', 'region',
+  'general_contractor', 'installation_company',
   'owner', 'status', 'phase', 'products_and_quantity', 'competition',
   'estimated_decision_date', 'estimated_delivery_date', 'actual_order_date',
   'current_status_note',
@@ -70,8 +71,8 @@ router.get('/', (req, res) => {
 
   const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
   const sql = `SELECT * FROM projects ${whereSql} ORDER BY ${sortCol} ${sortDir}`;
-  const rows = db.prepare(sql).all(...params);
-  res.json({ projects: rows });
+  const projects = db.prepare(sql).all(...params);
+  res.json({ projects });
 });
 
 // GET /api/projects/meta - dropdown options
@@ -81,7 +82,9 @@ router.get('/meta', (req, res) => {
   for (const s of settings) {
     try { meta[s.key] = JSON.parse(s.value); } catch (e) { meta[s.key] = s.value; }
   }
-  const owners = db.prepare("SELECT DISTINCT owner FROM projects WHERE owner IS NOT NULL ORDER BY owner").all().map(r => r.owner);
+  const fixedOwners = ['Cem', 'Hakan', 'Ogün', 'Okan', 'Pavla', 'Petr', 'Roman', 'Sefa', 'jiný'];
+  const dbOwners = db.prepare("SELECT DISTINCT owner FROM projects WHERE owner IS NOT NULL").all().map(r => r.owner);
+  const owners = [...new Set([...fixedOwners, ...dbOwners])].sort();
   const dealers = db.prepare("SELECT id, name FROM users WHERE role = 'DEALER' AND is_active = 1 ORDER BY name").all();
   meta.owners = owners;
   meta.dealers = dealers;
@@ -113,7 +116,10 @@ router.post('/', (req, res) => {
     project_name: body.project_name || null,
     company: body.company || null,
     client_name: body.client_name || null,
+    investor: body.investor || null,
     building_type: body.building_type || null,
+    general_contractor: body.general_contractor || null,
+    installation_company: body.installation_company || null,
     minib_price_eur: body.minib_price_eur ?? null,
     project_value_eur: body.project_value_eur ?? null,
     currency: body.currency || 'EUR',

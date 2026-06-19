@@ -1,5 +1,5 @@
 (async () => {
-  const user = await App.init('dashboard');
+  const user = await App.init('project-detail');
   if (!user) return;
 
   const params = new URLSearchParams(window.location.search);
@@ -14,13 +14,15 @@
 
   const BASIC_FIELDS = [
     { field: 'project_code', type: 'text', readonly: true },
-    { field: 'sheet', type: 'select', options: () => ['TR', 'CIS'] },
     { field: 'country', type: 'select', options: () => meta.countries || [] },
     { field: 'project_name', type: 'text' },
     { field: 'company', type: 'text' },
+    { field: 'investor', type: 'text' },
     { field: 'client_name', type: 'text' },
+    { field: 'general_contractor', type: 'text' },
+    { field: 'installation_company', type: 'text' },
     { field: 'building_type', type: 'select', options: () => meta.building_types || [] },
-    { field: 'owner', type: 'text' },
+    { field: 'owner', type: 'select', options: () => meta.owners || [] },
     { field: 'status', type: 'select', options: () => meta.statuses || [], i18nPrefix: 'status' },
     { field: 'phase', type: 'select', options: () => meta.phases || [], i18nPrefix: 'phase' },
     { field: 'products_and_quantity', type: 'textarea' },
@@ -31,9 +33,8 @@
   ];
 
   const COMMERCIAL_FIELDS = [
-    { field: 'project_value_eur', type: 'number' },
-    { field: 'project_value_local', type: 'number' },
-    { field: 'currency', type: 'text' },
+    { field: 'project_value_eur', type: 'number', suffix: '€' },
+    { field: 'project_value_local', type: 'number', suffix: 'Kč' },
   ];
 
   function fieldLabel(field) {
@@ -53,6 +54,20 @@
       return value === '' ? null : parseFloat(value);
     }
     return value === '' ? null : value;
+  }
+
+  function showSaved(btn) {
+    const orig = btn.textContent;
+    btn.textContent = '✓ ' + I18N.t('common.saved');
+    btn.style.background = '#2E7D32';
+    btn.style.color = '#fff';
+    btn.disabled = true;
+    setTimeout(() => {
+      btn.textContent = orig;
+      btn.style.background = '';
+      btn.style.color = '';
+      btn.disabled = false;
+    }, 2000);
   }
 
   async function saveFields(fields) {
@@ -94,7 +109,7 @@
       options.forEach((opt) => {
         const o = document.createElement('option');
         o.value = opt;
-        o.textContent = config.i18nPrefix ? I18N.t(`${config.i18nPrefix}.${opt}`) : opt;
+        o.textContent = config.i18nPrefix ? I18N.t(`${config.i18nPrefix}.${opt}`) : (I18N.t(`owner.${opt}`) !== `owner.${opt}` ? I18N.t(`owner.${opt}`) : opt);
         if (opt === raw) o.selected = true;
         input.appendChild(o);
       });
@@ -102,14 +117,41 @@
       input = document.createElement('textarea');
       input.rows = 3;
       input.value = raw || '';
+    } else if (config.type === 'number') {
+      input = document.createElement('input');
+      input.type = 'text';
+      const fmt = (v) => v !== '' && v !== null && v !== undefined
+        ? Number(v).toLocaleString('cs-CZ', { maximumFractionDigits: 2 }) : '';
+      const unFmt = (v) => v.replace(/\s/g, '').replace(',', '.');
+      input.value = fmt(raw);
+      input.addEventListener('focus', () => { input.value = raw === null || raw === undefined ? '' : raw; });
+      input.addEventListener('blur', () => { const n = parseFloat(unFmt(input.value)); input.value = isNaN(n) ? '' : fmt(n); raw = isNaN(n) ? null : n; });
     } else {
       input = document.createElement('input');
-      input.type = config.type === 'number' ? 'number' : 'text';
+      input.type = 'text';
       input.value = raw === null || raw === undefined ? '' : raw;
     }
 
-    wrap.appendChild(input);
-    return { wrap, getValue: () => input.value, field: config.field };
+    if (config.suffix) {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;gap:6px;';
+      row.appendChild(input);
+      const sfx = document.createElement('span');
+      sfx.textContent = config.suffix;
+      sfx.style.cssText = 'font-weight:600;color:var(--color-text-muted);white-space:nowrap;';
+      row.appendChild(sfx);
+      wrap.appendChild(row);
+    } else {
+      wrap.appendChild(input);
+    }
+    return { wrap, getValue: () => {
+      if (config.type === 'number') {
+        const v = input.value.replace(/\s/g, '').replace(',', '.');
+        const n = parseFloat(v);
+        return isNaN(n) ? null : n;
+      }
+      return input.value;
+    }, field: config.field };
   }
 
   let basicFieldHandles = [];
@@ -135,20 +177,24 @@
     });
   }
 
-  document.getElementById('save-basic-btn').addEventListener('click', async () => {
+  document.getElementById('save-basic-btn').addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
     const fields = basicFieldHandles
       .filter((h) => h.field)
       .map((h) => ({ field: h.field, value: h.getValue() }));
     await saveFields(fields);
+    showSaved(btn);
     renderBasicFields();
     await loadHistory();
   });
 
-  document.getElementById('save-commercial-btn').addEventListener('click', async () => {
+  document.getElementById('save-commercial-btn').addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
     const fields = commercialFieldHandles
       .filter((h) => h.field)
       .map((h) => ({ field: h.field, value: h.getValue() }));
     await saveFields(fields);
+    showSaved(btn);
     renderCommercialFields();
     await loadHistory();
   });
@@ -171,7 +217,15 @@
       manualValueEl.textContent = '-';
     }
 
-    document.getElementById('manual-prob').value = manualMin ?? '';
+    const sliderEl = document.getElementById('manual-prob');
+    const displayEl = document.getElementById('manual-prob-display');
+    if (manualVal !== null) {
+      sliderEl.value = manualVal;
+      displayEl.textContent = manualVal + '%';
+    } else {
+      sliderEl.value = 0;
+      displayEl.textContent = '-';
+    }
 
     const ai = project.win_prob_ai;
     const aiFill = document.getElementById('ai-gauge-fill');
@@ -205,7 +259,17 @@
     }
   }
 
-  document.getElementById('save-manual-prob').addEventListener('click', async () => {
+  document.getElementById('manual-prob').addEventListener('input', () => {
+    const v = document.getElementById('manual-prob').value;
+    document.getElementById('manual-prob-display').textContent = v + '%';
+    const fill = document.getElementById('manual-gauge-fill');
+    fill.style.width = `${v}%`;
+    fill.className = `gauge-fill ${App.gaugeClass(parseInt(v, 10))}`;
+    document.getElementById('manual-gauge-value').textContent = v + '%';
+  });
+
+  document.getElementById('save-manual-prob').addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
     const prob = document.getElementById('manual-prob').value;
     const value = prob === '' ? null : parseInt(prob, 10);
     await App.api(`/projects/${projectId}`, {
@@ -218,6 +282,7 @@
     const res = await App.api(`/projects/${projectId}`);
     project = res.project;
     renderGauges();
+    showSaved(btn);
     await loadHistory();
   });
 
@@ -326,7 +391,8 @@
           const newContent = textarea.value.trim();
           if (!newContent) return;
           await App.api(`/projects/${projectId}/comments/${btn.dataset.id}`, { method: 'PUT', body: { content: newContent } });
-          await loadComments();
+          showSaved(saveBtn);
+          setTimeout(() => loadComments(), 2000);
         });
         cancelBtn.addEventListener('click', () => {
           loadComments();
@@ -335,7 +401,8 @@
     });
   }
 
-  document.getElementById('add-comment-btn').addEventListener('click', async () => {
+  document.getElementById('add-comment-btn').addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
     const textarea = document.getElementById('comment-text');
     const content = textarea.value.trim();
     if (!content) return;
@@ -344,6 +411,7 @@
       body: { content, source: 'text', original_language: I18N.getLang() },
     });
     textarea.value = '';
+    showSaved(btn);
     await loadComments();
   });
 
@@ -421,51 +489,6 @@
     });
   }
 
-  // --- Product lines ---
-
-  async function loadProducts() {
-    const res = await App.api(`/projects/${projectId}/products`);
-    const tbody = document.getElementById('products-tbody');
-    tbody.innerHTML = '';
-    let total = 0;
-
-    res.products.forEach((p) => {
-      total += p.total_price_eur || 0;
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td><input type="text" value="${p.model || ''}" data-field="model" data-id="${p.id}"></td>
-        <td><input type="number" value="${p.quantity ?? ''}" data-field="quantity" data-id="${p.id}" style="width:90px;"></td>
-        <td><input type="number" value="${p.unit_price_eur ?? ''}" data-field="unit_price_eur" data-id="${p.id}" style="width:110px;"></td>
-        <td>${App.fmtMoney(p.total_price_eur)}</td>
-        <td><button class="btn btn-secondary delete-product" data-id="${p.id}" data-i18n="common.delete"></button></td>
-      `;
-      tbody.appendChild(tr);
-    });
-    I18N.applyTranslations(tbody);
-    document.getElementById('products-total').textContent = App.fmtMoney(total);
-
-    tbody.querySelectorAll('input[data-field]').forEach((input) => {
-      input.addEventListener('change', async () => {
-        const id = input.dataset.id;
-        const field = input.dataset.field;
-        await App.api(`/projects/${projectId}/products/${id}`, { method: 'PUT', body: { [field]: input.value === '' ? null : input.value } });
-        await loadProducts();
-      });
-    });
-
-    tbody.querySelectorAll('.delete-product').forEach((btn) => {
-      btn.addEventListener('click', async () => {
-        await App.api(`/projects/${projectId}/products/${btn.dataset.id}`, { method: 'DELETE' });
-        await loadProducts();
-      });
-    });
-  }
-
-  document.getElementById('add-product-btn').addEventListener('click', async () => {
-    await App.api(`/projects/${projectId}/products`, { method: 'POST', body: { model: '', quantity: null, unit_price_eur: null } });
-    await loadProducts();
-  });
-
   // --- History ---
 
   async function loadHistory() {
@@ -497,6 +520,8 @@
     meta = metaRes;
 
     document.getElementById('project-title').textContent = `${project.project_code} - ${project.project_name || ''}`;
+    const bc = document.getElementById('breadcrumb-project-name');
+    if (bc) bc.textContent = project.project_name || project.project_code || '';
 
     renderBasicFields();
     renderCommercialFields();
@@ -506,7 +531,7 @@
       document.querySelectorAll('[data-visibility="hq-only"]').forEach((el) => el.classList.add('hidden-for-dealer'));
     }
 
-    await Promise.all([loadComments(), loadProducts(), loadHistory()]);
+    await Promise.all([loadComments(), loadHistory()]);
   } catch (err) {
     console.error(err);
     if (err.status === 404) window.location.href = '/dashboard.html';

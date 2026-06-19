@@ -57,6 +57,7 @@
 }
 
 .filters-bar .form-group { margin-bottom: 0; min-width: 140px; }
+.filters-bar .form-group-btn { min-width: unset; }
 .filters-bar input[type="text"] { min-width: 220px; }
 
 /* --- Tables --- */
@@ -71,21 +72,24 @@
 table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 th, td {
-  padding: 10px 12px;
+  padding: 6px 8px;
   text-align: left;
   border-bottom: 1px solid var(--color-border);
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
 }
 
 th {
   background: #F0F0F0;
   font-weight: 700;
   text-transform: uppercase;
-  font-size: 11px;
+  font-size: 10px;
   letter-spacing: 0.04em;
   color: var(--color-primary);
   cursor: pointer;

@@ -94,7 +94,6 @@ const App = (() => {
       { href: '/reports.html', key: 'nav.reports', id: 'reports' },
     ];
     if (user && user.role === 'HQ') {
-      navItems.push({ href: '/admin-users.html', key: 'nav.users', id: 'users' });
       navItems.push({ href: '/admin-settings.html', key: 'nav.settings', id: 'settings' });
     }
     navItems.push({ href: '/profile.html', key: 'nav.profile', id: 'profile' });

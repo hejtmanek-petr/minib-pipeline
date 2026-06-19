@@ -46,14 +46,6 @@
         <input type="text" id="filter-search" data-i18n-placeholder="common.search">
       </div>
       <div class="form-group">
-        <label data-i18n="dashboard.filters.sheet"></label>
-        <select id="filter-sheet">
-          <option value="" data-i18n="common.all"></option>
-          <option value="TR">TR</option>
-          <option value="CIS">CIS</option>
-        </select>
-      </div>
-      <div class="form-group">
         <label data-i18n="dashboard.filters.country"></label>
         <select id="filter-country">
           <option value="" data-i18n="common.all"></option>
@@ -63,6 +55,16 @@
         <label data-i18n="dashboard.filters.owner"></label>
         <select id="filter-owner">
           <option value="" data-i18n="common.all"></option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label data-i18n="dashboard.filters.winProb"></label>
+        <select id="filter-win">
+          <option value="" data-i18n="common.all"></option>
+          <option value="high">≥ 70%</option>
+          <option value="mid">30–69%</option>
+          <option value="low">< 30%</option>
+          <option value="none">—</option>
         </select>
       </div>
       <div class="form-group">
@@ -85,6 +87,9 @@
           <option value="2027">2027</option>
         </select>
       </div>
+      <div class="form-group form-group-btn">
+        <button id="btn-reset-filters" class="btn btn-secondary" data-i18n="dashboard.filters.reset"></button>
+      </div>
     </div>
 
     <div class="table-wrap">
@@ -92,16 +97,20 @@
         <thead>
           <tr>
             <th class="status-bar-cell"></th>
-            <th data-sort="project_name" data-i18n="dashboard.table.name" style="width:18%"></th>
-            <th data-sort="company" data-i18n="dashboard.table.company" style="width:13%"></th>
+            <th data-sort="project_name" data-i18n="dashboard.table.name" style="width:9%"></th>
+            <th data-sort="company" data-i18n="dashboard.table.company" style="width:10%"></th>
             <th data-sort="country" data-i18n="dashboard.table.country"></th>
             <th data-sort="project_value_eur" data-i18n="dashboard.table.amount"></th>
             <th data-sort="project_value_local" data-i18n="dashboard.table.amountCzk"></th>
-            <th data-sort="owner" data-i18n="dashboard.table.owner"></th>
+            <th data-sort="products_and_quantity" data-i18n="dashboard.table.products"></th>
             <th data-sort="phase" data-i18n="dashboard.table.phase"></th>
             <th data-i18n="dashboard.table.win"></th>
             <th data-sort="estimated_decision_date" data-i18n="dashboard.table.decisionDate"></th>
             <th data-sort="estimated_delivery_date" data-i18n="dashboard.table.deliveryDate"></th>
+            <th data-sort="investor" data-i18n="dashboard.table.investor"></th>
+            <th data-sort="general_contractor" data-i18n="dashboard.table.generalContractor"></th>
+            <th data-sort="installation_company" data-i18n="dashboard.table.installationCompany"></th>
+            <th data-sort="owner" data-i18n="dashboard.table.owner"></th>
           </tr>
         </thead>
         <tbody id="projects-tbody">

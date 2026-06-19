@@ -21,6 +21,9 @@ CREATE TABLE IF NOT EXISTS projects (
   project_name TEXT,
   company TEXT,
   client_name TEXT,
+  investor TEXT,
+  general_contractor TEXT,
+  installation_company TEXT,
   building_type TEXT,
 
   minib_price_eur REAL,

@@ -64,14 +64,13 @@ function parseRomanLad(wb) {
       if (deadlineNote && note) note = `${deadlineNote} | ${note}`;
       else if (deadlineNote) note = deadlineNote;
 
-      const company = investor || genDodavatel || null;
-
       return {
         sheet: 'Roman',
         region: 'CZ/SK',
         country: country ? String(country).trim() : null,
         project_name: projectName ? String(projectName).trim() : null,
-        company: company ? String(company).trim() : null,
+        company: investor ? String(investor).trim() : null,
+        general_contractor: genDodavatel ? String(genDodavatel).trim() : null,
         project_value_eur: typeof amountEur === 'number' ? amountEur : null,
         currency: 'EUR',
         estimated_decision_date: normalizeDate(deadline),
