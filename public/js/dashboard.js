@@ -64,8 +64,8 @@
         <td>${p.project_name || ''}</td>
         <td>${p.company || ''}</td>
         <td>${countryName(p.country)}</td>
-        <td>${p.project_value_eur != null ? Number(p.project_value_eur).toLocaleString('cs-CZ', {maximumFractionDigits:0}) + (TUZEMSKO.has(p.country) ? ' Kč' : ' €') : '-'}</td>
-        <td>${p.project_value_local != null ? Number(p.project_value_local).toLocaleString('cs-CZ', {maximumFractionDigits:0}) + ' Kč' : '-'}</td>
+        <td>${!TUZEMSKO.has(p.country) && p.project_value_eur != null ? Number(p.project_value_eur).toLocaleString('cs-CZ', {maximumFractionDigits:0}) + ' €' : '-'}</td>
+        <td>${TUZEMSKO.has(p.country) && p.project_value_eur != null ? Number(p.project_value_eur).toLocaleString('cs-CZ', {maximumFractionDigits:0}) + ' Kč' : (p.project_value_local != null ? Number(p.project_value_local).toLocaleString('cs-CZ', {maximumFractionDigits:0}) + ' Kč' : '-')}</td>
         <td>${p.owner || ''}</td>
         <td><span class="${App.statusBadgeClass(p.status)}">${I18N.t('status.' + (p.status || 'lead'))}</span> <span class="text-muted">${p.phase ? I18N.t('phase.' + p.phase) : ''}</span></td>
         <td>${winCell(p)}</td>
@@ -85,21 +85,18 @@
     const active = projects.filter((p) => p.status === 'active' || p.status === 'lead');
     document.getElementById('kpi-active').textContent = active.length;
 
-    const withPrice = active.filter((p) => p.minib_price_eur !== null && p.minib_price_eur !== undefined);
-    const withoutPrice = active.length - withPrice.length;
-    const totalValue = withPrice.reduce((s, p) => s + p.minib_price_eur, 0);
-    document.getElementById('kpi-pipeline').textContent = '€ ' + App.fmtMoney(totalValue);
-    document.getElementById('kpi-pipeline-note').textContent = withoutPrice > 0
-      ? I18N.t('dashboard.kpi.noPriceNote', { count: withoutPrice })
-      : '';
+    const eurProjects = active.filter((p) => !TUZEMSKO.has(p.country) && p.project_value_eur != null);
+    const totalEur = eurProjects.reduce((s, p) => s + p.project_value_eur, 0);
+    document.getElementById('kpi-pipeline').textContent = '€ ' + App.fmtMoney(totalEur);
+
+    const czkProjects = active.filter((p) => TUZEMSKO.has(p.country) && p.project_value_eur != null);
+    const totalCzk = czkProjects.reduce((s, p) => s + p.project_value_eur, 0);
+    document.getElementById('kpi-pipeline-czk').textContent = App.fmtMoney(totalCzk) + ' Kč';
 
     const withProb = projects.filter((p) => p.win_prob_manual_min !== null && p.win_prob_manual_min !== undefined);
     const avgProb = withProb.length ? withProb.reduce((s, p) => s + p.win_prob_manual_min, 0) / withProb.length : null;
     document.getElementById('kpi-winprob').textContent = avgProb !== null ? Math.round(avgProb) + '%' : '-';
 
-    const trCount = projects.filter((p) => p.sheet === 'TR').length;
-    const cisCount = projects.filter((p) => p.sheet === 'CIS').length;
-    document.getElementById('kpi-region').textContent = `${trCount} / ${cisCount}`;
   }
 
   function applyFiltersAndRender() {

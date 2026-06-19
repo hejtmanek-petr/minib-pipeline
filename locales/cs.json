@@ -43,6 +43,7 @@
   "dashboard.kpi.noPriceNote": "{count} projektů bez ceny",
   "dashboard.filters.sheet": "Region",
   "dashboard.filters.country": "Země",
+  "dashboard.kpi.pipelineValueCzk": "Pipeline CZK",
   "dashboard.table.amount": "Obnos EUR",
   "dashboard.table.amountCzk": "Obnos CZK",
   "dashboard.filters.owner": "Obchodník",

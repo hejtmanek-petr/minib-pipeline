@@ -43,6 +43,7 @@
   "dashboard.kpi.noPriceNote": "{count} projects without price",
   "dashboard.filters.sheet": "Region",
   "dashboard.filters.country": "Country",
+  "dashboard.kpi.pipelineValueCzk": "Pipeline CZK",
   "dashboard.table.amount": "Amount EUR",
   "dashboard.table.amountCzk": "Amount CZK",
   "dashboard.filters.owner": "Owner",
