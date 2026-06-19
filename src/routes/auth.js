@@ -5,7 +5,6 @@ const { requireAuth } = require('../middleware/auth');
 const router = express.Router();
 
 const COOKIE_NAME = 'minib_access';
-const COOKIE_VALUE = 'granted';
 const COOKIE_MAX_AGE = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 const loginLimiter = rateLimit({
@@ -16,28 +15,32 @@ const loginLimiter = rateLimit({
   message: { error: 'Too many attempts, please try again later.' },
 });
 
-const ADMIN_USER = {
-  id: 1,
-  email: 'admin@minib.cz',
-  name: 'Admin',
-  role: 'HQ',
-  preferred_language: 'cs',
-  countries: [],
-};
-
 router.post('/login', loginLimiter, (req, res) => {
   const { code } = req.body || {};
-  const expected = process.env.ACCESS_CODE || 'minib2024';
-  if (!code || code.trim() !== expected) {
+  const trimmed = (code || '').trim();
+  const codeFull = process.env.ACCESS_CODE_FULL || 'minib2024';
+  const codeMea  = process.env.ACCESS_CODE_MEA  || 'mea2024';
+
+  let role = null;
+  if (trimmed === codeFull) role = 'full';
+  else if (trimmed === codeMea) role = 'mea';
+
+  if (!role) {
     return res.status(401).json({ error: 'Nesprávný přístupový kód' });
   }
-  res.cookie(COOKIE_NAME, COOKIE_VALUE, {
+
+  res.cookie(COOKIE_NAME, role, {
     httpOnly: true,
     sameSite: 'lax',
     secure: process.env.NODE_ENV === 'production',
     maxAge: COOKIE_MAX_AGE,
   });
-  res.json({ user: ADMIN_USER });
+
+  const user = role === 'full'
+    ? { id: 1, name: 'Admin', role: 'HQ', preferred_language: 'cs' }
+    : { id: 2, name: 'MEA', role: 'MEA', preferred_language: 'cs' };
+
+  res.json({ user });
 });
 
 router.post('/logout', (req, res) => {
@@ -50,7 +53,6 @@ router.get('/me', requireAuth, (req, res) => {
 });
 
 router.post('/preferred-language', requireAuth, (req, res) => {
-  // Language preference stored client-side only in single-user mode
   res.json({ ok: true });
 });
 

@@ -12,9 +12,18 @@
   let project = null;
   let meta = null;
 
+  const COUNTRY_NAMES = {
+    cs: { 'TR':'Turecko','AZ':'Ázerbájdžán','Az':'Ázerbájdžán','GE':'Gruzie','KZ':'Kazachstán','UZ':'Uzbekistán','Mong':'Mongolsko','CAN':'Kanada','CZ':'Česko','SK':'Slovensko','Německo':'Německo','Slovinsko':'Slovinsko','Srbsko':'Srbsko','Itálie':'Itálie','Rakousko':'Rakousko','Rumunsko':'Rumunsko','Francie':'Francie','USA':'USA','Řecko':'Řecko','Portugalsko':'Portugalsko','Kanada':'Kanada','Arménie':'Arménie' },
+    en: { 'TR':'Turkey','AZ':'Azerbaijan','Az':'Azerbaijan','GE':'Georgia','KZ':'Kazakhstan','UZ':'Uzbekistan','Mong':'Mongolia','CAN':'Canada','CZ':'Czech Republic','SK':'Slovakia','Německo':'Germany','Slovinsko':'Slovenia','Srbsko':'Serbia','Itálie':'Italy','Rakousko':'Austria','Rumunsko':'Romania','Francie':'France','USA':'USA','Řecko':'Greece','Portugalsko':'Portugal','Kanada':'Canada','Arménie':'Armenia' },
+  };
+  function countryLabel(code) {
+    const map = COUNTRY_NAMES[I18N.getLang()] || COUNTRY_NAMES.cs;
+    return map[code] || code || '';
+  }
+
   const BASIC_FIELDS = [
     { field: 'project_code', type: 'text', readonly: true },
-    { field: 'country', type: 'select', options: () => meta.countries || [] },
+    { field: 'country', type: 'select', options: () => meta.countries || [], labelFn: countryLabel },
     { field: 'project_name', type: 'text' },
     { field: 'company', type: 'text' },
     { field: 'investor', type: 'text' },
@@ -27,8 +36,8 @@
     { field: 'phase', type: 'select', options: () => meta.phases || [], i18nPrefix: 'phase' },
     { field: 'products_and_quantity', type: 'textarea' },
     { field: 'competition', type: 'text' },
-    { field: 'estimated_decision_date', type: 'text' },
-    { field: 'estimated_delivery_date', type: 'text' },
+    { field: 'estimated_decision_date', type: 'month' },
+    { field: 'estimated_delivery_date', type: 'month' },
     { field: 'current_status_note', type: 'textarea' },
   ];
 
@@ -109,7 +118,7 @@
       options.forEach((opt) => {
         const o = document.createElement('option');
         o.value = opt;
-        o.textContent = config.i18nPrefix ? I18N.t(`${config.i18nPrefix}.${opt}`) : (I18N.t(`owner.${opt}`) !== `owner.${opt}` ? I18N.t(`owner.${opt}`) : opt);
+        o.textContent = config.labelFn ? config.labelFn(opt) : config.i18nPrefix ? I18N.t(`${config.i18nPrefix}.${opt}`) : (I18N.t(`owner.${opt}`) !== `owner.${opt}` ? I18N.t(`owner.${opt}`) : opt);
         if (opt === raw) o.selected = true;
         input.appendChild(o);
       });
@@ -126,6 +135,39 @@
       input.value = fmt(raw);
       input.addEventListener('focus', () => { input.value = raw === null || raw === undefined ? '' : raw; });
       input.addEventListener('blur', () => { const n = parseFloat(unFmt(input.value)); input.value = isNaN(n) ? '' : fmt(n); raw = isNaN(n) ? null : n; });
+    } else if (config.type === 'month') {
+      const currentYear = new Date().getFullYear();
+      const months = ['01','02','03','04','05','06','07','08','09','10','11','12'];
+      const monthNames = { cs: ['Leden','Únor','Březen','Duben','Květen','Červen','Červenec','Srpen','Září','Říjen','Listopad','Prosinec'],
+                           en: ['January','February','March','April','May','June','July','August','September','October','November','December'] };
+
+      const selYear = document.createElement('select');
+      const selMonth = document.createElement('select');
+
+      const emptyOpt = (sel) => { const o = document.createElement('option'); o.value = ''; o.textContent = '-'; sel.appendChild(o); };
+      emptyOpt(selYear); emptyOpt(selMonth);
+
+      for (let y = 2026; y <= currentYear + 5; y++) {
+        const o = document.createElement('option'); o.value = y; o.textContent = y; selYear.appendChild(o);
+      }
+      const names = monthNames[I18N.getLang()] || monthNames.cs;
+      months.forEach((m, i) => { const o = document.createElement('option'); o.value = m; o.textContent = names[i]; selMonth.appendChild(o); });
+
+      if (raw) {
+        const parts = String(raw).slice(0, 7).split('-');
+        selYear.value = parts[0] || '';
+        selMonth.value = parts[1] || '';
+      }
+
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;gap:6px;';
+      row.appendChild(selYear);
+      row.appendChild(selMonth);
+      wrap.appendChild(row);
+      return { wrap, field: config.field, getValue: () => {
+        if (!selYear.value || !selMonth.value) return null;
+        return `${selYear.value}-${selMonth.value}`;
+      }};
     } else {
       input = document.createElement('input');
       input.type = 'text';

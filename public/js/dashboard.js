@@ -202,6 +202,15 @@
     });
   });
 
+  // MEA role: hide Tuzemsko tab and lock to MEA view
+  if (user.role === 'MEA') {
+    const tuzTab = document.querySelector('.region-tab[data-region="tuzemsko"]');
+    if (tuzTab) tuzTab.style.display = 'none';
+    const meaTab = document.querySelector('.region-tab[data-region="mea"]');
+    if (meaTab) { meaTab.click(); }
+    document.getElementById('kpi-pipeline-czk') && (document.getElementById('kpi-pipeline-czk').closest('.kpi-card') || document.getElementById('kpi-pipeline-czk').parentElement.parentElement).style.display = 'none';
+  }
+
   // Load data
   try {
     const [projectsRes, metaRes] = await Promise.all([

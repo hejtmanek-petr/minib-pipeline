@@ -43,6 +43,11 @@ router.get('/', (req, res) => {
 
   applyDealerFilter(req, where, params);
 
+  // MEA role sees only non-Tuzemsko projects
+  if (req.user.role === 'MEA') {
+    where.push("country NOT IN ('CZ', 'SK')");
+  }
+
   if (q) {
     where.push('(project_name LIKE ? OR company LIKE ? OR country LIKE ?)');
     const like = `%${q}%`;
@@ -86,8 +91,10 @@ router.get('/meta', (req, res) => {
   const dbOwners = db.prepare("SELECT DISTINCT owner FROM projects WHERE owner IS NOT NULL").all().map(r => r.owner);
   const owners = [...new Set([...fixedOwners, ...dbOwners])].sort();
   const dealers = db.prepare("SELECT id, name FROM users WHERE role = 'DEALER' AND is_active = 1 ORDER BY name").all();
+  const dbCountries = db.prepare("SELECT DISTINCT country FROM projects WHERE country IS NOT NULL ORDER BY country").all().map(r => r.country);
   meta.owners = owners;
   meta.dealers = dealers;
+  meta.countries = dbCountries;
   res.json(meta);
 });
 
