@@ -2,6 +2,31 @@
   const user = await App.init('dashboard');
   if (!user) return;
 
+  const COUNTRY_NAMES = {
+    cs: {
+      'TR': 'Turecko', 'AZ': 'Ázerbájdžán', 'Az': 'Ázerbájdžán', 'GE': 'Gruzie',
+      'KZ': 'Kazachstán', 'UZ': 'Uzbekistán', 'Mong': 'Mongolsko', 'CAN': 'Kanada',
+      'CZ': 'Česko', 'SK': 'Slovensko',
+      'Německo': 'Německo', 'Slovinsko': 'Slovinsko', 'Srbsko': 'Srbsko',
+      'Itálie': 'Itálie', 'Rakousko': 'Rakousko', 'Rumunsko': 'Rumunsko',
+      'Francie': 'Francie', 'USA': 'USA', 'Řecko': 'Řecko', 'Portugalsko': 'Portugalsko',
+      'Kanada': 'Kanada', 'Arménie': 'Arménie',
+    },
+    en: {
+      'TR': 'Turkey', 'AZ': 'Azerbaijan', 'Az': 'Azerbaijan', 'GE': 'Georgia',
+      'KZ': 'Kazakhstan', 'UZ': 'Uzbekistan', 'Mong': 'Mongolia', 'CAN': 'Canada',
+      'CZ': 'Czech Republic', 'SK': 'Slovakia',
+      'Německo': 'Germany', 'Slovinsko': 'Slovenia', 'Srbsko': 'Serbia',
+      'Itálie': 'Italy', 'Rakousko': 'Austria', 'Rumunsko': 'Romania',
+      'Francie': 'France', 'USA': 'USA', 'Řecko': 'Greece', 'Portugalsko': 'Portugal',
+      'Kanada': 'Canada', 'Arménie': 'Armenia',
+    },
+  };
+  function countryName(c) {
+    const map = COUNTRY_NAMES[I18N.getLang()] || COUNTRY_NAMES.cs;
+    return map[c] || c || '';
+  }
+
   let allProjects = [];
   let sortCol = 'id';
   let sortDir = 'desc';
@@ -27,7 +52,7 @@
   function renderTable(projects) {
     const tbody = document.getElementById('projects-tbody');
     if (!projects.length) {
-      tbody.innerHTML = `<tr><td colspan="9" class="text-muted" style="text-align:center; padding:24px;">${I18N.t('common.noData')}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="10" class="text-muted" style="text-align:center; padding:24px;">${I18N.t('common.noData')}</td></tr>`;
       return;
     }
     tbody.innerHTML = projects.map((p) => `
@@ -35,13 +60,14 @@
         <td class="status-bar-cell"><span class="status-bar status-${statusOf(p)}"></span></td>
         <td>${p.project_name || ''}</td>
         <td>${p.company || ''}</td>
-        <td>${p.country || ''}</td>
+        <td>${countryName(p.country)}</td>
         <td>${p.project_value_eur != null ? Number(p.project_value_eur).toLocaleString('cs-CZ', {maximumFractionDigits:0}) + ' €' : '-'}</td>
+        <td>${p.project_value_local != null ? Number(p.project_value_local).toLocaleString('cs-CZ', {maximumFractionDigits:0}) + ' Kč' : '-'}</td>
         <td>${p.owner || ''}</td>
         <td><span class="${App.statusBadgeClass(p.status)}">${I18N.t('status.' + (p.status || 'lead'))}</span> <span class="text-muted">${p.phase ? I18N.t('phase.' + p.phase) : ''}</span></td>
         <td>${winCell(p)}</td>
-        <td>${p.estimated_decision_date || '-'}</td>
-        <td>${p.estimated_delivery_date || '-'}</td>
+        <td>${p.estimated_decision_date ? String(p.estimated_decision_date).slice(0,7) : '-'}</td>
+        <td>${p.estimated_delivery_date ? String(p.estimated_delivery_date).slice(0,7) : '-'}</td>
       </tr>
     `).join('');
 

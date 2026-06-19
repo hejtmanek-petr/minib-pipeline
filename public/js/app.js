@@ -136,7 +136,7 @@ const App = (() => {
   async function init(activePage, opts = {}) {
     const user = await requireAuth();
     if (!user) return null;
-    await I18N.load(user.preferred_language || 'cs');
+    await I18N.load(I18N.getLang() || user.preferred_language || 'cs');
     await renderHeader(activePage);
     I18N.applyTranslations(document);
     return user;

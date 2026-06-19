@@ -32,6 +32,7 @@
 
   const COMMERCIAL_FIELDS = [
     { field: 'project_value_eur', type: 'number' },
+    { field: 'project_value_local', type: 'number' },
     { field: 'currency', type: 'text' },
   ];
 
