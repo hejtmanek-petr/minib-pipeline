@@ -13,6 +13,9 @@ const aiRoutes = require('./src/routes/ai');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Trust Railway/Heroku reverse proxy
+app.set('trust proxy', 1);
+
 // CORS
 const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000').split(',').map((o) => o.trim());
 app.use((req, res, next) => {
