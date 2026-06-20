@@ -98,6 +98,234 @@ router.get('/meta', (req, res) => {
   res.json(meta);
 });
 
+router.get('/export', async (req, res) => {
+  const ExcelJS = require('exceljs');
+
+  // Build query with same filters as the frontend passes via query params
+  const { region, country, win, status, year, owner, search } = req.query;
+  const TUZEMSKO = new Set(['CZ', 'SK']);
+  const MEA = new Set(['TR','AZ','Az','GE','KZ','UZ','Mong','SY','IQ','TM','EG','MA','DZ','LY','TN','TZ','UG','KW','AE','OM','JO','NC','BY','RU']);
+
+  const where = [];
+  const params = [];
+  applyDealerFilter(req, where, params);
+  if (req.user.role === 'MEA') where.push("country NOT IN ('CZ','SK')");
+
+  const allProjects = db.prepare(
+    `SELECT * FROM projects ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY id DESC`
+  ).all(...params);
+
+  // Apply frontend filters
+  let projects = allProjects.filter(p => {
+    if (region === 'tuzemsko' && !TUZEMSKO.has(p.country)) return false;
+    if (region === 'mea'      && !MEA.has(p.country))      return false;
+    if (region === 'zahranici' && (TUZEMSKO.has(p.country) || MEA.has(p.country))) return false;
+    if (country && p.country !== country) return false;
+    if (status  && p.status  !== status)  return false;
+    if (owner   && p.owner   !== owner)   return false;
+    if (year && !(p.estimated_decision_date && String(p.estimated_decision_date).includes(year))) return false;
+    if (win) {
+      const prob = p.win_prob_manual_min;
+      if (win === 'none' && prob != null) return false;
+      if (win === 'low'  && (prob == null || prob >= 30))  return false;
+      if (win === 'mid'  && (prob == null || prob < 30 || prob >= 70)) return false;
+      if (win === 'high' && (prob == null || prob < 70))  return false;
+    }
+    if (search) {
+      const norm = s => (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+      const hay = norm(`${p.project_name||''} ${p.company||''} ${p.country||''} ${p.owner||''}`);
+      if (!hay.includes(norm(search))) return false;
+    }
+    return true;
+  });
+
+  // ── colours ────────────────────────────────────────────────────────────────
+  const C_DARK   = 'FF3D3D3D';
+  const C_YELLOW = 'FFFFC600';
+  const C_WHITE  = 'FFFFFFFF';
+  const C_GREY1  = 'FFF7F7F7';
+  const C_BORDER = 'FFCCCCCC';
+  const C_GREEN  = 'FF2E7D32';
+  const C_RED    = 'FFC0272D';
+  const C_MUTED  = 'FF9E9E9E';
+  const C_BLUE   = 'FF1565C0';
+  const C_ORANGE = 'FFE65100';
+  const C_BG_TOT = 'FFFFF0B3';
+
+  const STATUS_COLORS = { active: C_GREEN, won: C_GREEN, lost: C_RED, lead: C_MUTED, on_hold: C_ORANGE };
+  const STATUS_LABELS = { lead:'Nabídka', active:'Aktivní', won:'Vyhráno', lost:'Prohráno', on_hold:'Pozastaveno' };
+  const PHASE_LABELS  = { project_stage:'Projektová fáze', tender:'Tendr', order:'Objednávka', delivery:'Dodávka' };
+  const REGION_LABELS = { '':'Vše', tuzemsko:'Tuzemsko', zahranici:'Zahraničí bez MEA', mea:'MEA' };
+  const WIN_LABELS    = { '':'Vše', high:'≥ 70%', mid:'30–69%', low:'< 30%', none:'Bez hodnoty' };
+
+  const COUNTRY_NAMES = { TR:'Turecko',AZ:'Ázerbájdžán',Az:'Ázerbájdžán',GE:'Gruzie',KZ:'Kazachstán',UZ:'Uzbekistán',Mong:'Mongolsko',CAN:'Kanada',CZ:'Česko',SK:'Slovensko',Německo:'Německo',Slovinsko:'Slovinsko',Srbsko:'Srbsko',Itálie:'Itálie',Rakousko:'Rakousko',Rumunsko:'Rumunsko',Francie:'Francie',USA:'USA',Řecko:'Řecko',Portugalsko:'Portugalsko',Kanada:'Kanada',Arménie:'Arménie' };
+  const countryName = c => COUNTRY_NAMES[c] || c || '';
+
+  const HEADERS = ['Název projektu','Klient','Země','EUR','CZK','Artikly a počty ks','AI hodnota EUR','Status','Fáze','Win% / AI%','Datum rozhodnutí','Datum realizace','Investor','Generální dodavatel','Montážní firma','Obchodník'];
+  const COL_WIDTHS = [34,26,14,12,10,36,14,14,17,12,14,14,20,20,20,14];
+  const NUM_COLS = new Set([3,4,6]); // 0-based
+
+  function thinBorder(color) {
+    const s = { style:'thin', color:{argb:color} };
+    return { top:s, left:s, bottom:s, right:s };
+  }
+
+  const wb = new ExcelJS.Workbook();
+  wb.creator = 'MINIB Pipeline';
+  const ws = wb.addWorksheet('Pipeline', { views:[{state:'frozen',ySplit:5}] });
+  ws.properties.tabColor = { argb: C_YELLOW };
+
+  // Column widths
+  ws.columns = COL_WIDTHS.map(w => ({ width: w }));
+
+  // Row 1: Title
+  ws.addRow([]);
+  const r1 = ws.lastRow;
+  r1.height = 34;
+  ws.mergeCells(`A1:P1`);
+  const c1 = r1.getCell(1);
+  c1.value = 'MINIB Project Pipeline';
+  c1.font = { name:'Arial', bold:true, size:16, color:{argb:C_WHITE} };
+  c1.fill = { type:'pattern', pattern:'solid', fgColor:{argb:C_DARK} };
+  c1.alignment = { horizontal:'left', vertical:'middle', indent:1 };
+
+  // Row 2: Yellow stripe
+  ws.addRow([]);
+  const r2 = ws.lastRow;
+  r2.height = 5;
+  ws.mergeCells(`A2:P2`);
+  r2.getCell(1).fill = { type:'pattern', pattern:'solid', fgColor:{argb:C_YELLOW} };
+
+  // Row 3: Filter meta
+  const filterParts = [
+    `Region: ${REGION_LABELS[region||''] || 'Vše'}`,
+    search  ? `Hledat: ${search}` : null,
+    country ? `Země: ${countryName(country)}` : null,
+    win     ? `Win%: ${WIN_LABELS[win]}` : null,
+    status  ? `Status: ${STATUS_LABELS[status]||status}` : null,
+    year    ? `Rok: ${year}` : null,
+    owner   ? `Obchodník: ${owner}` : null,
+  ].filter(Boolean).join('   |   ');
+  const metaText = `Exportováno: ${new Date().toLocaleString('cs-CZ')}     Filtry: ${filterParts}     Počet řádků: ${projects.length}`;
+  ws.addRow([]);
+  const r3 = ws.lastRow;
+  r3.height = 18;
+  ws.mergeCells('A3:P3');
+  const c3 = r3.getCell(1);
+  c3.value = metaText;
+  c3.font = { name:'Arial', size:9, italic:true, color:{argb:'FFAAAAAA'} };
+  c3.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FF2A2A2A'} };
+  c3.alignment = { horizontal:'left', vertical:'middle', indent:1 };
+
+  // Row 4: Spacer
+  ws.addRow([]);
+  ws.lastRow.height = 6;
+
+  // Row 5: Headers
+  ws.addRow(HEADERS);
+  const r5 = ws.lastRow;
+  r5.height = 30;
+  r5.eachCell((cell, ci) => {
+    cell.font = { name:'Arial', bold:true, size:10, color:{argb:C_DARK} };
+    cell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:C_YELLOW} };
+    cell.border = thinBorder(C_YELLOW);
+    cell.alignment = { horizontal: NUM_COLS.has(ci-1) ? 'right' : 'center', vertical:'middle', wrapText:true };
+  });
+
+  // Data rows
+  projects.forEach((p, i) => {
+    const rowBg = i % 2 === 1 ? C_GREY1 : C_WHITE;
+    const manual = p.win_prob_manual_min;
+    const aiP    = p.win_prob_ai;
+    let winVal = '';
+    if (manual != null && aiP != null) winVal = `${manual}% / ${aiP}%`;
+    else if (manual != null) winVal = `${manual}%`;
+    else if (aiP != null) winVal = `${aiP}%`;
+
+    const eur  = !TUZEMSKO.has(p.country) && p.project_value_eur != null ? p.project_value_eur : null;
+    const czk  = TUZEMSKO.has(p.country) && p.project_value_eur != null ? p.project_value_eur : (p.project_value_local ?? null);
+    const aiV  = p.project_value_eur == null && p.ai_value_eur != null ? p.ai_value_eur : null;
+
+    const rowData = [
+      p.project_name||'', p.company||'', countryName(p.country),
+      eur, czk, p.products_and_quantity||'',
+      aiV,
+      STATUS_LABELS[p.status]||p.status||'',
+      PHASE_LABELS[p.phase]||p.phase||'',
+      winVal,
+      p.estimated_decision_date ? String(p.estimated_decision_date).slice(0,7) : '',
+      p.estimated_delivery_date ? String(p.estimated_delivery_date).slice(0,7) : '',
+      p.investor||'', p.general_contractor||'', p.installation_company||'', p.owner||'',
+    ];
+
+    ws.addRow(rowData);
+    const dr = ws.lastRow;
+    dr.height = 20;
+
+    dr.eachCell({ includeEmpty:true }, (cell, ci) => {
+      const ci0 = ci - 1;
+      cell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:rowBg} };
+      cell.border = thinBorder(C_BORDER);
+
+      if (NUM_COLS.has(ci0)) {
+        cell.font = { name:'Arial', size:10, color:{argb: ci0===6 ? C_BLUE : C_DARK} };
+        cell.numFmt = '#,##0';
+        cell.alignment = { horizontal:'right', vertical:'middle' };
+      } else if (ci0 === 7) {
+        const statusColor = STATUS_COLORS[p.status] || C_MUTED;
+        cell.font = { name:'Arial', size:10, bold:true, color:{argb:statusColor} };
+        cell.alignment = { horizontal:'center', vertical:'middle' };
+      } else if (ci0 === 15) {
+        cell.font = { name:'Arial', size:10, bold:true, color:{argb:C_DARK} };
+        cell.alignment = { horizontal:'left', vertical:'middle' };
+      } else {
+        cell.font = { name:'Arial', size:10, color:{argb:C_DARK} };
+        cell.alignment = { horizontal:'left', vertical:'middle' };
+      }
+    });
+  });
+
+  // Totals row
+  const dataStartRow = 6;
+  const dataEndRow   = 5 + projects.length;
+  const totRow = ws.addRow([`CELKEM  (${projects.length} projektů)`, ...Array(HEADERS.length-1).fill(null)]);
+  totRow.height = 24;
+  totRow.eachCell({ includeEmpty:true }, (cell, ci) => {
+    const ci0 = ci - 1;
+    cell.fill   = { type:'pattern', pattern:'solid', fgColor:{argb:C_BG_TOT} };
+    cell.border = thinBorder(C_YELLOW);
+    if (ci0 === 0) {
+      cell.font = { name:'Arial', size:10, bold:true, color:{argb:C_DARK} };
+      cell.alignment = { horizontal:'left', vertical:'middle' };
+    } else if (NUM_COLS.has(ci0)) {
+      const colLetter = ws.getColumn(ci).letter;
+      cell.value = { formula: `SUM(${colLetter}${dataStartRow}:${colLetter}${dataEndRow})` };
+      cell.numFmt = '#,##0';
+      cell.font = { name:'Arial', size:10, bold:true, color:{argb: ci0===6 ? C_BLUE : C_DARK} };
+      cell.alignment = { horizontal:'right', vertical:'middle' };
+    } else {
+      cell.font = { name:'Arial', size:10, color:{argb:C_DARK} };
+    }
+  });
+
+  // Auto-filter on header row
+  ws.autoFilter = { from:'A5', to:`${ws.getColumn(HEADERS.length).letter}5` };
+
+  // Page setup
+  ws.pageSetup = { orientation:'landscape', fitToPage:true, fitToWidth:1, fitToHeight:0 };
+  ws.pageSetup.printTitlesRow = '1:5';
+
+  const now = new Date();
+  const stamp = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  const filename = `MINIB_Pipeline_${stamp}.xlsx`;
+
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+  await wb.xlsx.write(res);
+  res.end();
+});
+
+
 // GET /api/projects/:id
 router.get('/:id', (req, res) => {
   const project = db.prepare('SELECT * FROM projects WHERE id = ?').get(req.params.id);
@@ -401,5 +629,7 @@ router.post('/import/commit', (req, res) => {
 
   res.status(201).json({ inserted: inserted.length, ids: inserted });
 });
+
+
 
 module.exports = router;

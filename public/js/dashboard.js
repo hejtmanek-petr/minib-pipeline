@@ -161,86 +161,21 @@
   }
 
   function exportExcel() {
-    const regionLabels = { '': 'Vše', tuzemsko: 'Tuzemsko', zahranici: 'Zahraničí bez MEA', mea: 'MEA' };
-    const filterRows = [
-      ['Export MINIB Pipeline', '', new Date().toLocaleString('cs-CZ')],
-      [],
-      ['Aktivní filtry:'],
-      ['Region', regionLabels[activeRegion] || 'Vše'],
-    ];
+    const params = new URLSearchParams();
+    if (activeRegion) params.set('region', activeRegion);
     const search = document.getElementById('filter-search').value;
     const country = document.getElementById('filter-country').value;
     const win = document.getElementById('filter-win').value;
     const status = document.getElementById('filter-status').value;
     const year = document.getElementById('filter-year').value;
     const owner = document.getElementById('filter-owner').value;
-    const winLabels = { '': 'Vše', high: '≥ 70%', mid: '30–69%', low: '< 30%', none: 'Bez hodnoty' };
-    const statusLabels = { '': 'Vše', lead: 'Lead', active: 'Aktivní', won: 'Vyhráno', lost: 'Prohráno', on_hold: 'Pozastaveno' };
-    if (search) filterRows.push(['Hledat', search]);
-    filterRows.push(['Země', country ? countryName(country) : 'Vše']);
-    filterRows.push(['Win%', winLabels[win] || 'Vše']);
-    filterRows.push(['Status', statusLabels[status] || 'Vše']);
-    filterRows.push(['Rok rozhodnutí', year || 'Vše']);
-    filterRows.push(['Obchodník', owner || 'Vše']);
-    filterRows.push(['Počet řádků', lastFiltered.length]);
-    filterRows.push([]);
-
-    const headers = [
-      'Název projektu', 'Klient', 'Země', 'EUR', 'AI hodnota EUR', 'CZK',
-      'Artikly a počty ks', 'Status', 'Fáze', 'Win% / AI%',
-      'Datum rozhodnutí', 'Datum realizace',
-      'Investor', 'Generální dodavatel', 'Montážní firma', 'Obchodník',
-    ];
-
-    const rows = lastFiltered.map((p) => {
-      const manual = p.win_prob_manual_min;
-      const ai = p.win_prob_ai;
-      let winVal = '';
-      if (manual != null && ai != null) winVal = `${manual}% / ${ai}%`;
-      else if (manual != null) winVal = `${manual}%`;
-      else if (ai != null) winVal = `${ai}%`;
-
-      const eur = !TUZEMSKO.has(p.country) && p.project_value_eur != null ? p.project_value_eur : '';
-      const czk = TUZEMSKO.has(p.country) && p.project_value_eur != null
-        ? p.project_value_eur
-        : (p.project_value_local != null ? p.project_value_local : '');
-
-      return [
-        p.project_name || '',
-        p.company || '',
-        countryName(p.country),
-        eur,
-        p.ai_value_eur != null ? p.ai_value_eur : '',
-        czk,
-        p.products_and_quantity || '',
-        p.status || '',
-        p.phase || '',
-        winVal,
-        p.estimated_decision_date ? String(p.estimated_decision_date).slice(0, 7) : '',
-        p.estimated_delivery_date ? String(p.estimated_delivery_date).slice(0, 7) : '',
-        p.investor || '',
-        p.general_contractor || '',
-        p.installation_company || '',
-        p.owner || '',
-      ];
-    });
-
-    const ws = XLSX.utils.aoa_to_sheet([...filterRows, headers, ...rows]);
-
-    // Column widths
-    ws['!cols'] = [
-      {wch:30},{wch:20},{wch:15},{wch:12},{wch:14},{wch:12},
-      {wch:30},{wch:12},{wch:12},{wch:12},
-      {wch:14},{wch:14},
-      {wch:20},{wch:20},{wch:20},{wch:15},
-    ];
-
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Přehled');
-
-    const now = new Date();
-    const stamp = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-    XLSX.writeFile(wb, `MINIB_Pipeline_${stamp}.xlsx`);
+    if (search)  params.set('search', search);
+    if (country) params.set('country', country);
+    if (win)     params.set('win', win);
+    if (status)  params.set('status', status);
+    if (year)    params.set('year', year);
+    if (owner)   params.set('owner', owner);
+    window.location.href = `/api/projects/export?${params.toString()}`;
   }
 
   document.getElementById('btn-export-excel').addEventListener('click', exportExcel);
