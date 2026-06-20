@@ -209,11 +209,11 @@ router.get('/export', async (req, res) => {
   const metaText = `Exportováno: ${new Date().toLocaleString('cs-CZ')}     Filtry: ${filterParts}     Počet řádků: ${projects.length}`;
   ws.addRow([]);
   const r3 = ws.lastRow;
-  r3.height = 36;
+  r3.height = 52;
   ws.mergeCells('A3:P3');
   const c3 = r3.getCell(1);
   c3.value = metaText;
-  c3.font = { name:'Arial', size:9, italic:true, color:{argb:'FFAAAAAA'} };
+  c3.font = { name:'Arial', size:14, italic:true, color:{argb:'FFAAAAAA'} };
   c3.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FF2A2A2A'} };
   c3.alignment = { horizontal:'left', vertical:'middle', indent:1 };
 
