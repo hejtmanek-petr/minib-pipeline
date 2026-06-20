@@ -209,7 +209,7 @@ router.get('/export', async (req, res) => {
   const metaText = `Exportováno: ${new Date().toLocaleString('cs-CZ')}     Filtry: ${filterParts}     Počet řádků: ${projects.length}`;
   ws.addRow([]);
   const r3 = ws.lastRow;
-  r3.height = 52;
+  r3.height = 40;
   ws.mergeCells('A3:P3');
   const c3 = r3.getCell(1);
   c3.value = metaText;
