@@ -48,6 +48,11 @@ router.post('/logout', (req, res) => {
   res.json({ ok: true });
 });
 
+router.get('/logout', (req, res) => {
+  res.clearCookie(COOKIE_NAME);
+  res.redirect('/login.html');
+});
+
 router.get('/me', requireAuth, (req, res) => {
   res.json({ user: req.user });
 });
