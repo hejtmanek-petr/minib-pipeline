@@ -65,6 +65,7 @@
   "dashboard.table.phase": "Status / Phase",
   "dashboard.table.price": "MINIB Price EUR",
   "dashboard.table.value": "Project Value (EUR)",
+  "dashboard.table.aiValue": "AI Value",
   "dashboard.table.win": "Win% / AI%",
   "dashboard.table.decisionDate": "Decision Date",
   "dashboard.table.deliveryDate": "Delivery Date",

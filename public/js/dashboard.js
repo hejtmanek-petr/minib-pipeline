@@ -28,8 +28,13 @@
   }
 
   const TUZEMSKO = new Set(['CZ', 'SK']);
+  // Explicit MEA country codes as stored in DB
+  const MEA = new Set(['TR', 'AZ', 'Az', 'GE', 'KZ', 'UZ', 'Mong',
+    'SY', 'IQ', 'TM', 'EG', 'MA', 'DZ', 'LY', 'TN', 'TZ', 'UG',
+    'KW', 'AE', 'OM', 'JO', 'NC', 'BY', 'RU']);
 
   let allProjects = [];
+  let lastFiltered = [];
   let sortCol = 'id';
   let sortDir = 'desc';
   let activeRegion = '';
@@ -55,7 +60,7 @@
   function renderTable(projects) {
     const tbody = document.getElementById('projects-tbody');
     if (!projects.length) {
-      tbody.innerHTML = `<tr><td colspan="12" class="text-muted" style="text-align:center; padding:24px;">${I18N.t('common.noData')}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="16" class="text-muted" style="text-align:center; padding:24px;">${I18N.t('common.noData')}</td></tr>`;
       return;
     }
     tbody.innerHTML = projects.map((p) => `
@@ -67,6 +72,7 @@
         <td>${!TUZEMSKO.has(p.country) && p.project_value_eur != null ? Number(p.project_value_eur).toLocaleString('cs-CZ', {maximumFractionDigits:0}) + ' €' : '-'}</td>
         <td>${TUZEMSKO.has(p.country) && p.project_value_eur != null ? Number(p.project_value_eur).toLocaleString('cs-CZ', {maximumFractionDigits:0}) + ' Kč' : (p.project_value_local != null ? Number(p.project_value_local).toLocaleString('cs-CZ', {maximumFractionDigits:0}) + ' Kč' : '-')}</td>
         <td>${p.products_and_quantity || ''}</td>
+        <td>${p.project_value_eur == null && p.ai_value_eur != null ? '🤖 ' + Number(p.ai_value_eur).toLocaleString('cs-CZ', {maximumFractionDigits:0}) + ' €' : '<span class="text-muted">-</span>'}</td>
         <td><span class="${App.statusBadgeClass(p.status)}">${I18N.t('status.' + (p.status || 'lead'))}</span> <span class="text-muted">${p.phase ? I18N.t('phase.' + p.phase) : ''}</span></td>
         <td>${winCell(p)}</td>
         <td>${p.estimated_decision_date ? String(p.estimated_decision_date).slice(0,7) : '-'}</td>
@@ -89,7 +95,7 @@
     const active = projects.filter((p) => p.status === 'active' || p.status === 'lead');
     document.getElementById('kpi-active').textContent = active.length;
 
-    const eurProjects = active.filter((p) => !TUZEMSKO.has(p.country) && p.project_value_eur != null);
+    const eurProjects = active.filter((p) => MEA.has(p.country) && p.project_value_eur != null);
     const totalEur = eurProjects.reduce((s, p) => s + p.project_value_eur, 0);
     document.getElementById('kpi-pipeline').textContent = '€ ' + App.fmtMoney(totalEur);
 
@@ -113,7 +119,8 @@
 
     let filtered = allProjects.filter((p) => {
       if (activeRegion === 'tuzemsko' && !TUZEMSKO.has(p.country)) return false;
-      if (activeRegion === 'mea' && TUZEMSKO.has(p.country)) return false;
+      if (activeRegion === 'mea' && !MEA.has(p.country)) return false;
+      if (activeRegion === 'zahranici' && (TUZEMSKO.has(p.country) || MEA.has(p.country))) return false;
       if (country && p.country !== country) return false;
       if (win) {
         const prob = p.win_prob_manual_min;
@@ -126,8 +133,9 @@
       if (status && p.status !== status) return false;
       if (year && !(p.estimated_decision_date && String(p.estimated_decision_date).includes(year))) return false;
       if (search) {
-        const haystack = `${p.project_name || ''} ${p.company || ''} ${p.country || ''}`.toLowerCase();
-        if (!haystack.includes(search)) return false;
+        const norm = (s) => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+        const haystack = norm(`${p.project_name || ''} ${p.company || ''} ${p.country || ''} ${p.owner || ''}`);
+        if (!haystack.includes(norm(search))) return false;
       }
       return true;
     });
@@ -147,9 +155,95 @@
       return 0;
     });
 
+    lastFiltered = filtered;
     renderKpis(filtered);
     renderTable(filtered);
   }
+
+  function exportExcel() {
+    const regionLabels = { '': 'Vše', tuzemsko: 'Tuzemsko', zahranici: 'Zahraničí bez MEA', mea: 'MEA' };
+    const filterRows = [
+      ['Export MINIB Pipeline', '', new Date().toLocaleString('cs-CZ')],
+      [],
+      ['Aktivní filtry:'],
+      ['Region', regionLabels[activeRegion] || 'Vše'],
+    ];
+    const search = document.getElementById('filter-search').value;
+    const country = document.getElementById('filter-country').value;
+    const win = document.getElementById('filter-win').value;
+    const status = document.getElementById('filter-status').value;
+    const year = document.getElementById('filter-year').value;
+    const owner = document.getElementById('filter-owner').value;
+    const winLabels = { '': 'Vše', high: '≥ 70%', mid: '30–69%', low: '< 30%', none: 'Bez hodnoty' };
+    const statusLabels = { '': 'Vše', lead: 'Lead', active: 'Aktivní', won: 'Vyhráno', lost: 'Prohráno', on_hold: 'Pozastaveno' };
+    if (search) filterRows.push(['Hledat', search]);
+    filterRows.push(['Země', country ? countryName(country) : 'Vše']);
+    filterRows.push(['Win%', winLabels[win] || 'Vše']);
+    filterRows.push(['Status', statusLabels[status] || 'Vše']);
+    filterRows.push(['Rok rozhodnutí', year || 'Vše']);
+    filterRows.push(['Obchodník', owner || 'Vše']);
+    filterRows.push(['Počet řádků', lastFiltered.length]);
+    filterRows.push([]);
+
+    const headers = [
+      'Název projektu', 'Klient', 'Země', 'EUR', 'AI hodnota EUR', 'CZK',
+      'Artikly a počty ks', 'Status', 'Fáze', 'Win% / AI%',
+      'Datum rozhodnutí', 'Datum realizace',
+      'Investor', 'Generální dodavatel', 'Montážní firma', 'Obchodník',
+    ];
+
+    const rows = lastFiltered.map((p) => {
+      const manual = p.win_prob_manual_min;
+      const ai = p.win_prob_ai;
+      let winVal = '';
+      if (manual != null && ai != null) winVal = `${manual}% / ${ai}%`;
+      else if (manual != null) winVal = `${manual}%`;
+      else if (ai != null) winVal = `${ai}%`;
+
+      const eur = !TUZEMSKO.has(p.country) && p.project_value_eur != null ? p.project_value_eur : '';
+      const czk = TUZEMSKO.has(p.country) && p.project_value_eur != null
+        ? p.project_value_eur
+        : (p.project_value_local != null ? p.project_value_local : '');
+
+      return [
+        p.project_name || '',
+        p.company || '',
+        countryName(p.country),
+        eur,
+        p.ai_value_eur != null ? p.ai_value_eur : '',
+        czk,
+        p.products_and_quantity || '',
+        p.status || '',
+        p.phase || '',
+        winVal,
+        p.estimated_decision_date ? String(p.estimated_decision_date).slice(0, 7) : '',
+        p.estimated_delivery_date ? String(p.estimated_delivery_date).slice(0, 7) : '',
+        p.investor || '',
+        p.general_contractor || '',
+        p.installation_company || '',
+        p.owner || '',
+      ];
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet([...filterRows, headers, ...rows]);
+
+    // Column widths
+    ws['!cols'] = [
+      {wch:30},{wch:20},{wch:15},{wch:12},{wch:14},{wch:12},
+      {wch:30},{wch:12},{wch:12},{wch:12},
+      {wch:14},{wch:14},
+      {wch:20},{wch:20},{wch:20},{wch:15},
+    ];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Přehled');
+
+    const now = new Date();
+    const stamp = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+    XLSX.writeFile(wb, `MINIB_Pipeline_${stamp}.xlsx`);
+  }
+
+  document.getElementById('btn-export-excel').addEventListener('click', exportExcel);
 
   // Sorting
   document.querySelectorAll('th[data-sort]').forEach((th) => {

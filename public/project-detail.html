@@ -15,6 +15,7 @@
     <a href="/dashboard.html" class="breadcrumb-back">&#8592; <span data-i18n="nav.dashboard"></span></a>
     <span class="breadcrumb-sep">/</span>
     <span class="breadcrumb-current" id="breadcrumb-project-name"></span>
+    <button id="btn-delete-project" class="btn btn-danger" style="margin-left:auto;">&#128465; Smazat projekt</button>
   </div>
 
   <main class="app-main">
@@ -34,6 +35,17 @@
       <h3 data-i18n="project.section.commercial"></h3>
       <div class="field-grid" id="commercial-fields"></div>
       <button class="btn btn-primary" id="save-commercial-btn" data-i18n="common.save" style="margin-top:12px;"></button>
+
+      <div style="margin-top:20px; padding-top:16px; border-top:1px solid var(--border);">
+        <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+          <div>
+            <div class="field-label" style="font-size:0.78rem; color:var(--text-muted); margin-bottom:4px;">🤖 AI hodnota (odhad z artiklů)</div>
+            <div id="ai-value-display" style="font-size:1.1rem; font-weight:600;">—</div>
+          </div>
+          <div id="ai-value-breakdown" style="font-size:0.82rem; color:var(--text-muted); max-width:400px;"></div>
+          <button id="btn-estimate-value" class="btn btn-secondary" style="margin-left:auto;">🤖 Odhadnout AI hodnotu</button>
+        </div>
+      </div>
     </div>
 
     <!-- Section C: Win probability -->

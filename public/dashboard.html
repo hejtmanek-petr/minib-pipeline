@@ -38,6 +38,7 @@
     <div class="region-tabs">
       <button class="region-tab active" data-region="">Vše</button>
       <button class="region-tab" data-region="tuzemsko">Tuzemsko</button>
+      <button class="region-tab" data-region="zahranici">Zahraničí bez MEA</button>
       <button class="region-tab" data-region="mea">MEA</button>
     </div>
 
@@ -48,12 +49,6 @@
       <div class="form-group">
         <label data-i18n="dashboard.filters.country"></label>
         <select id="filter-country">
-          <option value="" data-i18n="common.all"></option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label data-i18n="dashboard.filters.owner"></label>
-        <select id="filter-owner">
           <option value="" data-i18n="common.all"></option>
         </select>
       </div>
@@ -87,8 +82,15 @@
           <option value="2027">2027</option>
         </select>
       </div>
-      <div class="form-group form-group-btn">
+      <div class="form-group">
+        <label data-i18n="dashboard.filters.owner"></label>
+        <select id="filter-owner">
+          <option value="" data-i18n="common.all"></option>
+        </select>
+      </div>
+      <div class="form-group form-group-btn" style="display:flex;gap:8px;">
         <button id="btn-reset-filters" class="btn btn-secondary" data-i18n="dashboard.filters.reset"></button>
+        <button id="btn-export-excel" class="btn btn-secondary">&#x1F4E5; Export Excel</button>
       </div>
     </div>
 
@@ -103,6 +105,7 @@
             <th data-sort="project_value_eur" data-i18n="dashboard.table.amount"></th>
             <th data-sort="project_value_local" data-i18n="dashboard.table.amountCzk"></th>
             <th data-sort="products_and_quantity" data-i18n="dashboard.table.products"></th>
+            <th data-sort="ai_value_eur" data-i18n="dashboard.table.aiValue"></th>
             <th data-sort="phase" data-i18n="dashboard.table.phase"></th>
             <th data-i18n="dashboard.table.win"></th>
             <th data-sort="estimated_decision_date" data-i18n="dashboard.table.decisionDate"></th>
@@ -119,6 +122,7 @@
     </div>
   </main>
 
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
   <script src="/js/i18n.js"></script>
   <script src="/js/app.js"></script>
   <script src="/js/dashboard.js"></script>

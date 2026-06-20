@@ -21,6 +21,7 @@ const migrations = [
   "ALTER TABLE projects ADD COLUMN investor TEXT",
   "ALTER TABLE projects ADD COLUMN general_contractor TEXT",
   "ALTER TABLE projects ADD COLUMN installation_company TEXT",
+  "ALTER TABLE projects ADD COLUMN ai_value_eur REAL",
 ];
 for (const sql of migrations) {
   try { db.exec(sql); } catch (e) { /* column already exists */ }

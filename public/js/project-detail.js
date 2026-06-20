@@ -351,6 +351,49 @@
     }
   });
 
+  // --- AI Value estimate ---
+
+  function renderAiValue(p) {
+    const display = document.getElementById('ai-value-display');
+    const breakdown = document.getElementById('ai-value-breakdown');
+    if (!display) return;
+    if (p.ai_value_eur != null) {
+      display.textContent = Number(p.ai_value_eur).toLocaleString('cs-CZ', { maximumFractionDigits: 0 }) + ' €';
+      display.style.color = 'var(--primary)';
+    } else {
+      display.textContent = '—';
+      display.style.color = '';
+    }
+    if (breakdown) breakdown.textContent = '';
+  }
+
+  document.getElementById('btn-estimate-value').addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    const display = document.getElementById('ai-value-display');
+    const breakdown = document.getElementById('ai-value-breakdown');
+    btn.disabled = true;
+    btn.textContent = '⏳ Odhaduji...';
+    display.textContent = '...';
+    try {
+      const res = await App.api(`/ai/estimate-value/${projectId}`, { method: 'POST' });
+      if (res.estimated_value_eur != null) {
+        project.ai_value_eur = res.estimated_value_eur;
+        display.textContent = Number(res.estimated_value_eur).toLocaleString('cs-CZ', { maximumFractionDigits: 0 }) + ' €';
+        display.style.color = 'var(--primary)';
+      } else {
+        display.textContent = 'Nelze odhadnout';
+        display.style.color = 'var(--text-muted)';
+      }
+      if (breakdown && res.breakdown) breakdown.textContent = res.breakdown;
+    } catch (err) {
+      display.textContent = 'Chyba: ' + err.message;
+      display.style.color = 'red';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '🤖 Odhadnout AI hodnotu';
+    }
+  });
+
   // --- Comments ---
 
   async function loadComments() {
@@ -567,7 +610,21 @@
 
     renderBasicFields();
     renderCommercialFields();
+    renderAiValue(project);
     renderGauges();
+
+    const deleteBtn = document.getElementById('btn-delete-project');
+    if (deleteBtn) {
+      if (user.role !== 'HQ') {
+        deleteBtn.style.display = 'none';
+      } else {
+        deleteBtn.addEventListener('click', async () => {
+          if (!confirm(`Opravdu smazat projekt "${project.project_name || project.project_code}"? Tato akce je nevratná.`)) return;
+          await App.api(`/projects/${projectId}`, { method: 'DELETE' });
+          window.location.href = '/dashboard.html';
+        });
+      }
+    }
 
     if (user.role !== 'HQ' && meta.dealer_visibility && meta.dealer_visibility.hide_hq_only_sections) {
       document.querySelectorAll('[data-visibility="hq-only"]').forEach((el) => el.classList.add('hidden-for-dealer'));

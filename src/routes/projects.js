@@ -155,6 +155,15 @@ router.post('/', (req, res) => {
   res.status(201).json({ project });
 });
 
+// DELETE /api/projects/:id
+router.delete('/:id', (req, res) => {
+  if (req.user.role !== 'HQ') return res.status(403).json({ error: 'HQ only' });
+  const project = db.prepare('SELECT id FROM projects WHERE id = ?').get(req.params.id);
+  if (!project) return res.status(404).json({ error: 'Project not found' });
+  db.prepare('DELETE FROM projects WHERE id = ?').run(req.params.id);
+  res.json({ ok: true });
+});
+
 // PUT /api/projects/:id - update with history tracking
 router.put('/:id', (req, res) => {
   const project = db.prepare('SELECT * FROM projects WHERE id = ?').get(req.params.id);
