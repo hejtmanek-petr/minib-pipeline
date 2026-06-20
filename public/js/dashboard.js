@@ -207,8 +207,13 @@
     const tuzTab = document.querySelector('.region-tab[data-region="tuzemsko"]');
     if (tuzTab) tuzTab.style.display = 'none';
     const meaTab = document.querySelector('.region-tab[data-region="mea"]');
-    if (meaTab) { meaTab.click(); }
-    document.getElementById('kpi-pipeline-czk') && (document.getElementById('kpi-pipeline-czk').closest('.kpi-card') || document.getElementById('kpi-pipeline-czk').parentElement.parentElement).style.display = 'none';
+    if (meaTab) meaTab.click();
+    const czkCard = document.getElementById('kpi-pipeline-czk');
+    if (czkCard) {
+      let card = czkCard;
+      while (card && !card.classList.contains('kpi-card')) card = card.parentElement;
+      if (card) card.style.display = 'none';
+    }
   }
 
   // Load data
@@ -240,5 +245,7 @@
     applyFiltersAndRender();
   } catch (err) {
     console.error(err);
+    const tbody = document.getElementById('projects-tbody');
+    if (tbody) tbody.innerHTML = `<tr><td colspan="15" style="color:red;padding:20px;text-align:center;">Chyba načítání: ${err.message} (status: ${err.status || 'N/A'})</td></tr>`;
   }
 })();
