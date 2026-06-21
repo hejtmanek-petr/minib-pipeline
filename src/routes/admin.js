@@ -125,6 +125,42 @@ router.put('/settings/:key', (req, res) => {
   res.json({ key, value });
 });
 
+// POST /api/admin/import-comments — upsert comments from local export
+router.post('/import-comments', (req, res) => {
+  const comments = req.body.comments;
+  if (!Array.isArray(comments)) return res.status(400).json({ error: 'comments array required' });
+
+  const upsert = db.prepare(`
+    INSERT INTO comments (id, project_id, user_id, content, source, original_language, raw_transcript, title, audio_url, content_cs, content_en, content_de, content_tr, created_at)
+    VALUES (@id, @project_id, @user_id, @content, @source, @original_language, @raw_transcript, @title, @audio_url, @content_cs, @content_en, @content_de, @content_tr, @created_at)
+    ON CONFLICT(id) DO UPDATE SET
+      content=excluded.content, title=excluded.title,
+      content_cs=excluded.content_cs, content_en=excluded.content_en,
+      content_de=excluded.content_de, content_tr=excluded.content_tr
+  `);
+
+  let inserted = 0, skipped = 0;
+  const tx = db.transaction(() => {
+    for (const c of comments) {
+      const project = db.prepare('SELECT id FROM projects WHERE id = ?').get(c.project_id);
+      if (!project) { skipped++; continue; }
+      upsert.run({
+        id: c.id, project_id: c.project_id, user_id: c.user_id || 1,
+        content: c.content, source: c.source || 'text',
+        original_language: c.original_language || null,
+        raw_transcript: c.raw_transcript || null,
+        title: c.title || null, audio_url: c.audio_url || null,
+        content_cs: c.content_cs || null, content_en: c.content_en || null,
+        content_de: c.content_de || null, content_tr: c.content_tr || null,
+        created_at: c.created_at || null,
+      });
+      inserted++;
+    }
+  });
+  tx();
+  res.json({ inserted, skipped });
+});
+
 // POST /api/admin/translate-comments — translate all untranslated comments
 router.post('/translate-comments', async (req, res) => {
   const untranslated = db.prepare(
