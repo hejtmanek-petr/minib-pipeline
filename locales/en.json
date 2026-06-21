@@ -138,6 +138,7 @@
   "winprob.aiUnavailable": "AI assessment is currently unavailable. Set ANTHROPIC_API_KEY in .env to enable it.",
 
   "comments.add": "Add Comment",
+  "comments.titlePlaceholder": "Comment title (optional)",
   "comments.placeholder": "Write a comment...",
   "comments.addText": "Add Comment",
   "comments.voiceInput": "Voice Input",

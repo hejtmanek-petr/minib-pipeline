@@ -59,6 +59,36 @@
     return I18N.t(`project.field.${field}`);
   }
 
+  function debounce(fn, ms) {
+    let t;
+    return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+  }
+
+  let autoSaveTimer = null;
+  function showAutoStatus(msg, color) {
+    const el = document.getElementById('auto-save-status');
+    if (!el) return;
+    el.textContent = msg;
+    el.style.color = color;
+    el.style.opacity = '1';
+    clearTimeout(autoSaveTimer);
+    if (color !== 'var(--color-text-muted)') {
+      autoSaveTimer = setTimeout(() => { el.style.opacity = '0'; }, 2500);
+    }
+  }
+
+  async function autoSaveField(field, value) {
+    showAutoStatus('Ukládám…', 'var(--color-text-muted)');
+    try {
+      const body = { [field]: castFieldValue(field, value) };
+      const res = await App.api(`/projects/${projectId}`, { method: 'PUT', body });
+      project = res.project;
+      showAutoStatus('✓ Uloženo', 'var(--color-success)');
+    } catch {
+      showAutoStatus('Chyba při ukládání', 'var(--color-danger)');
+    }
+  }
+
   function displayValue(field, value) {
     if (value === null || value === undefined || value === '') return null;
     if (field === 'status') return I18N.t('status.' + value);
@@ -121,6 +151,8 @@
     }
 
     let input;
+    const debouncedSave = config.field ? debounce((val) => autoSaveField(config.field, val), 1200) : null;
+
     if (config.type === 'select') {
       input = document.createElement('select');
       const options = config.options();
@@ -131,10 +163,12 @@
         if (opt === raw) o.selected = true;
         input.appendChild(o);
       });
+      if (debouncedSave) input.addEventListener('change', () => debouncedSave(input.value));
     } else if (config.type === 'textarea') {
       input = document.createElement('textarea');
       input.rows = 3;
       input.value = raw || '';
+      if (debouncedSave) input.addEventListener('input', () => debouncedSave(input.value));
     } else if (config.type === 'number') {
       input = document.createElement('input');
       input.type = 'text';
@@ -143,7 +177,7 @@
       const unFmt = (v) => v.replace(/\s/g, '').replace(',', '.');
       input.value = fmt(raw);
       input.addEventListener('focus', () => { input.value = raw === null || raw === undefined ? '' : raw; });
-      input.addEventListener('blur', () => { const n = parseFloat(unFmt(input.value)); input.value = isNaN(n) ? '' : fmt(n); raw = isNaN(n) ? null : n; });
+      input.addEventListener('blur', () => { const n = parseFloat(unFmt(input.value)); input.value = isNaN(n) ? '' : fmt(n); raw = isNaN(n) ? null : n; if (debouncedSave) debouncedSave(raw); });
     } else if (config.type === 'month') {
       const currentYear = new Date().getFullYear();
       const months = ['01','02','03','04','05','06','07','08','09','10','11','12'];
@@ -168,6 +202,12 @@
         selMonth.value = parts[1] || '';
       }
 
+      const onChange = () => {
+        if (debouncedSave) debouncedSave(selYear.value && selMonth.value ? `${selYear.value}-${selMonth.value}` : null);
+      };
+      selYear.addEventListener('change', onChange);
+      selMonth.addEventListener('change', onChange);
+
       const row = document.createElement('div');
       row.style.cssText = 'display:flex;gap:6px;';
       row.appendChild(selYear);
@@ -181,6 +221,7 @@
       input = document.createElement('input');
       input.type = 'text';
       input.value = raw === null || raw === undefined ? '' : raw;
+      if (debouncedSave) input.addEventListener('input', () => debouncedSave(input.value));
     }
 
     if (config.suffix) {
@@ -412,35 +453,114 @@
       feed.innerHTML = `<div class="text-muted">${I18N.t('common.noData')}</div>`;
       return;
     }
-    feed.innerHTML = res.comments.map((c) => {
+    feed.innerHTML = res.comments.map((c, idx) => {
+      const isLatest = idx === 0;
       const sourceBadge = c.source === 'voice'
         ? `<span class="badge badge-source">🎤 ${I18N.t('comments.sourceVoice')}</span>`
         : `<span class="badge badge-source">✍️ ${I18N.t('comments.sourceText')}</span>`;
       const langBadge = c.original_language
-        ? `<span class="badge badge-lang">${c.original_language.toUpperCase()}</span>`
+        ? `<span class="badge badge-orig-lang" title="Jazyk originálu">${c.original_language.toUpperCase()}</span>`
         : '';
+      const audioPlayer = c.audio_url
+        ? `<span class="audio-toggle" data-src="${c.audio_url}" title="Přehrát nahrávku">🎤</span>`
+        : '';
+      const langs = ['cs', 'en', 'de', 'tr'];
+      const defaultLang = c.original_language || 'cs';
+      const hasTranslations = c.content_cs || c.content_en || c.content_de || c.content_tr;
+      const langBar = hasTranslations ? `<div class="comment-lang-bar" data-comment-id="${c.id}">
+        ${langs.map((l) => `<button class="comment-lang-btn ${l === defaultLang ? 'active' : ''}" data-lang="${l}">${l.toUpperCase()}</button>`).join('')}
+      </div>` : '';
       const canManage = c.user_id === user.id || user.role === 'HQ';
       const actions = canManage ? `
             <div class="comment-actions">
               <button class="btn-link edit-comment-btn" data-id="${c.id}">${I18N.t('common.edit')}</button>
               <button class="btn-link delete-comment-btn" data-id="${c.id}">${I18N.t('common.delete')}</button>
             </div>` : '';
+
+      const bodyClass = isLatest ? 'comment-body' : 'comment-body comment-body--collapsed';
+      const textStyle = isLatest ? '' : 'display:none;';
+      const textClamp = isLatest
+        ? 'overflow:hidden;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;'
+        : '';
+
+      const safeContent = (txt) => (txt || '').replace(/</g, '&lt;');
       return `
-        <div class="comment-item" data-comment-id="${c.id}">
+        <div class="comment-item ${isLatest ? '' : 'comment-item--collapsed'}" data-comment-id="${c.id}"
+          data-lang-cs="${safeContent(c.content_cs)}"
+          data-lang-en="${safeContent(c.content_en)}"
+          data-lang-de="${safeContent(c.content_de)}"
+          data-lang-tr="${safeContent(c.content_tr)}"
+          data-lang-orig="${safeContent(c.content)}"
+          data-orig-lang="${c.original_language || 'cs'}">
           <div class="avatar">${App.initials(c.author_name)}</div>
-          <div class="comment-body">
-            <div class="comment-meta">
+          <div class="${bodyClass}">
+            <div class="comment-meta comment-meta--clickable" data-comment-id="${c.id}">
               <span class="author-name">${c.author_name}</span>
               <span>${App.fmtDateTime(c.created_at)}</span>
+              ${c.title ? `<span class="comment-title-inline">${c.title.replace(/</g, '&lt;')}</span>` : ''}
               ${sourceBadge}
               ${langBadge}
+              <span style="margin-left:auto;display:flex;align-items:center;gap:6px;">
+                ${langBar}
+                ${audioPlayer}
+              </span>
             </div>
-            <div class="comment-text">${c.content.replace(/</g, '&lt;')}</div>
-            ${actions}
+            <div class="comment-content-wrap" style="${textStyle}">
+              <div class="comment-text" style="${textClamp}">${safeContent(c.content_cs || c.content)}</div>
+              ${actions}
+            </div>
           </div>
         </div>
       `;
     }).join('');
+
+    // Audio toggle
+    feed.querySelectorAll('.audio-toggle').forEach((icon) => {
+      icon.addEventListener('click', (e) => {
+        e.stopPropagation();
+        let player = icon.nextElementSibling;
+        if (player && player.tagName === 'AUDIO') {
+          player.remove();
+          icon.classList.remove('active');
+        } else {
+          player = document.createElement('audio');
+          player.controls = true;
+          player.src = icon.dataset.src;
+          player.style.cssText = 'height:28px;max-width:220px;vertical-align:middle;margin-left:4px;';
+          icon.after(player);
+          icon.classList.add('active');
+          player.play();
+        }
+      });
+    });
+
+    // Language switcher
+    feed.querySelectorAll('.comment-lang-btn').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const lang = btn.dataset.lang;
+        const item = btn.closest('.comment-item');
+        const textEl = item.querySelector('.comment-text');
+        const key = `lang${lang.charAt(0).toUpperCase() + lang.slice(1)}`;
+        const translated = item.dataset[`lang${lang.charAt(0).toUpperCase() + lang.slice(1)}`];
+        textEl.textContent = translated || item.dataset.langOrig;
+        btn.closest('.comment-lang-bar').querySelectorAll('.comment-lang-btn').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+
+    // Expand/collapse older comments — whole row clickable
+    feed.querySelectorAll('.comment-item--collapsed').forEach((item) => {
+      item.style.cursor = 'pointer';
+      item.addEventListener('click', (e) => {
+        if (e.target.closest('.audio-toggle') || e.target.closest('.comment-lang-btn') || e.target.tagName === 'AUDIO') return;
+        const wrap = item.querySelector('.comment-content-wrap');
+        const btn = item.querySelector('.comment-expand-btn');
+        const isOpen = wrap.style.display !== 'none';
+        wrap.style.display = isOpen ? 'none' : 'block';
+        if (btn) btn.textContent = isOpen ? 'Rozbalit' : 'Sbalit';
+      });
+    });
 
     feed.querySelectorAll('.delete-comment-btn').forEach((btn) => {
       btn.addEventListener('click', async () => {
@@ -454,7 +574,15 @@
       btn.addEventListener('click', () => {
         const item = feed.querySelector(`.comment-item[data-comment-id="${btn.dataset.id}"]`);
         const textEl = item.querySelector('.comment-text');
+        const titleEl = item.querySelector('.comment-title');
         const currentText = textEl.textContent;
+        const currentTitle = titleEl ? titleEl.textContent : '';
+
+        const titleInput = document.createElement('input');
+        titleInput.type = 'text';
+        titleInput.value = currentTitle;
+        titleInput.placeholder = I18N.t('comments.titlePlaceholder');
+        titleInput.style.marginBottom = '6px';
 
         const textarea = document.createElement('textarea');
         textarea.rows = 3;
@@ -471,6 +599,7 @@
         cancelBtn.style.marginLeft = '8px';
 
         const editWrap = document.createElement('div');
+        editWrap.appendChild(titleInput);
         editWrap.appendChild(textarea);
         const btnRow = document.createElement('div');
         btnRow.style.marginTop = '8px';
@@ -479,12 +608,16 @@
         editWrap.appendChild(btnRow);
 
         item.querySelector('.comment-actions').style.display = 'none';
-        textEl.replaceWith(editWrap);
+        if (titleEl) titleEl.replaceWith(editWrap);
+        else textEl.replaceWith(editWrap);
 
         saveBtn.addEventListener('click', async () => {
           const newContent = textarea.value.trim();
           if (!newContent) return;
-          await App.api(`/projects/${projectId}/comments/${btn.dataset.id}`, { method: 'PUT', body: { content: newContent } });
+          await App.api(`/projects/${projectId}/comments/${btn.dataset.id}`, {
+            method: 'PUT',
+            body: { content: newContent, title: titleInput.value.trim() || null },
+          });
           showSaved(saveBtn);
           setTimeout(() => loadComments(), 2000);
         });
@@ -498,13 +631,15 @@
   document.getElementById('add-comment-btn').addEventListener('click', async (e) => {
     const btn = e.currentTarget;
     const textarea = document.getElementById('comment-text');
+    const titleEl = document.getElementById('comment-title');
     const content = textarea.value.trim();
     if (!content) return;
     await App.api(`/projects/${projectId}/comments`, {
       method: 'POST',
-      body: { content, source: 'text', original_language: I18N.getLang() },
+      body: { content, source: 'text', original_language: I18N.getLang(), title: titleEl.value.trim() || null },
     });
     textarea.value = '';
+    titleEl.value = '';
     showSaved(btn);
     await loadComments();
   });
@@ -572,10 +707,24 @@
       const content = document.getElementById('voice-transcript-text').value.trim();
       if (!content) return;
       const raw = document.getElementById('voice-result-area').dataset.raw || content;
-      await App.api(`/projects/${projectId}/comments`, {
+      const titleVal = document.getElementById('comment-title').value.trim() || null;
+      const res = await App.api(`/projects/${projectId}/comments`, {
         method: 'POST',
-        body: { content, source: 'voice', original_language: voiceLang, raw_transcript: raw },
+        body: { content, source: 'voice', original_language: voiceLang, raw_transcript: raw, title: titleVal },
       });
+
+      // Upload audio blob if available
+      const blob = VoiceInput.getAudioBlob();
+      if (blob && res.comment) {
+        const ext = VoiceInput.getAudioExt();
+        await fetch(`/api/projects/${projectId}/comments/${res.comment.id}/audio`, {
+          method: 'POST',
+          headers: { 'Content-Type': blob.type, 'X-Audio-Ext': ext },
+          credentials: 'include',
+          body: blob,
+        });
+      }
+
       document.getElementById('voice-result-area').style.display = 'none';
       document.getElementById('voice-transcript-text').value = '';
       document.getElementById('live-transcript').textContent = '';

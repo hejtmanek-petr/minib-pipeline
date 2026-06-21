@@ -4,6 +4,7 @@ const bcrypt = require('bcrypt');
 const db = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { requireHQ } = require('../middleware/permissions');
+const ai = require('../services/ai');
 
 const router = express.Router();
 
@@ -122,6 +123,27 @@ router.put('/settings/:key', (req, res) => {
   `).run(key, JSON.stringify(value));
 
   res.json({ key, value });
+});
+
+// POST /api/admin/translate-comments — translate all untranslated comments
+router.post('/translate-comments', async (req, res) => {
+  const untranslated = db.prepare(
+    `SELECT id, content, original_language FROM comments WHERE content_cs IS NULL OR content_en IS NULL`
+  ).all();
+
+  res.json({ started: true, total: untranslated.length });
+
+  for (const c of untranslated) {
+    try {
+      const t = await ai.translateComment(c.content, c.original_language || 'cs');
+      db.prepare(`UPDATE comments SET content_cs=?, content_en=?, content_de=?, content_tr=? WHERE id=?`)
+        .run(t.cs, t.en, t.de, t.tr, c.id);
+      console.log(`Translated comment ${c.id}`);
+    } catch (e) {
+      console.error(`Failed comment ${c.id}:`, e.message);
+    }
+  }
+  console.log('Bulk translation complete.');
 });
 
 module.exports = router;

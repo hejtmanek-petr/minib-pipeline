@@ -138,6 +138,7 @@
   "winprob.aiUnavailable": "AI hodnocení momentálně není k dispozici. Nastavte ANTHROPIC_API_KEY v .env pro aktivaci.",
 
   "comments.add": "Přidat komentář",
+  "comments.titlePlaceholder": "Název komentáře (volitelný)",
   "comments.placeholder": "Napište komentář...",
   "comments.addText": "Přidat komentář",
   "comments.voiceInput": "Hlasový vstup",

@@ -1,4 +1,4 @@
-// Web Speech API wrapper for voice comment input
+// Web Speech API + MediaRecorder wrapper for voice comment input
 const VoiceInput = (() => {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   const isSupported = !!SpeechRecognition;
@@ -6,6 +6,9 @@ const VoiceInput = (() => {
   const LANG_MAP = { cs: 'cs-CZ', en: 'en-US', de: 'de-DE', tr: 'tr-TR' };
 
   let recognition = null;
+  let mediaRecorder = null;
+  let audioChunks = [];
+  let audioBlob = null;
   let isRecording = false;
   let finalTranscript = '';
 
@@ -31,18 +34,39 @@ const VoiceInput = (() => {
 
     recognition.onend = () => {
       isRecording = false;
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
       if (onEnd) onEnd(finalTranscript.trim());
     };
 
     recognition.onerror = (event) => {
       isRecording = false;
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
       if (onError) onError(event.error);
     };
   }
 
-  function start(language) {
+  async function start(language) {
     if (!recognition) return;
     finalTranscript = '';
+    audioChunks = [];
+    audioBlob = null;
+
+    // Start MediaRecorder for audio capture (parallel to SpeechRecognition)
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm'
+        : MediaRecorder.isTypeSupported('audio/ogg') ? 'audio/ogg' : 'audio/mp4';
+      mediaRecorder = new MediaRecorder(stream, { mimeType });
+      mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) audioChunks.push(e.data); };
+      mediaRecorder.onstop = () => {
+        audioBlob = new Blob(audioChunks, { type: mimeType });
+        stream.getTracks().forEach((t) => t.stop());
+      };
+      mediaRecorder.start();
+    } catch {
+      // microphone unavailable — continue with transcript only
+    }
+
     recognition.lang = LANG_MAP[language] || 'en-US';
     recognition.start();
     isRecording = true;
@@ -53,5 +77,13 @@ const VoiceInput = (() => {
     recognition.stop();
   }
 
-  return { isSupported, init, start, stop, isRecording: () => isRecording };
+  function getAudioBlob() { return audioBlob; }
+  function getAudioExt() {
+    if (!audioBlob) return 'webm';
+    if (audioBlob.type.includes('ogg')) return 'ogg';
+    if (audioBlob.type.includes('mp4')) return 'mp4';
+    return 'webm';
+  }
+
+  return { isSupported, init, start, stop, isRecording: () => isRecording, getAudioBlob, getAudioExt };
 })();

@@ -141,4 +141,37 @@ Respond ONLY with valid JSON, no markdown:
   return JSON.parse(jsonMatch[0]);
 }
 
-module.exports = { correctTranscript, assessWinProbability, estimateProjectValue, MODEL };
+async function translateComment(content, sourceLang) {
+  const client = getClient();
+  if (!client) throw new Error('AI not configured');
+
+  const srcName = LANGUAGE_NAMES[sourceLang] || 'English';
+  const prompt = `Translate the following text from ${srcName} into Czech, English, German and Turkish.
+Return ONLY valid JSON, no markdown, no explanation:
+{
+  "cs": "<Czech translation>",
+  "en": "<English translation>",
+  "de": "<German translation>",
+  "tr": "<Turkish translation>"
+}
+
+If the source language is one of the targets, copy the original text for that language instead of translating.
+
+Text to translate:
+"""
+${content}
+"""`;
+
+  const response = await client.messages.create({
+    model: MODEL,
+    max_tokens: 2000,
+    messages: [{ role: 'user', content: prompt }],
+  });
+
+  const text = response.content[0].text.trim();
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) throw new Error('AI did not return valid JSON');
+  return JSON.parse(jsonMatch[0]);
+}
+
+module.exports = { correctTranscript, assessWinProbability, estimateProjectValue, translateComment, MODEL };

@@ -26,7 +26,10 @@
 
     <!-- Section A: Basic info -->
     <div class="card">
-      <h3 data-i18n="project.section.basic"></h3>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+        <h3 data-i18n="project.section.basic" style="margin-bottom:0;"></h3>
+        <span id="auto-save-status" style="font-size:12px;font-weight:600;opacity:0;transition:opacity 0.4s;"></span>
+      </div>
       <div class="field-grid" id="basic-fields"></div>
       <button class="btn btn-primary" id="save-basic-btn" data-i18n="common.save" style="margin-top:12px;"></button>
     </div>
@@ -84,6 +87,7 @@
 
       <div class="form-group">
         <label data-i18n="comments.add"></label>
+        <input type="text" id="comment-title" data-i18n-placeholder="comments.titlePlaceholder" style="margin-bottom:6px;">
         <textarea id="comment-text" rows="3" data-i18n-placeholder="comments.placeholder"></textarea>
         <button class="btn btn-primary" id="add-comment-btn" data-i18n="comments.addText" style="margin-top:8px;"></button>
       </div>

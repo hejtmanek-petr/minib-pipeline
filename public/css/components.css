@@ -147,6 +147,7 @@ tbody tr:hover { background: #F9F4F4; }
 
 .badge-source { background: #ECECED; color: var(--color-text-muted); margin-right: 4px; }
 .badge-lang { background: var(--color-primary); color: #fff; }
+.badge-orig-lang { background: var(--color-accent); color: #2A2A2A; font-weight: 700; }
 
 /* --- Inline editable fields --- */
 
@@ -256,7 +257,37 @@ tbody tr:hover { background: #F9F4F4; }
   flex-wrap: wrap;
 }
 .comment-meta .author-name { font-weight: 700; color: var(--color-primary); }
+.comment-title { font-weight: 700; font-size: 13px; color: var(--color-primary); margin-bottom: 4px; }
+.comment-title-inline { font-weight: 700; color: var(--color-primary); }
 .comment-text { white-space: pre-wrap; line-height: 1.5; }
+
+.comment-item--collapsed { background: #F5F5F5; }
+.comment-expand-btn { margin-left: auto; font-size: 13px; padding: 6px 18px; }
+
+.audio-toggle {
+  font-size: 16px;
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity 0.15s;
+  user-select: none;
+  padding: 2px 4px;
+  border-radius: var(--radius);
+}
+.audio-toggle:hover, .audio-toggle.active { opacity: 1; background: var(--color-bg); }
+
+.comment-lang-bar { display: flex; gap: 4px; margin-bottom: 8px; }
+.comment-lang-btn {
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: #fff;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+.comment-lang-btn:hover { background: var(--color-bg); color: var(--color-primary); }
+.comment-lang-btn.active { background: var(--color-accent); color: #2A2A2A; border-color: var(--color-accent); }
 
 .comment-actions { margin-top: 6px; display: flex; gap: 12px; }
 .btn-link {
