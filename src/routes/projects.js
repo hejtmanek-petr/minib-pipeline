@@ -334,14 +334,23 @@ router.get('/:id', (req, res) => {
   res.json({ project });
 });
 
+const TUZEMSKO_CODES = new Set(['CZ', 'SK']);
+const MEA_CODES = new Set(['TR','AZ','Az','GE','KZ','UZ','Mong','SY','IQ','TM','EG','MA','DZ','LY','TN','TZ','UG','KW','AE','OM','JO','NC','BY','RU']);
+function codePrefix(country) {
+  if (TUZEMSKO_CODES.has(country)) return 'TO';
+  if (MEA_CODES.has(country)) return 'MEA';
+  return 'ZO';
+}
+
 // POST /api/projects - create new
 router.post('/', (req, res) => {
   const body = req.body || {};
   const sheet = body.sheet || 'TR';
   const year = new Date().getFullYear();
-  const countRow = db.prepare("SELECT COUNT(*) AS c FROM projects WHERE sheet = ?").get(sheet);
+  const prefix = codePrefix(body.country || '');
+  const countRow = db.prepare("SELECT COUNT(*) AS c FROM projects WHERE project_code LIKE ?").get(`${prefix}-%`);
   const seq = countRow.c + 1;
-  const project_code = body.project_code || `${sheet}-${year}-${String(seq).padStart(3, '0')}`;
+  const project_code = body.project_code || `${prefix}-${year}-${String(seq).padStart(3, '0')}`;
 
   const fields = {
     project_code,
@@ -577,8 +586,6 @@ router.post('/import/commit', (req, res) => {
 
   const sheetName = sheet || 'TR';
   const year = new Date().getFullYear();
-  let countRow = db.prepare("SELECT COUNT(*) AS c FROM projects WHERE sheet = ?").get(sheetName);
-  let seq = countRow.c;
 
   const insert = db.prepare(`
     INSERT INTO projects (
@@ -597,8 +604,11 @@ router.post('/import/commit', (req, res) => {
   const inserted = [];
   const tx = db.transaction(() => {
     for (const row of rows) {
-      seq += 1;
-      const project_code = `${sheetName}-${year}-${String(seq).padStart(3, '0')}`;
+      const country = row['Country'] || null;
+      const prefix = codePrefix(country || '');
+      const seqRow = db.prepare("SELECT COUNT(*) AS c FROM projects WHERE project_code LIKE ?").get(`${prefix}-%`);
+      const seq = seqRow.c + inserted.filter(r => codePrefix(r.country || '') === prefix).length + 1;
+      const project_code = `${prefix}-${year}-${String(seq).padStart(3, '0')}`;
       const probability = row['Probability of winning'];
       let prob = null;
       if (typeof probability === 'number') {

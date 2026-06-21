@@ -66,6 +66,8 @@
   "dashboard.table.price": "MINIB Price EUR",
   "dashboard.table.value": "Project Value (EUR)",
   "dashboard.table.aiValue": "AI Value",
+  "dashboard.table.createdAt": "Created",
+  "dashboard.table.updatedAt": "Modified",
   "dashboard.table.win": "Win% / AI%",
   "dashboard.table.decisionDate": "Decision Date",
   "dashboard.table.deliveryDate": "Delivery Date",
@@ -117,6 +119,8 @@
   "project.field.dealer_user_id": "Assigned Dealer",
   "project.field.win_prob_manual_min": "Win Probability",
   "project.field.win_prob_manual_max": "Win Probability",
+  "project.field.created_at": "Date Created",
+  "project.field.updated_at": "Last Modified",
 
   "project.calc.note": "Enter local value and exchange rate to auto-calculate EUR value",
   "project.calc.calculated": "Calculated EUR value",

@@ -66,6 +66,8 @@
     tbody.innerHTML = projects.map((p) => `
       <tr data-id="${p.id}">
         <td class="status-bar-cell"><span class="status-bar status-${statusOf(p)}"></span></td>
+        <td class="text-muted">${p.created_at ? (() => { const d = new Date(p.created_at); return `${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()}`; })() : '-'}</td>
+        <td class="text-muted">${p.updated_at ? (() => { const d = new Date(p.updated_at); return `${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()}`; })() : '-'}</td>
         <td>${p.project_name || ''}</td>
         <td>${p.company || ''}</td>
         <td>${countryName(p.country)}</td>
@@ -86,6 +88,9 @@
 
     tbody.querySelectorAll('tr[data-id]').forEach((tr) => {
       tr.addEventListener('click', () => {
+        const state = { region: activeRegion };
+        FILTER_IDS.forEach((id) => { state[id] = document.getElementById(id).value; });
+        sessionStorage.setItem('dashboardFilters', JSON.stringify(state));
         window.location.href = `/project-detail.html?id=${tr.dataset.id}`;
       });
     });
@@ -270,6 +275,20 @@
       opt.textContent = o;
       ownerSelect.appendChild(opt);
     });
+
+    const saved = sessionStorage.getItem('dashboardFilters');
+    if (saved) {
+      const state = JSON.parse(saved);
+      sessionStorage.removeItem('dashboardFilters');
+      FILTER_IDS.forEach((id) => { if (state[id]) document.getElementById(id).value = state[id]; });
+      if (state.region) {
+        activeRegion = state.region;
+        document.querySelectorAll('.region-tab').forEach((b) => b.classList.remove('active'));
+        const tab = document.querySelector(`.region-tab[data-region="${state.region}"]`);
+        if (tab) tab.classList.add('active');
+      }
+      updateFilterHighlights();
+    }
 
     applyFiltersAndRender();
   } catch (err) {

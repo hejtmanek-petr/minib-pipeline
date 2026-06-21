@@ -66,6 +66,8 @@
   "dashboard.table.price": "MINIB cena EUR",
   "dashboard.table.value": "Hodnota projektu (EUR)",
   "dashboard.table.aiValue": "AI hodnota",
+  "dashboard.table.createdAt": "Vytvoření",
+  "dashboard.table.updatedAt": "Změna",
   "dashboard.table.win": "Win% / AI%",
   "dashboard.table.decisionDate": "Datum rozhodnutí",
   "dashboard.table.deliveryDate": "Datum realizace",
@@ -117,6 +119,8 @@
   "project.field.dealer_user_id": "Přiřazený dealer",
   "project.field.win_prob_manual_min": "Pravděpodobnost výhry",
   "project.field.win_prob_manual_max": "Pravděpodobnost výhry",
+  "project.field.created_at": "Datum vytvoření",
+  "project.field.updated_at": "Datum poslední změny",
 
   "project.calc.note": "Zadejte hodnotu v lokální měně a kurz pro automatický výpočet EUR hodnoty",
   "project.calc.calculated": "Vypočtená hodnota EUR",

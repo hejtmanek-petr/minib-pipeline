@@ -21,7 +21,16 @@
     return map[code] || code || '';
   }
 
+  function fmtDate(val) {
+    if (!val) return null;
+    const d = new Date(val);
+    if (isNaN(d)) return val;
+    return `${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()}`;
+  }
+
   const BASIC_FIELDS = [
+    { field: 'created_at', type: 'text', readonly: true, displayFn: fmtDate },
+    { field: 'updated_at', type: 'text', readonly: true, displayFn: fmtDate },
     { field: 'project_code', type: 'text', readonly: true },
     { field: 'country', type: 'select', options: () => meta.countries || [], labelFn: countryLabel },
     { field: 'project_name', type: 'text' },
@@ -104,7 +113,7 @@
     if (config.readonly) {
       const valueEl = document.createElement('div');
       valueEl.className = 'editable-value';
-      const display = displayValue(config.field, raw);
+      const display = config.displayFn ? config.displayFn(raw) : displayValue(config.field, raw);
       valueEl.textContent = display === null ? '-' : display;
       if (display === null) valueEl.classList.add('empty');
       wrap.appendChild(valueEl);
