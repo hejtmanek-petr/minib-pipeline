@@ -63,7 +63,7 @@ Respond ONLY with valid JSON (no markdown, no explanation outside JSON):
   "probability": <number 0-100>,
   "probability_min": <number 0-100>,
   "probability_max": <number 0-100>,
-  "reasoning": "<2-4 sentences in ${langName}>"
+  "reasoning": "<max 2 sentences, max 1000 characters, in ${langName}>"
 }`;
 
   const response = await client.messages.create({

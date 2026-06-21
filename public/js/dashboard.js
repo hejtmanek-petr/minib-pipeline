@@ -74,7 +74,7 @@
         <td>${!TUZEMSKO.has(p.country) && p.project_value_eur != null ? Number(p.project_value_eur).toLocaleString('cs-CZ', {maximumFractionDigits:0}) + ' €' : '-'}</td>
         <td>${TUZEMSKO.has(p.country) && p.project_value_eur != null ? Number(p.project_value_eur).toLocaleString('cs-CZ', {maximumFractionDigits:0}) + ' Kč' : (p.project_value_local != null ? Number(p.project_value_local).toLocaleString('cs-CZ', {maximumFractionDigits:0}) + ' Kč' : '-')}</td>
         <td>${p.products_and_quantity || ''}</td>
-        <td>${p.project_value_eur == null && p.ai_value_eur != null ? '🤖 ' + Number(p.ai_value_eur).toLocaleString('cs-CZ', {maximumFractionDigits:0}) + ' €' : '<span class="text-muted">-</span>'}</td>
+        <td>${p.ai_value_eur != null ? '🤖 ' + Number(p.ai_value_eur).toLocaleString('cs-CZ', {maximumFractionDigits:0}) + ' €' : '<span class="text-muted">-</span>'}</td>
         <td><span class="${App.statusBadgeClass(p.status)}">${I18N.t('status.' + (p.status || 'lead'))}</span> <span class="text-muted">${p.phase ? I18N.t('phase.' + p.phase) : ''}</span></td>
         <td>${winCell(p)}</td>
         <td>${p.estimated_decision_date ? String(p.estimated_decision_date).slice(0,7) : '-'}</td>
@@ -100,7 +100,7 @@
     const active = projects.filter((p) => p.status === 'active' || p.status === 'lead');
     document.getElementById('kpi-active').textContent = active.length;
 
-    const eurProjects = active.filter((p) => MEA.has(p.country) && p.project_value_eur != null);
+    const eurProjects = active.filter((p) => !TUZEMSKO.has(p.country) && p.project_value_eur != null);
     const totalEur = eurProjects.reduce((s, p) => s + p.project_value_eur, 0);
     document.getElementById('kpi-pipeline').textContent = '€ ' + App.fmtMoney(totalEur);
 
@@ -108,10 +108,25 @@
     const totalCzk = czkProjects.reduce((s, p) => s + p.project_value_eur, 0);
     document.getElementById('kpi-pipeline-czk').textContent = App.fmtMoney(totalCzk) + ' Kč';
 
+    // Show/hide EUR and CZK cards based on active region
+    const eurCard = document.getElementById('kpi-pipeline')?.closest('.kpi-card');
+    const czkCard = document.getElementById('kpi-pipeline-czk')?.closest('.kpi-card');
+    if (eurCard && czkCard) {
+      if (activeRegion === 'tuzemsko') {
+        eurCard.style.display = 'none';
+        czkCard.style.display = '';
+      } else if (activeRegion === 'mea' || activeRegion === 'zahranici') {
+        eurCard.style.display = '';
+        czkCard.style.display = 'none';
+      } else {
+        eurCard.style.display = '';
+        czkCard.style.display = '';
+      }
+    }
+
     const withProb = projects.filter((p) => p.win_prob_manual_min !== null && p.win_prob_manual_min !== undefined);
     const avgProb = withProb.length ? withProb.reduce((s, p) => s + p.win_prob_manual_min, 0) / withProb.length : null;
     document.getElementById('kpi-winprob').textContent = avgProb !== null ? Math.round(avgProb) + '%' : '-';
-
   }
 
   function applyFiltersAndRender() {
