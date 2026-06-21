@@ -125,6 +125,16 @@ router.put('/settings/:key', (req, res) => {
   res.json({ key, value });
 });
 
+// POST /api/admin/delete-comments-by-ids
+router.post('/delete-comments-by-ids', (req, res) => {
+  const { ids } = req.body;
+  if (!Array.isArray(ids)) return res.status(400).json({ error: 'ids array required' });
+  const stmt = db.prepare('DELETE FROM comments WHERE id = ?');
+  const tx = db.transaction(() => ids.forEach(id => stmt.run(id)));
+  tx();
+  res.json({ deleted: ids.length });
+});
+
 // POST /api/admin/import-comments — upsert comments from local export
 router.post('/import-comments', (req, res) => {
   const comments = req.body.comments;
