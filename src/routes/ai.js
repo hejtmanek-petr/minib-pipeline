@@ -29,8 +29,12 @@ router.post('/estimate-value/:id', async (req, res) => {
     return res.status(400).json({ error: 'No products text to estimate from' });
   }
 
+  const comments = db.prepare(
+    'SELECT content FROM comments WHERE project_id = ? ORDER BY created_at DESC LIMIT 10'
+  ).all(project.id);
+
   try {
-    const result = await ai.estimateProjectValue(project.products_and_quantity);
+    const result = await ai.estimateProjectValue(project.products_and_quantity, comments);
     if (result.estimated_value_eur != null) {
       db.prepare('UPDATE projects SET ai_value_eur = ? WHERE id = ?')
         .run(result.estimated_value_eur, project.id);
@@ -42,7 +46,7 @@ router.post('/estimate-value/:id', async (req, res) => {
   }
 });
 
-// POST /api/ai/estimate-value-batch — estimate for all projects with products text
+// POST /api/ai/estimate-value-batch — estimate for ALL projects with products text (incl. those with manual value)
 router.post('/estimate-value-batch', async (req, res) => {
   if (req.user.role !== 'HQ') return res.status(403).json({ error: 'HQ only' });
 
@@ -52,12 +56,14 @@ router.post('/estimate-value-batch', async (req, res) => {
 
   res.json({ started: true, total: projects.length });
 
-  // Run in background with delay to avoid rate limiting
   (async () => {
     let done = 0, skipped = 0, errors = 0;
     for (const p of projects) {
       try {
-        const result = await ai.estimateProjectValue(p.products_and_quantity);
+        const comments = db.prepare(
+          'SELECT content FROM comments WHERE project_id = ? ORDER BY created_at DESC LIMIT 10'
+        ).all(p.id);
+        const result = await ai.estimateProjectValue(p.products_and_quantity, comments);
         if (result.estimated_value_eur != null) {
           db.prepare('UPDATE projects SET ai_value_eur = ? WHERE id = ?')
             .run(result.estimated_value_eur, p.id);
@@ -69,7 +75,7 @@ router.post('/estimate-value-batch', async (req, res) => {
         console.error(`Batch estimate failed for project ${p.id}:`, e.message);
         errors++;
       }
-      await new Promise(r => setTimeout(r, 300)); // 300ms between calls
+      await new Promise(r => setTimeout(r, 300));
     }
     console.log(`Batch estimate done: ${done} updated, ${skipped} skipped, ${errors} errors`);
   })();

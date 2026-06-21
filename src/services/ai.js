@@ -103,9 +103,13 @@ MINIB product line – typical list prices per piece (EUR, average across common
 - Connection set: ~25–28 EUR/pc
 `;
 
-async function estimateProjectValue(productsText) {
+async function estimateProjectValue(productsText, comments = []) {
   const client = getClient();
   if (!client) throw new Error('AI not configured');
+
+  const commentsSection = comments.length > 0
+    ? `\nAdditional context from project comments (may contain model/length details):\n${comments.map((c, i) => `${i + 1}. ${c.content}`).join('\n')}`
+    : '';
 
   const prompt = `You are a pricing assistant for MINIB a.s., a Czech manufacturer of heating convectors.
 
@@ -113,14 +117,15 @@ Below is the MINIB pricelist with typical prices per piece:
 ${PRICELIST_CONTEXT}
 
 A salesperson wrote this about a project's products and quantities:
-"${productsText}"
+"${productsText}"${commentsSection}
 
 Your task:
-1. Identify the product type(s) and quantity from the text (product codes like HC, KT, PB, T, etc. + number of pieces).
-2. Use the pricelist above to estimate total project value in EUR (quantity × avg price per type).
-3. If multiple product types, sum them.
-4. If quantity is missing or unclear, make a reasonable assumption and note it.
-5. If the text contains no useful product/quantity info, return null.
+1. Identify the product type(s) and quantity from the text and comments (product codes like HC, KT, PB, T, etc. + number of pieces).
+2. Use the pricelist above to estimate total project value in EUR (quantity × price per type).
+3. IMPORTANT: If the exact model length or variant is NOT explicitly mentioned in the products text or comments, ALWAYS use the average price (avg) from the pricelist — never the min or max. Only use a specific price if the exact size/length is stated.
+4. If multiple product types, sum them.
+5. If quantity is missing or unclear, make a reasonable assumption and note it.
+6. If the text contains no useful product/quantity info, return null.
 
 Respond ONLY with valid JSON, no markdown:
 {
