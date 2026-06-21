@@ -3,6 +3,8 @@ const express = require('express');
 const cookieParser = require('cookie-parser');
 const path = require('path');
 
+const fs = require('fs');
+const path2 = require('path');
 const authRoutes = require('./src/routes/auth');
 const projectsRoutes = require('./src/routes/projects');
 const commentsRoutes = require('./src/routes/comments');
@@ -32,6 +34,18 @@ app.use((req, res, next) => {
 
 app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser());
+
+// Public audio serving (no auth required — URLs are unguessable per comment ID)
+const AUDIO_DIR = path2.join(__dirname, 'data', 'audio');
+app.get('/api/audio/:filename', (req, res) => {
+  const filename = path2.basename(req.params.filename);
+  const filepath = path2.join(AUDIO_DIR, filename);
+  if (!fs.existsSync(filepath)) return res.status(404).json({ error: 'Not found' });
+  const ext = path2.extname(filename).slice(1);
+  const mime = ext === 'ogg' ? 'audio/ogg' : ext === 'mp4' ? 'audio/mp4' : 'audio/webm';
+  res.setHeader('Content-Type', mime);
+  fs.createReadStream(filepath).pipe(res);
+});
 
 // API routes
 app.use('/api/auth', authRoutes);
