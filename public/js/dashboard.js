@@ -100,11 +100,12 @@
     const active = projects.filter((p) => p.status === 'active' || p.status === 'lead');
     document.getElementById('kpi-active').textContent = active.length;
 
-    const eurProjects = active.filter((p) => !TUZEMSKO.has(p.country) && p.project_value_eur != null);
+    const openProjects = projects.filter((p) => p.status !== 'lost');
+    const eurProjects = openProjects.filter((p) => !TUZEMSKO.has(p.country) && p.project_value_eur != null);
     const totalEur = eurProjects.reduce((s, p) => s + p.project_value_eur, 0);
     document.getElementById('kpi-pipeline').textContent = '€ ' + App.fmtMoney(totalEur);
 
-    const czkProjects = active.filter((p) => TUZEMSKO.has(p.country) && p.project_value_eur != null);
+    const czkProjects = openProjects.filter((p) => TUZEMSKO.has(p.country) && p.project_value_eur != null);
     const totalCzk = czkProjects.reduce((s, p) => s + p.project_value_eur, 0);
     document.getElementById('kpi-pipeline-czk').textContent = App.fmtMoney(totalCzk) + ' Kč';
 
