@@ -553,7 +553,7 @@
     feed.querySelectorAll('.comment-item--collapsed').forEach((item) => {
       item.style.cursor = 'pointer';
       item.addEventListener('click', (e) => {
-        if (e.target.closest('.audio-toggle') || e.target.closest('.comment-lang-btn') || e.target.tagName === 'AUDIO') return;
+        if (e.target.closest('.audio-toggle') || e.target.closest('.comment-lang-btn') || e.target.closest('.comment-actions') || e.target.tagName === 'AUDIO') return;
         const wrap = item.querySelector('.comment-content-wrap');
         const btn = item.querySelector('.comment-expand-btn');
         const isOpen = wrap.style.display !== 'none';
@@ -573,6 +573,9 @@
     feed.querySelectorAll('.edit-comment-btn').forEach((btn) => {
       btn.addEventListener('click', () => {
         const item = feed.querySelector(`.comment-item[data-comment-id="${btn.dataset.id}"]`);
+        // Ensure content is visible before editing
+        const wrap = item.querySelector('.comment-content-wrap');
+        if (wrap) wrap.style.display = 'block';
         const textEl = item.querySelector('.comment-text');
         const titleEl = item.querySelector('.comment-title');
         const currentText = textEl.textContent;
@@ -599,6 +602,7 @@
         cancelBtn.style.marginLeft = '8px';
 
         const editWrap = document.createElement('div');
+        editWrap.addEventListener('click', (e) => e.stopPropagation());
         editWrap.appendChild(titleInput);
         editWrap.appendChild(textarea);
         const btnRow = document.createElement('div');
@@ -608,8 +612,9 @@
         editWrap.appendChild(btnRow);
 
         item.querySelector('.comment-actions').style.display = 'none';
-        if (titleEl) titleEl.replaceWith(editWrap);
-        else textEl.replaceWith(editWrap);
+        // Always replace textEl (title is shown in meta, not in content-wrap)
+        textEl.replaceWith(editWrap);
+        textarea.focus();
 
         saveBtn.addEventListener('click', async () => {
           const newContent = textarea.value.trim();

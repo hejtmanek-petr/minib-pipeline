@@ -39,7 +39,7 @@ const App = (() => {
 
   async function requireAuth() {
     const user = await loadUser();
-    if (!user) { window.location.href = '/login.html'; return null; }
+    if (!user) { window.location.href = '/login.html?next=' + encodeURIComponent(window.location.pathname + window.location.search); return null; }
     return user;
   }
 
