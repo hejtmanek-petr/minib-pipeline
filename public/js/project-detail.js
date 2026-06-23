@@ -13,8 +13,8 @@
   let meta = null;
 
   const COUNTRY_NAMES = {
-    cs: { 'TR':'Turecko','AZ':'Ázerbájdžán','Az':'Ázerbájdžán','GE':'Gruzie','KZ':'Kazachstán','UZ':'Uzbekistán','Mong':'Mongolsko','CAN':'Kanada','CZ':'Česko','SK':'Slovensko','Německo':'Německo','Slovinsko':'Slovinsko','Srbsko':'Srbsko','Itálie':'Itálie','Rakousko':'Rakousko','Rumunsko':'Rumunsko','Francie':'Francie','USA':'USA','Řecko':'Řecko','Portugalsko':'Portugalsko','Kanada':'Kanada','Arménie':'Arménie' },
-    en: { 'TR':'Turkey','AZ':'Azerbaijan','Az':'Azerbaijan','GE':'Georgia','KZ':'Kazakhstan','UZ':'Uzbekistan','Mong':'Mongolia','CAN':'Canada','CZ':'Czech Republic','SK':'Slovakia','Německo':'Germany','Slovinsko':'Slovenia','Srbsko':'Serbia','Itálie':'Italy','Rakousko':'Austria','Rumunsko':'Romania','Francie':'France','USA':'USA','Řecko':'Greece','Portugalsko':'Portugal','Kanada':'Canada','Arménie':'Armenia' },
+    cs: { 'TR':'Turecko','AZ':'Ázerbájdžán','Az':'Ázerbájdžán','GE':'Gruzie','KZ':'Kazachstán','UZ':'Uzbekistán','Mong':'Mongolsko','SY':'Sýrie','IQ':'Irák','TM':'Turkmenistán','EG':'Egypt','MA':'Maroko','DZ':'Alžírsko','LY':'Libye','TN':'Tunisko','TZ':'Tanzanie','UG':'Uganda','KW':'Kuvajt','AE':'SAE','OM':'Omán','JO':'Jordánsko','NC':'Severní Kypr','BY':'Bělorusko','RU':'Rusko' },
+    en: { 'TR':'Turkey','AZ':'Azerbaijan','Az':'Azerbaijan','GE':'Georgia','KZ':'Kazakhstan','UZ':'Uzbekistan','Mong':'Mongolia','SY':'Syria','IQ':'Iraq','TM':'Turkmenistan','EG':'Egypt','MA':'Morocco','DZ':'Algeria','LY':'Libya','TN':'Tunisia','TZ':'Tanzania','UG':'Uganda','KW':'Kuwait','AE':'UAE','OM':'Oman','JO':'Jordan','NC':'Northern Cyprus','BY':'Belarus','RU':'Russia' },
   };
   function countryLabel(code) {
     const map = COUNTRY_NAMES[I18N.getLang()] || COUNTRY_NAMES.cs;
@@ -52,7 +52,6 @@
 
   const COMMERCIAL_FIELDS = [
     { field: 'project_value_eur', type: 'number', suffix: '€' },
-    { field: 'project_value_local', type: 'number', suffix: 'Kč' },
   ];
 
   function fieldLabel(field) {
@@ -98,7 +97,7 @@
   }
 
   function castFieldValue(field, value) {
-    if (['minib_price_eur', 'project_value_eur', 'project_value_local', 'exchange_rate'].includes(field)) {
+    if (['minib_price_eur', 'project_value_eur', 'exchange_rate'].includes(field)) {
       return value === '' ? null : parseFloat(value);
     }
     return value === '' ? null : value;

@@ -43,11 +43,6 @@ router.get('/', (req, res) => {
 
   applyDealerFilter(req, where, params);
 
-  // MEA role sees only non-Tuzemsko projects
-  if (req.user.role === 'MEA') {
-    where.push("country NOT IN ('CZ', 'SK')");
-  }
-
   if (q) {
     where.push('(project_name LIKE ? OR company LIKE ? OR country LIKE ?)');
     const like = `%${q}%`;
@@ -102,14 +97,11 @@ router.get('/export', async (req, res) => {
   const ExcelJS = require('exceljs');
 
   // Build query with same filters as the frontend passes via query params
-  const { region, country, win, status, year, owner, search } = req.query;
-  const TUZEMSKO = new Set(['CZ', 'SK']);
-  const MEA = new Set(['TR','AZ','Az','GE','KZ','UZ','Mong','SY','IQ','TM','EG','MA','DZ','LY','TN','TZ','UG','KW','AE','OM','JO','NC','BY','RU']);
+  const { country, win, status, year, owner, search } = req.query;
 
   const where = [];
   const params = [];
   applyDealerFilter(req, where, params);
-  if (req.user.role === 'MEA') where.push("country NOT IN ('CZ','SK')");
 
   const allProjects = db.prepare(
     `SELECT * FROM projects ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY id DESC`
@@ -117,9 +109,6 @@ router.get('/export', async (req, res) => {
 
   // Apply frontend filters
   let projects = allProjects.filter(p => {
-    if (region === 'tuzemsko' && !TUZEMSKO.has(p.country)) return false;
-    if (region === 'mea'      && !MEA.has(p.country))      return false;
-    if (region === 'zahranici' && (TUZEMSKO.has(p.country) || MEA.has(p.country))) return false;
     if (country && p.country !== country) return false;
     if (status  && p.status  !== status)  return false;
     if (owner   && p.owner   !== owner)   return false;
@@ -155,15 +144,15 @@ router.get('/export', async (req, res) => {
   const STATUS_COLORS = { active: C_GREEN, won: C_GREEN, lost: C_RED, lead: C_MUTED, on_hold: C_ORANGE };
   const STATUS_LABELS = { lead:'Nabídka', active:'Aktivní', won:'Vyhráno', lost:'Prohráno', on_hold:'Pozastaveno' };
   const PHASE_LABELS  = { project_stage:'Projektová fáze', tender:'Tendr', order:'Objednávka', delivery:'Dodávka' };
-  const REGION_LABELS = { '':'Vše', tuzemsko:'Tuzemsko', zahranici:'Zahraničí bez MEA', mea:'MEA' };
+  const REGION_LABELS = { '':'Vše', mea:'MEA' };
   const WIN_LABELS    = { '':'Vše', high:'≥ 70%', mid:'30–69%', low:'< 30%', none:'Bez hodnoty' };
 
-  const COUNTRY_NAMES = { TR:'Turecko',AZ:'Ázerbájdžán',Az:'Ázerbájdžán',GE:'Gruzie',KZ:'Kazachstán',UZ:'Uzbekistán',Mong:'Mongolsko',CAN:'Kanada',CZ:'Česko',SK:'Slovensko',Německo:'Německo',Slovinsko:'Slovinsko',Srbsko:'Srbsko',Itálie:'Itálie',Rakousko:'Rakousko',Rumunsko:'Rumunsko',Francie:'Francie',USA:'USA',Řecko:'Řecko',Portugalsko:'Portugalsko',Kanada:'Kanada',Arménie:'Arménie' };
+  const COUNTRY_NAMES = { TR:'Turecko',AZ:'Ázerbájdžán',Az:'Ázerbájdžán',GE:'Gruzie',KZ:'Kazachstán',UZ:'Uzbekistán',Mong:'Mongolsko',SY:'Sýrie',IQ:'Irák',TM:'Turkmenistán',EG:'Egypt',MA:'Maroko',DZ:'Alžírsko',LY:'Libye',TN:'Tunisko',TZ:'Tanzanie',UG:'Uganda',KW:'Kuvajt',AE:'SAE',OM:'Omán',JO:'Jordánsko',NC:'Severní Kypr',BY:'Bělorusko',RU:'Rusko' };
   const countryName = c => COUNTRY_NAMES[c] || c || '';
 
-  const HEADERS = ['Název projektu','Klient','Země','EUR','CZK','Artikly a počty ks','AI hodnota EUR','Status','Fáze','Win% / AI%','Datum rozhodnutí','Datum realizace','Investor','Generální dodavatel','Montážní firma','Obchodník'];
-  const COL_WIDTHS = [34,26,14,12,10,36,14,14,17,12,14,14,20,20,20,14];
-  const NUM_COLS = new Set([3,4,6]); // 0-based
+  const HEADERS = ['Název projektu','Klient','Země','EUR','Artikly a počty ks','AI hodnota EUR','Status','Fáze','Win% / AI%','Datum rozhodnutí','Datum realizace','Investor','Generální dodavatel','Montážní firma','Obchodník'];
+  const COL_WIDTHS = [34,26,14,12,36,14,14,17,12,14,14,20,20,20,14];
+  const NUM_COLS = new Set([3,5]); // 0-based
 
   function thinBorder(color) {
     const s = { style:'thin', color:{argb:color} };
@@ -182,7 +171,7 @@ router.get('/export', async (req, res) => {
   ws.addRow([]);
   const r1 = ws.lastRow;
   r1.height = 34;
-  ws.mergeCells(`A1:P1`);
+  ws.mergeCells(`A1:O1`);
   const c1 = r1.getCell(1);
   c1.value = 'MINIB Project Pipeline';
   c1.font = { name:'Arial', bold:true, size:16, color:{argb:C_WHITE} };
@@ -193,7 +182,7 @@ router.get('/export', async (req, res) => {
   ws.addRow([]);
   const r2 = ws.lastRow;
   r2.height = 5;
-  ws.mergeCells(`A2:P2`);
+  ws.mergeCells(`A2:O2`);
   r2.getCell(1).fill = { type:'pattern', pattern:'solid', fgColor:{argb:C_YELLOW} };
 
   // Row 3: Filter meta
@@ -210,7 +199,7 @@ router.get('/export', async (req, res) => {
   ws.addRow([]);
   const r3 = ws.lastRow;
   r3.height = 40;
-  ws.mergeCells('A3:P3');
+  ws.mergeCells('A3:O3');
   const c3 = r3.getCell(1);
   c3.value = metaText;
   c3.font = { name:'Arial', size:14, italic:true, color:{argb:'FFAAAAAA'} };
@@ -242,13 +231,12 @@ router.get('/export', async (req, res) => {
     else if (manual != null) winVal = `${manual}%`;
     else if (aiP != null) winVal = `${aiP}%`;
 
-    const eur  = !TUZEMSKO.has(p.country) && p.project_value_eur != null ? p.project_value_eur : null;
-    const czk  = TUZEMSKO.has(p.country) && p.project_value_eur != null ? p.project_value_eur : (p.project_value_local ?? null);
-    const aiV  = p.project_value_eur == null && p.ai_value_eur != null ? p.ai_value_eur : null;
+    const eur  = p.project_value_eur != null ? p.project_value_eur : null;
+    const aiV  = p.ai_value_eur != null ? p.ai_value_eur : null;
 
     const rowData = [
       p.project_name||'', p.company||'', countryName(p.country),
-      eur, czk, p.products_and_quantity||'',
+      eur, p.products_and_quantity||'',
       aiV,
       STATUS_LABELS[p.status]||p.status||'',
       PHASE_LABELS[p.phase]||p.phase||'',
@@ -334,12 +322,9 @@ router.get('/:id', (req, res) => {
   res.json({ project });
 });
 
-const TUZEMSKO_CODES = new Set(['CZ', 'SK']);
 const MEA_CODES = new Set(['TR','AZ','Az','GE','KZ','UZ','Mong','SY','IQ','TM','EG','MA','DZ','LY','TN','TZ','UG','KW','AE','OM','JO','NC','BY','RU']);
-function codePrefix(country) {
-  if (TUZEMSKO_CODES.has(country)) return 'TO';
-  if (MEA_CODES.has(country)) return 'MEA';
-  return 'ZO';
+function codePrefix() {
+  return 'MEA';
 }
 
 // POST /api/projects - create new

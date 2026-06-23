@@ -5,33 +5,25 @@
   const COUNTRY_NAMES = {
     cs: {
       'TR': 'Turecko', 'AZ': 'Ázerbájdžán', 'Az': 'Ázerbájdžán', 'GE': 'Gruzie',
-      'KZ': 'Kazachstán', 'UZ': 'Uzbekistán', 'Mong': 'Mongolsko', 'CAN': 'Kanada',
-      'CZ': 'Česko', 'SK': 'Slovensko',
-      'Německo': 'Německo', 'Slovinsko': 'Slovinsko', 'Srbsko': 'Srbsko',
-      'Itálie': 'Itálie', 'Rakousko': 'Rakousko', 'Rumunsko': 'Rumunsko',
-      'Francie': 'Francie', 'USA': 'USA', 'Řecko': 'Řecko', 'Portugalsko': 'Portugalsko',
-      'Kanada': 'Kanada', 'Arménie': 'Arménie',
+      'KZ': 'Kazachstán', 'UZ': 'Uzbekistán', 'Mong': 'Mongolsko',
+      'SY': 'Sýrie', 'IQ': 'Irák', 'TM': 'Turkmenistán', 'EG': 'Egypt',
+      'MA': 'Maroko', 'DZ': 'Alžírsko', 'LY': 'Libye', 'TN': 'Tunisko',
+      'TZ': 'Tanzanie', 'UG': 'Uganda', 'KW': 'Kuvajt', 'AE': 'SAE',
+      'OM': 'Omán', 'JO': 'Jordánsko', 'NC': 'Severní Kypr', 'BY': 'Bělorusko', 'RU': 'Rusko',
     },
     en: {
       'TR': 'Turkey', 'AZ': 'Azerbaijan', 'Az': 'Azerbaijan', 'GE': 'Georgia',
-      'KZ': 'Kazakhstan', 'UZ': 'Uzbekistan', 'Mong': 'Mongolia', 'CAN': 'Canada',
-      'CZ': 'Czech Republic', 'SK': 'Slovakia',
-      'Německo': 'Germany', 'Slovinsko': 'Slovenia', 'Srbsko': 'Serbia',
-      'Itálie': 'Italy', 'Rakousko': 'Austria', 'Rumunsko': 'Romania',
-      'Francie': 'France', 'USA': 'USA', 'Řecko': 'Greece', 'Portugalsko': 'Portugal',
-      'Kanada': 'Canada', 'Arménie': 'Armenia',
+      'KZ': 'Kazakhstan', 'UZ': 'Uzbekistan', 'Mong': 'Mongolia',
+      'SY': 'Syria', 'IQ': 'Iraq', 'TM': 'Turkmenistan', 'EG': 'Egypt',
+      'MA': 'Morocco', 'DZ': 'Algeria', 'LY': 'Libya', 'TN': 'Tunisia',
+      'TZ': 'Tanzania', 'UG': 'Uganda', 'KW': 'Kuwait', 'AE': 'UAE',
+      'OM': 'Oman', 'JO': 'Jordan', 'NC': 'Northern Cyprus', 'BY': 'Belarus', 'RU': 'Russia',
     },
   };
   function countryName(c) {
     const map = COUNTRY_NAMES[I18N.getLang()] || COUNTRY_NAMES.cs;
     return map[c] || c || '';
   }
-
-  const TUZEMSKO = new Set(['CZ', 'SK']);
-  // Explicit MEA country codes as stored in DB
-  const MEA = new Set(['TR', 'AZ', 'Az', 'GE', 'KZ', 'UZ', 'Mong',
-    'SY', 'IQ', 'TM', 'EG', 'MA', 'DZ', 'LY', 'TN', 'TZ', 'UG',
-    'KW', 'AE', 'OM', 'JO', 'NC', 'BY', 'RU']);
 
   let allProjects = [];
   let lastFiltered = [];
@@ -46,7 +38,6 @@
   function winCell(p) {
     const manual = p.win_prob_manual_min;
     const ai = p.win_prob_ai;
-    const parts = [];
     const main = manual !== null && manual !== undefined ? manual : ai;
     const cls = App.winBadgeClass(main);
     if (manual !== null && manual !== undefined && ai !== null && ai !== undefined) {
@@ -60,7 +51,7 @@
   function renderTable(projects) {
     const tbody = document.getElementById('projects-tbody');
     if (!projects.length) {
-      tbody.innerHTML = `<tr><td colspan="16" class="text-muted" style="text-align:center; padding:24px;">${I18N.t('common.noData')}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="15" class="text-muted" style="text-align:center; padding:24px;">${I18N.t('common.noData')}</td></tr>`;
       return;
     }
     tbody.innerHTML = projects.map((p) => `
@@ -71,8 +62,7 @@
         <td>${p.project_name || ''}</td>
         <td>${p.company || ''}</td>
         <td>${countryName(p.country)}</td>
-        <td>${!TUZEMSKO.has(p.country) && p.project_value_eur != null ? Number(p.project_value_eur).toLocaleString('cs-CZ', {maximumFractionDigits:0}) + ' €' : '-'}</td>
-        <td>${TUZEMSKO.has(p.country) && p.project_value_eur != null ? Number(p.project_value_eur).toLocaleString('cs-CZ', {maximumFractionDigits:0}) + ' Kč' : (p.project_value_local != null ? Number(p.project_value_local).toLocaleString('cs-CZ', {maximumFractionDigits:0}) + ' Kč' : '-')}</td>
+        <td>${p.project_value_eur != null ? Number(p.project_value_eur).toLocaleString('cs-CZ', {maximumFractionDigits:0}) + ' €' : '-'}</td>
         <td>${p.products_and_quantity || ''}</td>
         <td>${p.ai_value_eur != null ? '🤖 ' + Number(p.ai_value_eur).toLocaleString('cs-CZ', {maximumFractionDigits:0}) + ' €' : '<span class="text-muted">-</span>'}</td>
         <td><span class="${App.statusBadgeClass(p.status)}">${I18N.t('status.' + (p.status || 'lead'))}</span> <span class="text-muted">${p.phase ? I18N.t('phase.' + p.phase) : ''}</span></td>
@@ -101,29 +91,9 @@
     document.getElementById('kpi-active').textContent = active.length;
 
     const openProjects = projects.filter((p) => p.status !== 'lost');
-    const eurProjects = openProjects.filter((p) => !TUZEMSKO.has(p.country) && p.project_value_eur != null);
+    const eurProjects = openProjects.filter((p) => p.project_value_eur != null);
     const totalEur = eurProjects.reduce((s, p) => s + p.project_value_eur, 0);
     document.getElementById('kpi-pipeline').textContent = '€ ' + App.fmtMoney(totalEur);
-
-    const czkProjects = openProjects.filter((p) => TUZEMSKO.has(p.country) && p.project_value_eur != null);
-    const totalCzk = czkProjects.reduce((s, p) => s + p.project_value_eur, 0);
-    document.getElementById('kpi-pipeline-czk').textContent = App.fmtMoney(totalCzk) + ' Kč';
-
-    // Show/hide EUR and CZK cards based on active region
-    const eurCard = document.getElementById('kpi-pipeline')?.closest('.kpi-card');
-    const czkCard = document.getElementById('kpi-pipeline-czk')?.closest('.kpi-card');
-    if (eurCard && czkCard) {
-      if (activeRegion === 'tuzemsko') {
-        eurCard.style.display = 'none';
-        czkCard.style.display = '';
-      } else if (activeRegion === 'mea' || activeRegion === 'zahranici') {
-        eurCard.style.display = '';
-        czkCard.style.display = 'none';
-      } else {
-        eurCard.style.display = '';
-        czkCard.style.display = '';
-      }
-    }
 
     const withProb = projects.filter((p) => p.win_prob_manual_min !== null && p.win_prob_manual_min !== undefined);
     const avgProb = withProb.length ? withProb.reduce((s, p) => s + p.win_prob_manual_min, 0) / withProb.length : null;
@@ -139,9 +109,6 @@
     const year = document.getElementById('filter-year').value;
 
     let filtered = allProjects.filter((p) => {
-      if (activeRegion === 'tuzemsko' && !TUZEMSKO.has(p.country)) return false;
-      if (activeRegion === 'mea' && !MEA.has(p.country)) return false;
-      if (activeRegion === 'zahranici' && (TUZEMSKO.has(p.country) || MEA.has(p.country))) return false;
       if (country && p.country !== country) return false;
       if (win) {
         const prob = p.win_prob_manual_min;
@@ -183,7 +150,6 @@
 
   function exportExcel() {
     const params = new URLSearchParams();
-    if (activeRegion) params.set('region', activeRegion);
     const search = document.getElementById('filter-search').value;
     const country = document.getElementById('filter-country').value;
     const win = document.getElementById('filter-win').value;
@@ -236,35 +202,9 @@
 
   document.getElementById('btn-reset-filters').addEventListener('click', () => {
     FILTER_IDS.forEach((id) => { document.getElementById(id).value = ''; });
-    activeRegion = '';
-    document.querySelectorAll('.region-tab').forEach((b) => b.classList.remove('active'));
-    document.querySelector('.region-tab[data-region=""]').classList.add('active');
     updateFilterHighlights();
     applyFiltersAndRender();
   });
-
-  document.querySelectorAll('.region-tab').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      activeRegion = btn.dataset.region;
-      document.querySelectorAll('.region-tab').forEach((b) => b.classList.remove('active'));
-      btn.classList.add('active');
-      applyFiltersAndRender();
-    });
-  });
-
-  // MEA role: hide Tuzemsko tab and lock to MEA view
-  if (user.role === 'MEA') {
-    const tuzTab = document.querySelector('.region-tab[data-region="tuzemsko"]');
-    if (tuzTab) tuzTab.style.display = 'none';
-    const meaTab = document.querySelector('.region-tab[data-region="mea"]');
-    if (meaTab) meaTab.click();
-    const czkCard = document.getElementById('kpi-pipeline-czk');
-    if (czkCard) {
-      let card = czkCard;
-      while (card && !card.classList.contains('kpi-card')) card = card.parentElement;
-      if (card) card.style.display = 'none';
-    }
-  }
 
   // Load data
   try {
@@ -297,12 +237,6 @@
       const state = JSON.parse(saved);
       sessionStorage.removeItem('dashboardFilters');
       FILTER_IDS.forEach((id) => { if (state[id]) document.getElementById(id).value = state[id]; });
-      if (state.region) {
-        activeRegion = state.region;
-        document.querySelectorAll('.region-tab').forEach((b) => b.classList.remove('active'));
-        const tab = document.querySelector(`.region-tab[data-region="${state.region}"]`);
-        if (tab) tab.classList.add('active');
-      }
       updateFilterHighlights();
     }
 
