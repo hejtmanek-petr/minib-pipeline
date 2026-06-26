@@ -106,18 +106,19 @@
 
     kill('phase');
     const phaseLabels = pipeline.groups.map(g => g.phase.replace('project_stage', 'Project Stage').replace('tender', 'Tender').replace('order', 'Order').replace('delivery', 'Delivery'));
+    const phaseColors = ['#90CAF9', '#FFC600', '#FF8F00', '#2E7D32'];
     charts.phase = new Chart(document.getElementById('ch-phase'), {
       type: 'bar',
       data: {
         labels: phaseLabels,
         datasets: hidePrices
-          ? [{ label: 'Projects', data: pipeline.groups.map(g => g.count), backgroundColor: YELLOW, borderRadius: 4 }]
-          : [{ label: 'Value €', data: pipeline.groups.map(g => g.value), backgroundColor: YELLOW, borderRadius: 4 }],
+          ? [{ label: 'Projects', data: pipeline.groups.map(g => g.count), backgroundColor: phaseColors, borderRadius: 4 }]
+          : [{ label: 'Value €', data: pipeline.groups.map(g => g.value), backgroundColor: phaseColors, borderRadius: 4 }],
       },
       options: {
         responsive: true, maintainAspectRatio: false, indexAxis: 'y',
         plugins: { legend: { display: false } },
-        scales: { x: { grid: { display: false } } },
+        scales: { x: { grid: { display: false }, ticks: { callback: v => v >= 1000 ? (v/1000) + 'k' : v } } },
       },
     });
   }
