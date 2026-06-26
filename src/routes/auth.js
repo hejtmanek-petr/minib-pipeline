@@ -99,6 +99,10 @@ router.get('/me', requireAuth, (req, res) => {
 });
 
 router.post('/preferred-language', requireAuth, (req, res) => {
+  const { language } = req.body || {};
+  if (language) {
+    db.prepare('UPDATE users SET preferred_language = ? WHERE id = ?').run(language, req.user.id);
+  }
   res.json({ ok: true });
 });
 

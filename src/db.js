@@ -84,13 +84,10 @@ for (const sql of migrations) {
   const usersWithPassword = new Set(['Petr', 'Monika', 'Pavla']);
   db.prepare("UPDATE users SET password_hash = '' WHERE name NOT IN ('Petr','Monika','Pavla')").run();
 
-  // Set passwords if empty
+  // Set passwords (always overwrite to ensure correct passwords)
   const passwords = { Petr:'Pashtika', Monika:'Trinity', Pavla:'Kleopatra' };
   for (const [name, pw] of Object.entries(passwords)) {
-    const u = db.prepare("SELECT password_hash FROM users WHERE name = ?").get(name);
-    if (u && (!u.password_hash || u.password_hash.length === 0)) {
-      db.prepare("UPDATE users SET password_hash = ? WHERE name = ?").run(bcrypt.hashSync(pw, 10), name);
-    }
+    db.prepare("UPDATE users SET password_hash = ? WHERE name = ?").run(bcrypt.hashSync(pw, 10), name);
   }
 })();
 
