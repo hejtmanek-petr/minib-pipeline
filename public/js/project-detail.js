@@ -168,7 +168,7 @@
       input = document.createElement('input');
       input.type = 'text';
       const fmt = (v) => v !== '' && v !== null && v !== undefined
-        ? Number(v).toLocaleString('de-DE', { maximumFractionDigits: 2 }) : '';
+        ? Number(v).toLocaleString('de-DE', { maximumFractionDigits: 0 }) : '';
       const unFmt = (v) => v.replace(/[\s.]/g, '').replace(',', '.');
       input.value = fmt(raw);
       input.addEventListener('focus', () => { input.value = raw === null || raw === undefined ? '' : raw; });
@@ -759,11 +759,25 @@
       tbody.innerHTML = `<tr><td colspan="5" class="text-muted" style="text-align:center;">${I18N.t('common.noData')}</td></tr>`;
       return;
     }
+    const moneyFields = new Set(['project_value_eur','ai_value_eur','minib_price_eur','project_value_local']);
+    const pctFields = new Set(['win_prob_manual_min','win_prob_manual_max','win_prob_ai','win_prob_ai_min','win_prob_ai_max']);
+    function fmtHistVal(field, val) {
+      if (val === null || val === undefined || val === '') return '-';
+      if (moneyFields.has(field)) {
+        const n = parseFloat(val);
+        return isNaN(n) ? val : Number(n).toLocaleString('de-DE', { maximumFractionDigits: 0 });
+      }
+      if (pctFields.has(field)) {
+        const n = parseFloat(val);
+        return isNaN(n) ? val : Math.round(n) + '%';
+      }
+      return val;
+    }
     tbody.innerHTML = res.history.map((h) => `
       <tr>
         <td>${fieldLabel(h.field_name)}</td>
-        <td>${h.old_value ?? '-'}</td>
-        <td>${h.new_value ?? '-'}</td>
+        <td>${fmtHistVal(h.field_name, h.old_value)}</td>
+        <td>${fmtHistVal(h.field_name, h.new_value)}</td>
         <td>${h.user_name}</td>
         <td>${App.fmtDateTime(h.changed_at)}</td>
       </tr>
