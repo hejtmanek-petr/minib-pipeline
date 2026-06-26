@@ -80,6 +80,10 @@ for (const sql of migrations) {
     try { db.prepare("UPDATE users SET access_role = ? WHERE name = ?").run(role, name); } catch(e) {}
   }
 
+  // Clear passwords for users without assigned password (allow login without password)
+  const usersWithPassword = new Set(['Petr', 'Monika', 'Pavla']);
+  db.prepare("UPDATE users SET password_hash = '' WHERE name NOT IN ('Petr','Monika','Pavla')").run();
+
   // Set passwords if empty
   const passwords = { Petr:'Pashtika', Monika:'Trinity', Pavla:'Kleopatra' };
   for (const [name, pw] of Object.entries(passwords)) {
