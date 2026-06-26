@@ -20,19 +20,7 @@ const EDITABLE_FIELDS = [
 router.use(requireAuth);
 
 function applyDealerFilter(req, where, params) {
-  if (req.user.role === 'admin') return;
-  let countries = [];
-  try {
-    countries = JSON.parse(req.user.countries || '[]');
-  } catch (e) { /* ignore */ }
-
-  const clauses = ['dealer_user_id = ?'];
-  params.push(req.user.id);
-  if (countries.length) {
-    clauses.push(`country IN (${countries.map(() => '?').join(',')})`);
-    params.push(...countries);
-  }
-  where.push(`(${clauses.join(' OR ')})`);
+  // All users see all projects
 }
 
 // GET /api/projects - list with filters

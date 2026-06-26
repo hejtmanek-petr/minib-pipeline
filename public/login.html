@@ -5,66 +5,128 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>MINIB Project Pipeline</title>
   <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/main.css">
   <style>
-    body { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #F5F5F5; }
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #2A2A2A 0%, #3a3a3a 100%);
+      margin: 0;
+    }
     .login-card {
-      background: var(--color-card);
-      border-radius: var(--radius);
-      box-shadow: 0 2px 16px rgba(0,0,0,0.13);
-      width: 360px;
-      text-align: center;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.3);
+      width: 400px;
       overflow: hidden;
     }
     .login-header {
-      background: #FFC600;
-      padding: 28px 48px 22px;
+      background: #fff;
+      padding: 40px 48px 20px;
+      text-align: center;
+      border-bottom: 4px solid #FFC600;
     }
-    .login-body { padding: 28px 40px 36px; }
-    .login-logo { font-size: 30px; font-weight: 900; color: #2A2A2A; letter-spacing: -1px; margin-bottom: 2px; }
-    .login-logo .dot { color: #2A2A2A; }
-    .login-sub { font-size: 12px; color: #5a5a5a; margin-bottom: 0; }
-    .login-card select, .login-card input {
-      width: 100%;
-      padding: 10px 12px;
-      font-size: 15px;
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius);
+    .login-header img {
+      height: 60px;
       margin-bottom: 12px;
-      box-sizing: border-box;
     }
-    .login-card select { text-align: left; cursor: pointer; }
-    .login-card input { text-align: center; letter-spacing: 2px; }
-    .login-card select:focus, .login-card input:focus { outline: 2px solid var(--color-accent); border-color: transparent; }
-    .login-card .btn { width: 100%; padding: 11px; font-size: 15px; }
-    .error-msg { color: var(--color-danger); font-size: 13px; margin-top: 10px; min-height: 18px; }
+    .login-sub {
+      font-family: var(--font-family);
+      font-size: 15px;
+      font-weight: 600;
+      color: #888;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    .login-body {
+      padding: 32px 40px 40px;
+      background: #FAFAFA;
+    }
     .lang-switch {
       display: flex;
       justify-content: center;
       gap: 6px;
-      margin-bottom: 20px;
+      margin-bottom: 28px;
     }
     .lang-switch button {
-      padding: 4px 14px;
-      border: 1px solid #ccc;
-      border-radius: var(--radius);
+      padding: 5px 16px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
       background: #fff;
-      color: #000;
+      color: #666;
       cursor: pointer;
       font-weight: 600;
       font-size: 13px;
+      transition: all 0.2s;
+    }
+    .lang-switch button:hover {
+      border-color: #FFC600;
+      color: #333;
     }
     .lang-switch button.active {
-      background: #222;
-      color: #fff;
-      border-color: #222;
+      background: #FFC600;
+      color: #2A2A2A;
+      border-color: #FFC600;
     }
-    .field-label { text-align: left; font-size: 12px; font-weight: 600; color: #888; margin-bottom: 4px; text-transform: uppercase; }
+    .field-label {
+      text-align: left;
+      font-size: 11px;
+      font-weight: 700;
+      color: #999;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .login-card select, .login-card input[type="password"] {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 15px;
+      font-family: var(--font-family);
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-sizing: border-box;
+      background: #fff;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .login-card select { cursor: pointer; color: #333; }
+    .login-card input[type="password"] { letter-spacing: 3px; }
+    .login-card select:focus, .login-card input[type="password"]:focus {
+      outline: none;
+      border-color: #FFC600;
+      box-shadow: 0 0 0 3px rgba(255,198,0,0.15);
+    }
+    .login-btn {
+      width: 100%;
+      padding: 13px;
+      font-size: 15px;
+      font-weight: 700;
+      font-family: var(--font-family);
+      background: #FFC600;
+      color: #2A2A2A;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      letter-spacing: 0.5px;
+    }
+    .login-btn:hover { background: #e6b200; }
+    .login-btn:active { transform: scale(0.98); }
+    .error-msg {
+      color: #d32f2f;
+      font-size: 13px;
+      margin-top: 12px;
+      min-height: 18px;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
   <div class="login-card">
     <div class="login-header">
-      <div class="login-logo">MINIB<span class="dot">.</span></div>
+      <img src="/img/minib-logo-claim-EN-nahled.jpg" alt="MINIB">
       <div class="login-sub">Project Pipeline MEA</div>
     </div>
     <div class="login-body">
@@ -75,15 +137,15 @@
       <div class="field-label" id="label-user"></div>
       <select id="user-select"></select>
       <div class="field-label" id="label-password"></div>
-      <input type="password" id="password-input" autocomplete="current-password">
-      <button class="btn btn-primary" id="login-btn"></button>
+      <input type="password" id="password-input" autocomplete="current-password" minlength="4">
+      <button class="login-btn" id="login-btn"></button>
       <div class="error-msg" id="error-msg"></div>
     </div>
   </div>
   <script>
     const T = {
       cs: { user: 'Uživatel', password: 'Heslo', selectUser: '— Vyberte uživatele —', btn: 'Vstoupit', error: 'Nesprávné přihlášení', connErr: 'Chyba spojení se serverem' },
-      en: { user: 'User', password: 'Password', selectUser: '— Select user —', btn: 'Sign in', error: 'Incorrect login', connErr: 'Connection error' },
+      en: { user: 'User', password: 'Password', selectUser: '— Select user —', btn: 'Enter', error: 'Incorrect login', connErr: 'Connection error' },
     };
 
     let lang = localStorage.getItem('minib_lang') || 'en';

@@ -103,7 +103,7 @@ const App = (() => {
     `).join('');
 
     header.innerHTML = `
-      <div class="logo"><span>MINIB</span><span class="dot">.</span></div>
+      <div class="logo"><img src="/img/minib-logo-claim-EN-nahled.jpg" alt="MINIB" style="height:36px;"></div>
       <nav class="app-nav">${navHtml}</nav>
       <div class="header-right">
         <div class="lang-switch">
