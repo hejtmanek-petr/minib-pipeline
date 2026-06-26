@@ -103,8 +103,9 @@ const App = (() => {
     `).join('');
 
     header.innerHTML = `
+      <button class="hamburger-btn" id="hamburger-btn" style="display:none;">&#9776;</button>
       <div class="logo"><img src="/img/minib-logo-claim-EN-nahled.jpg" alt="MINIB" style="height:36px;"></div>
-      <nav class="app-nav">${navHtml}</nav>
+      <nav class="app-nav" id="app-nav">${navHtml}</nav>
       <div class="header-right">
         <div class="lang-switch">
           <button data-lang="cs">CS</button>
@@ -113,6 +114,13 @@ const App = (() => {
         <button class="btn btn-secondary" id="logout-btn" data-i18n="nav.logout"></button>
       </div>
     `;
+
+    document.getElementById('hamburger-btn').addEventListener('click', () => {
+      document.getElementById('app-nav').classList.toggle('open');
+    });
+    document.getElementById('app-nav').querySelectorAll('a').forEach(a => {
+      a.addEventListener('click', () => document.getElementById('app-nav').classList.remove('open'));
+    });
 
     I18N.applyTranslations(header);
 

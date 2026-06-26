@@ -81,6 +81,8 @@ h3 { font-size: 15px; text-transform: uppercase; letter-spacing: 0.04em; color: 
   line-height: 0;
 }
 
+.hamburger-btn { display: none; }
+
 .app-nav {
   display: flex;
   align-items: center;

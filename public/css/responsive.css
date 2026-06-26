@@ -1,29 +1,134 @@
+/* Tablet */
 @media (max-width: 1024px) {
   .kpi-grid { grid-template-columns: repeat(2, 1fr); }
   .winprob-grid { grid-template-columns: 1fr; }
 }
 
+/* Mobile */
 @media (max-width: 768px) {
-  .app-header { flex-wrap: wrap; height: auto; padding: 10px 12px; gap: 8px; }
-  .app-nav { order: 3; width: 100%; justify-content: flex-start; gap: 2px; }
-  .app-nav a { padding: 6px 8px; font-size: 12px; }
+  /* --- Header: hamburger menu --- */
+  .app-header {
+    flex-wrap: nowrap;
+    height: 50px;
+    padding: 0 12px;
+  }
+  .app-header .logo img { height: 28px !important; }
+
+  .app-nav {
+    display: none;
+    position: fixed;
+    top: 53px;
+    left: 0;
+    right: 0;
+    background: #fff;
+    flex-direction: column;
+    padding: 8px 0;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    z-index: 200;
+    border-bottom: 3px solid var(--color-accent);
+  }
+  .app-nav.open { display: flex; }
+  .app-nav a {
+    padding: 14px 24px;
+    font-size: 15px;
+    border-radius: 0;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .app-nav a:last-child { border-bottom: none; }
+  .app-nav a.active { background: #FFF8E1; }
+
+  .hamburger-btn {
+    display: flex !important;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 4px 8px;
+    color: #333;
+  }
+
+  .header-right { gap: 6px; }
+  .header-right .lang-switch button { padding: 3px 7px; font-size: 11px; }
+  #logout-btn { padding: 4px 10px; font-size: 12px; }
+
+  /* --- Breadcrumb bar --- */
+  .breadcrumb-bar {
+    padding: 8px 12px;
+    font-size: 12px;
+    gap: 6px;
+    top: 53px;
+  }
+  .breadcrumb-bar .btn { padding: 5px 10px; font-size: 11px; }
+  .breadcrumb-back span { display: none; }
+
+  /* --- Main content --- */
   .app-main { padding: 12px; }
+  .page-title h1 { font-size: 18px; }
 
-  .kpi-grid { grid-template-columns: 1fr; }
-  .field-grid { grid-template-columns: 1fr; }
+  /* --- KPI grid --- */
+  .kpi-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .kpi-card { padding: 12px; }
+  .kpi-value { font-size: 20px; }
+  .kpi-label { font-size: 11px; }
 
-  .filters-bar { flex-direction: column; align-items: stretch; }
+  /* --- Filters --- */
+  .filters-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
   .filters-bar .form-group { min-width: 0; }
   .filters-bar input[type="text"] { min-width: 0; }
 
-  table { font-size: 12px; }
-  th, td { padding: 8px; }
+  /* --- Table: horizontal scroll --- */
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table { font-size: 12px; min-width: 600px; }
+  th, td { padding: 8px 6px; white-space: nowrap; }
 
-  .mic-button {
-    width: 84px;
-    height: 84px;
-    font-size: 36px;
-  }
+  /* --- Field grid --- */
+  .field-grid { grid-template-columns: 1fr; }
 
+  /* --- Cards --- */
+  .card { padding: 16px; margin-bottom: 12px; }
+  .card h3 { font-size: 14px; }
+
+  /* --- Win probability --- */
+  .winprob-grid { grid-template-columns: 1fr; gap: 16px; }
+  .gauge-bar { height: 10px; }
+
+  /* --- Comments --- */
+  .comment-item { padding: 12px; }
+  .comment-header { flex-wrap: wrap; gap: 4px; }
+  .comment-lang-bar { margin-left: 0; margin-top: 6px; }
+  .comment-actions { margin-top: 4px; }
+
+  /* --- Voice input --- */
+  .mic-button { width: 72px; height: 72px; font-size: 32px; }
+  .voice-langs button { padding: 6px 12px; font-size: 13px; }
+
+  /* --- Modal --- */
   .modal { max-width: 95vw; padding: 16px; }
+  .modal-header h3 { font-size: 16px; }
+
+  /* --- Login --- */
+  .login-card { width: 92vw; max-width: 400px; }
+  .login-header { padding: 28px 24px 16px; }
+  .login-body { padding: 24px 20px 32px; }
+
+  /* --- Profile / Settings --- */
+  #password-form { max-width: 100% !important; }
+
+  /* --- AI reasoning lang bar inline --- */
+  #ai-reasoning-lang-bar { flex-wrap: wrap; }
+
+  /* --- Export button --- */
+  .form-group-btn { flex-direction: column; }
+  .form-group-btn .btn { width: 100%; }
+}
+
+/* Small phones */
+@media (max-width: 380px) {
+  .kpi-grid { grid-template-columns: 1fr; }
+  .app-header .logo img { height: 24px !important; }
+  .breadcrumb-bar .btn-danger { font-size: 10px; padding: 4px 8px; }
 }

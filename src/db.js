@@ -91,4 +91,38 @@ for (const sql of migrations) {
   }
 })();
 
+// One-time data sync from local export
+(function syncData() {
+  const syncPath = path.join(__dirname, '..', 'scripts', 'sync-data.json');
+  if (!fs.existsSync(syncPath)) return;
+  try {
+    const data = JSON.parse(fs.readFileSync(syncPath, 'utf-8'));
+    if (!data.projects || !data.projects.length) return;
+
+    const currentCount = db.prepare('SELECT count(*) as c FROM projects').get().c;
+    if (currentCount === data.projects.length) return;
+
+    console.log('Syncing data:', data.projects.length, 'projects,', data.comments.length, 'comments');
+    const tx = db.transaction(() => {
+      db.prepare('DELETE FROM comments').run();
+      db.prepare('DELETE FROM projects').run();
+      const projCols = Object.keys(data.projects[0]);
+      const projStmt = db.prepare(`INSERT OR REPLACE INTO projects (${projCols.join(',')}) VALUES (${projCols.map(() => '?').join(',')})`);
+      for (const p of data.projects) projStmt.run(...projCols.map(c => p[c] ?? null));
+      if (data.comments.length > 0) {
+        const comCols = Object.keys(data.comments[0]);
+        const comStmt = db.prepare(`INSERT OR REPLACE INTO comments (${comCols.join(',')}) VALUES (${comCols.map(() => '?').join(',')})`);
+        for (const c of data.comments) comStmt.run(...comCols.map(col => c[col] ?? null));
+      }
+      for (const s of data.settings) {
+        db.prepare('INSERT OR REPLACE INTO app_settings (key, value) VALUES (?, ?)').run(s.key, s.value);
+      }
+    });
+    tx();
+    console.log('Data sync complete!');
+  } catch (e) {
+    console.error('Data sync failed:', e.message);
+  }
+})();
+
 module.exports = db;
