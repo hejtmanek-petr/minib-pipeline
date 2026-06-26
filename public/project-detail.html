@@ -88,18 +88,8 @@
       </div>
     </div>
 
-    <!-- Section D: Comments pipeline -->
+    <!-- Section D: Voice input + Comments -->
     <div class="card">
-      <h3 data-i18n="project.section.comments"></h3>
-      <div class="comment-feed" id="comment-feed"></div>
-
-      <div class="form-group">
-        <label data-i18n="comments.add"></label>
-        <input type="text" id="comment-title" data-i18n-placeholder="comments.titlePlaceholder" style="margin-bottom:6px;">
-        <textarea id="comment-text" rows="3" data-i18n-placeholder="comments.placeholder"></textarea>
-        <button class="btn btn-primary" id="add-comment-btn" data-i18n="comments.addText" style="margin-top:8px;"></button>
-      </div>
-
       <div id="voice-section">
         <h3 style="display:inline;"><span data-i18n="comments.voiceInput"></span></h3> <span class="text-muted" style="font-size:16px;">(max 5 min)</span>
         <div class="voice-langs">
@@ -119,6 +109,16 @@
         </div>
         <div id="voice-not-supported" class="error-message" style="display:none;" data-i18n="comments.notSupported"></div>
       </div>
+
+      <div class="form-group" style="margin-top:20px;">
+        <label data-i18n="comments.add"></label>
+        <input type="text" id="comment-title" data-i18n-placeholder="comments.titlePlaceholder" style="margin-bottom:6px;">
+        <textarea id="comment-text" rows="3" data-i18n-placeholder="comments.placeholder"></textarea>
+        <button class="btn btn-primary" id="add-comment-btn" data-i18n="comments.addText" style="margin-top:8px;"></button>
+      </div>
+
+      <h3 data-i18n="project.section.comments" style="margin-top:24px;"></h3>
+      <div class="comment-feed" id="comment-feed"></div>
       <button class="btn btn-primary save-basic-trigger" data-i18n="common.save" style="margin-top:16px;"></button>
     </div>
 
