@@ -12,8 +12,8 @@ if (!fs.existsSync(AUDIO_DIR)) fs.mkdirSync(AUDIO_DIR, { recursive: true });
 async function translateAndSave(commentId, content, sourceLang) {
   try {
     const translations = await ai.translateComment(content, sourceLang || 'cs');
-    db.prepare(`UPDATE comments SET content_cs=?, content_en=?, content_de=?, content_tr=? WHERE id=?`)
-      .run(translations.cs, translations.en, translations.de, translations.tr, commentId);
+    db.prepare(`UPDATE comments SET content_cs=?, content_en=?, content_tr=? WHERE id=?`)
+      .run(translations.cs, translations.en, translations.tr, commentId);
   } catch (e) {
     console.error('Translation failed for comment', commentId, e.message);
   }

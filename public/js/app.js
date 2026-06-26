@@ -67,7 +67,7 @@ const App = (() => {
 
   function fmtMoney(value) {
     if (value === null || value === undefined) return '-';
-    return new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(value);
+    return new Intl.NumberFormat('de-DE', { maximumFractionDigits: 0 }).format(value);
   }
 
   function fmtDateTime(iso) {
@@ -93,7 +93,7 @@ const App = (() => {
       { href: '/project-new.html', key: 'nav.newProject', id: 'new-project' },
       { href: '/reports.html', key: 'nav.reports', id: 'reports' },
     ];
-    if (user && user.role === 'HQ') {
+    if (user && user.role === 'admin') {
       navItems.push({ href: '/admin-settings.html', key: 'nav.settings', id: 'settings' });
     }
     navItems.push({ href: '/profile.html', key: 'nav.profile', id: 'profile' });
@@ -141,8 +141,17 @@ const App = (() => {
     return user;
   }
 
+  const scrollKey = 'scroll_' + location.pathname + location.search;
+  window.addEventListener('scroll', () => {
+    sessionStorage.setItem(scrollKey, String(window.scrollY));
+  });
+  function restoreScroll() {
+    const y = sessionStorage.getItem(scrollKey);
+    if (y) window.scrollTo(0, parseInt(y, 10));
+  }
+
   return {
     api, loadUser, getUser, requireAuth, requireHQ, renderHeader, init,
-    statusBadgeClass, winBadgeClass, gaugeClass, fmtMoney, fmtDateTime, initials,
+    statusBadgeClass, winBadgeClass, gaugeClass, fmtMoney, fmtDateTime, initials, restoreScroll,
   };
 })();

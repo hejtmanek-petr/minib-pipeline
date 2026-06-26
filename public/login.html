@@ -11,7 +11,7 @@
       background: var(--color-card);
       border-radius: var(--radius);
       box-shadow: 0 2px 16px rgba(0,0,0,0.13);
-      width: 340px;
+      width: 360px;
       text-align: center;
       overflow: hidden;
     }
@@ -23,25 +23,25 @@
     .login-logo { font-size: 30px; font-weight: 900; color: #2A2A2A; letter-spacing: -1px; margin-bottom: 2px; }
     .login-logo .dot { color: #2A2A2A; }
     .login-sub { font-size: 12px; color: #5a5a5a; margin-bottom: 0; }
-    .login-card input {
+    .login-card select, .login-card input {
       width: 100%;
       padding: 10px 12px;
-      font-size: 18px;
-      text-align: center;
-      letter-spacing: 4px;
+      font-size: 15px;
       border: 1px solid var(--color-border);
       border-radius: var(--radius);
-      margin-bottom: 16px;
+      margin-bottom: 12px;
       box-sizing: border-box;
     }
-    .login-card input:focus { outline: 2px solid var(--color-accent); border-color: transparent; }
+    .login-card select { text-align: left; cursor: pointer; }
+    .login-card input { text-align: center; letter-spacing: 2px; }
+    .login-card select:focus, .login-card input:focus { outline: 2px solid var(--color-accent); border-color: transparent; }
     .login-card .btn { width: 100%; padding: 11px; font-size: 15px; }
     .error-msg { color: var(--color-danger); font-size: 13px; margin-top: 10px; min-height: 18px; }
     .lang-switch {
       display: flex;
       justify-content: center;
       gap: 6px;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
     }
     .lang-switch button {
       padding: 4px 14px;
@@ -58,6 +58,7 @@
       color: #fff;
       border-color: #222;
     }
+    .field-label { text-align: left; font-size: 12px; font-weight: 600; color: #888; margin-bottom: 4px; text-transform: uppercase; }
   </style>
 </head>
 <body>
@@ -67,44 +68,72 @@
       <div class="login-sub">Project Pipeline MEA</div>
     </div>
     <div class="login-body">
-    <div class="lang-switch">
-      <button id="lang-cs" class="active" onclick="setLang('cs')">CZ</button>
-      <button id="lang-en" onclick="setLang('en')">EN</button>
-    </div>
-    <input type="password" id="code-input" autocomplete="current-password">
-    <button class="btn btn-primary" id="login-btn"></button>
-    <div class="error-msg" id="error-msg"></div>
+      <div class="lang-switch">
+        <button id="lang-cs" class="active" onclick="setLang('cs')">CZ</button>
+        <button id="lang-en" onclick="setLang('en')">EN</button>
+      </div>
+      <div class="field-label" id="label-user"></div>
+      <select id="user-select"></select>
+      <div class="field-label" id="label-password"></div>
+      <input type="password" id="password-input" autocomplete="current-password">
+      <button class="btn btn-primary" id="login-btn"></button>
+      <div class="error-msg" id="error-msg"></div>
     </div>
   </div>
   <script>
     const T = {
-      cs: { placeholder: 'Přístupový kód', btn: 'Vstoupit', error: 'Nesprávný přístupový kód', connErr: 'Chyba spojení se serverem' },
-      en: { placeholder: 'Access code', btn: 'Enter', error: 'Incorrect access code', connErr: 'Connection error' },
+      cs: { user: 'Uživatel', password: 'Heslo', selectUser: '— Vyberte uživatele —', btn: 'Vstoupit', error: 'Nesprávné přihlášení', connErr: 'Chyba spojení se serverem' },
+      en: { user: 'User', password: 'Password', selectUser: '— Select user —', btn: 'Sign in', error: 'Incorrect login', connErr: 'Connection error' },
     };
 
-    let lang = localStorage.getItem('minib_lang') || 'cs';
+    let lang = localStorage.getItem('minib_lang') || 'en';
 
     function setLang(l) {
       lang = l;
       localStorage.setItem('minib_lang', l);
       document.getElementById('lang-cs').classList.toggle('active', l === 'cs');
       document.getElementById('lang-en').classList.toggle('active', l === 'en');
-      document.getElementById('code-input').placeholder = T[l].placeholder;
+      document.getElementById('label-user').textContent = T[l].user;
+      document.getElementById('label-password').textContent = T[l].password;
       document.getElementById('login-btn').textContent = T[l].btn;
+      document.getElementById('password-input').placeholder = T[l].password;
       document.getElementById('error-msg').textContent = '';
+      const firstOpt = document.querySelector('#user-select option[value=""]');
+      if (firstOpt) firstOpt.textContent = T[l].selectUser;
     }
 
-    setLang(lang);
+    async function loadUsers() {
+      try {
+        const res = await fetch('/api/auth/users');
+        const data = await res.json();
+        const sel = document.getElementById('user-select');
+        sel.innerHTML = '';
+        const empty = document.createElement('option');
+        empty.value = '';
+        empty.textContent = T[lang].selectUser;
+        sel.appendChild(empty);
+        data.users.forEach(u => {
+          const opt = document.createElement('option');
+          opt.value = u.id;
+          opt.textContent = u.name;
+          sel.appendChild(opt);
+        });
+      } catch (e) {
+        console.error('Failed to load users', e);
+      }
+    }
 
     async function doLogin() {
-      const code = document.getElementById('code-input').value;
+      const userId = document.getElementById('user-select').value;
+      const password = document.getElementById('password-input').value;
       const errEl = document.getElementById('error-msg');
       errEl.textContent = '';
+      if (!userId) { errEl.textContent = T[lang].error; return; }
       try {
         const res = await fetch('/api/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code }),
+          body: JSON.stringify({ userId: parseInt(userId), password }),
           credentials: 'include',
         });
         const data = await res.json();
@@ -117,9 +146,12 @@
     }
 
     document.getElementById('login-btn').addEventListener('click', doLogin);
-    document.getElementById('code-input').addEventListener('keydown', (e) => {
+    document.getElementById('password-input').addEventListener('keydown', (e) => {
       if (e.key === 'Enter') doLogin();
     });
+
+    setLang(lang);
+    loadUsers();
   </script>
 </body>
 </html>

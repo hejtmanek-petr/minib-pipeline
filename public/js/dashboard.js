@@ -1,23 +1,24 @@
 (async () => {
   const user = await App.init('dashboard');
   if (!user) return;
+  const hidePrices = user.role === 'mea_sales';
 
   const COUNTRY_NAMES = {
     cs: {
-      'TR': 'Turecko', 'AZ': 'Ázerbájdžán', 'Az': 'Ázerbájdžán', 'GE': 'Gruzie',
-      'KZ': 'Kazachstán', 'UZ': 'Uzbekistán', 'Mong': 'Mongolsko',
-      'SY': 'Sýrie', 'IQ': 'Irák', 'TM': 'Turkmenistán', 'EG': 'Egypt',
-      'MA': 'Maroko', 'DZ': 'Alžírsko', 'LY': 'Libye', 'TN': 'Tunisko',
-      'TZ': 'Tanzanie', 'UG': 'Uganda', 'KW': 'Kuvajt', 'AE': 'SAE',
-      'OM': 'Omán', 'JO': 'Jordánsko', 'NC': 'Severní Kypr', 'BY': 'Bělorusko', 'RU': 'Rusko',
+      'TR': 'Türkiye', 'AZ': 'Ázerbájdžán', 'UZ': 'Uzbekistán', 'KZ': 'Kazachstán',
+      'GE': 'Gruzie', 'SY': 'Sýrie', 'IQ': 'Irák', 'TM': 'Turkmenistán',
+      'MN': 'Mongolsko', 'EG': 'Egypt', 'MA': 'Maroko', 'DZ': 'Alžírsko',
+      'LY': 'Libye', 'TN': 'Tunisko', 'TZ': 'Tanzanie', 'UG': 'Uganda',
+      'KW': 'Kuvajt', 'AE': 'SAE', 'OM': 'Omán', 'JO': 'Jordánsko',
+      'NC': 'Severní Kypr', 'BY': 'Bělorusko', 'RU': 'Rusko',
     },
     en: {
-      'TR': 'Turkey', 'AZ': 'Azerbaijan', 'Az': 'Azerbaijan', 'GE': 'Georgia',
-      'KZ': 'Kazakhstan', 'UZ': 'Uzbekistan', 'Mong': 'Mongolia',
-      'SY': 'Syria', 'IQ': 'Iraq', 'TM': 'Turkmenistan', 'EG': 'Egypt',
-      'MA': 'Morocco', 'DZ': 'Algeria', 'LY': 'Libya', 'TN': 'Tunisia',
-      'TZ': 'Tanzania', 'UG': 'Uganda', 'KW': 'Kuwait', 'AE': 'UAE',
-      'OM': 'Oman', 'JO': 'Jordan', 'NC': 'Northern Cyprus', 'BY': 'Belarus', 'RU': 'Russia',
+      'TR': 'Türkiye', 'AZ': 'Azerbaijan', 'UZ': 'Uzbekistan', 'KZ': 'Kazakhstan',
+      'GE': 'Georgia', 'SY': 'Syria', 'IQ': 'Iraq', 'TM': 'Turkmenistan',
+      'MN': 'Mongolia', 'EG': 'Egypt', 'MA': 'Morocco', 'DZ': 'Algeria',
+      'LY': 'Libya', 'TN': 'Tunisia', 'TZ': 'Tanzania', 'UG': 'Uganda',
+      'KW': 'Kuwait', 'AE': 'United Arab Emirates', 'OM': 'Oman', 'JO': 'Jordan',
+      'NC': 'Northern Cyprus', 'BY': 'Belarus', 'RU': 'Russia',
     },
   };
   function countryName(c) {
@@ -32,7 +33,7 @@
   let activeRegion = '';
 
   function statusOf(p) {
-    return p.status || 'lead';
+    return p.status || 'active';
   }
 
   function winCell(p) {
@@ -51,7 +52,7 @@
   function renderTable(projects) {
     const tbody = document.getElementById('projects-tbody');
     if (!projects.length) {
-      tbody.innerHTML = `<tr><td colspan="15" class="text-muted" style="text-align:center; padding:24px;">${I18N.t('common.noData')}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="11" class="text-muted" style="text-align:center; padding:24px;">${I18N.t('common.noData')}</td></tr>`;
       return;
     }
     tbody.innerHTML = projects.map((p) => `
@@ -62,16 +63,12 @@
         <td>${p.project_name || ''}</td>
         <td>${p.company || ''}</td>
         <td>${countryName(p.country)}</td>
-        <td>${p.project_value_eur != null ? Number(p.project_value_eur).toLocaleString('cs-CZ', {maximumFractionDigits:0}) + ' €' : '-'}</td>
+        ${hidePrices ? '' : `<td>${p.project_value_eur != null ? Number(p.project_value_eur).toLocaleString('de-DE', {maximumFractionDigits:0}) + ' €' : '-'}</td>`}
         <td>${p.products_and_quantity || ''}</td>
-        <td>${p.ai_value_eur != null ? '🤖 ' + Number(p.ai_value_eur).toLocaleString('cs-CZ', {maximumFractionDigits:0}) + ' €' : '<span class="text-muted">-</span>'}</td>
-        <td><span class="${App.statusBadgeClass(p.status)}">${I18N.t('status.' + (p.status || 'lead'))}</span> <span class="text-muted">${p.phase ? I18N.t('phase.' + p.phase) : ''}</span></td>
+        ${hidePrices ? '' : `<td>${p.ai_value_eur != null ? '🤖 ' + Number(p.ai_value_eur).toLocaleString('de-DE', {maximumFractionDigits:0}) + ' €' : '<span class="text-muted">-</span>'}</td>`}
+        <td><span class="${App.statusBadgeClass(p.status)}">${I18N.t('status.' + (p.status || 'active'))}</span> <span class="text-muted">${p.phase ? I18N.t('phase.' + p.phase) : ''}</span></td>
         <td>${winCell(p)}</td>
         <td>${p.estimated_decision_date ? String(p.estimated_decision_date).slice(0,7) : '-'}</td>
-        <td>${p.estimated_delivery_date ? String(p.estimated_delivery_date).slice(0,7) : '-'}</td>
-        <td>${p.investor || ''}</td>
-        <td>${p.general_contractor || ''}</td>
-        <td>${p.installation_company || ''}</td>
         <td>${p.owner || ''}</td>
       </tr>
     `).join('');
@@ -87,7 +84,7 @@
   }
 
   function renderKpis(projects) {
-    const active = projects.filter((p) => p.status === 'active' || p.status === 'lead');
+    const active = projects.filter((p) => p.status === 'active');
     document.getElementById('kpi-active').textContent = active.length;
 
     const openProjects = projects.filter((p) => p.status !== 'lost');
@@ -240,10 +237,18 @@
       updateFilterHighlights();
     }
 
+    if (hidePrices) {
+      document.querySelector('th[data-sort="project_value_eur"]')?.closest('th')?.remove();
+      document.querySelector('th[data-sort="ai_value_eur"]')?.closest('th')?.remove();
+      const pipelineCard = document.getElementById('kpi-pipeline')?.closest('.kpi-card');
+      if (pipelineCard) pipelineCard.style.display = 'none';
+    }
+
     applyFiltersAndRender();
+    App.restoreScroll();
   } catch (err) {
     console.error(err);
     const tbody = document.getElementById('projects-tbody');
-    if (tbody) tbody.innerHTML = `<tr><td colspan="15" style="color:red;padding:20px;text-align:center;">Chyba načítání: ${err.message} (status: ${err.status || 'N/A'})</td></tr>`;
+    if (tbody) tbody.innerHTML = `<tr><td colspan="11" style="color:red;padding:20px;text-align:center;">Loading error: ${err.message} (status: ${err.status || 'N/A'})</td></tr>`;
   }
 })();

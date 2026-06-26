@@ -15,8 +15,8 @@
     <a href="/dashboard.html" class="breadcrumb-back">&#8592; <span data-i18n="nav.dashboard"></span></a>
     <span class="breadcrumb-sep">/</span>
     <span class="breadcrumb-current" id="breadcrumb-project-name"></span>
-    <a href="/dashboard.html" class="btn btn-primary" style="margin-left:auto;">&#8592; Přehled</a>
-    <button id="btn-delete-project" class="btn btn-danger">&#128465; Smazat projekt</button>
+    <a href="/dashboard.html" class="btn btn-primary" style="margin-left:auto;">&#8592; Overview</a>
+    <button id="btn-delete-project" class="btn btn-danger">&#128465; Delete project</button>
   </div>
 
   <main class="app-main">
@@ -30,8 +30,9 @@
         <h3 data-i18n="project.section.basic" style="margin-bottom:0;"></h3>
         <span id="auto-save-status" style="font-size:12px;font-weight:600;opacity:0;transition:opacity 0.4s;"></span>
       </div>
+      <button class="btn btn-primary save-basic-trigger" data-i18n="common.save" style="margin-bottom:12px;"></button>
       <div class="field-grid" id="basic-fields"></div>
-      <button class="btn btn-primary" id="save-basic-btn" data-i18n="common.save" style="margin-top:12px;"></button>
+      <button class="btn btn-primary save-basic-trigger" data-i18n="common.save" style="margin-top:12px;"></button>
     </div>
 
     <!-- Section B: Commercial values -->
@@ -43,11 +44,11 @@
       <div style="margin-top:20px; padding-top:16px; border-top:1px solid var(--border);">
         <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
           <div>
-            <div class="field-label" style="font-size:0.78rem; color:var(--text-muted); margin-bottom:4px;">🤖 AI hodnota (odhad z artiklů)</div>
+            <div class="field-label" style="font-size:0.78rem; color:var(--text-muted); margin-bottom:4px;">🤖 AI value (estimate from products)</div>
             <div id="ai-value-display" style="font-size:1.1rem; font-weight:600;">—</div>
           </div>
           <div id="ai-value-breakdown" style="font-size:0.82rem; color:var(--text-muted); max-width:400px;"></div>
-          <button id="btn-estimate-value" class="btn btn-secondary" style="margin-left:auto;">🤖 Odhadnout AI hodnotu</button>
+          <button id="btn-estimate-value" class="btn btn-secondary" style="margin-left:auto;">🤖 Estimate AI value</button>
         </div>
       </div>
     </div>
@@ -75,7 +76,14 @@
           <button class="btn btn-secondary" id="ask-ai-btn" style="margin-top:8px;">🤖 <span data-i18n="winprob.askAi"></span></button>
           <div id="ai-spinner" class="text-muted" style="display:none; margin-top:8px;" data-i18n="winprob.aiThinking"></div>
           <div id="ai-updated" class="text-muted" style="margin-top:8px; font-size:12px;"></div>
-          <div class="ai-reasoning" id="ai-reasoning" style="display:none;"></div>
+          <div id="ai-reasoning-wrap" style="display:none; margin-top:10px;">
+            <div class="comment-lang-bar" id="ai-reasoning-lang-bar" style="margin-bottom:6px;">
+              <button class="comment-lang-btn active" data-lang="en">EN</button>
+              <button class="comment-lang-btn" data-lang="cs">CS</button>
+              <button class="comment-lang-btn" data-lang="tr">TR</button>
+            </div>
+            <div class="ai-reasoning" id="ai-reasoning"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -93,11 +101,10 @@
       </div>
 
       <div id="voice-section">
-        <h3 data-i18n="comments.voiceInput"></h3>
+        <h3 style="display:inline;"><span data-i18n="comments.voiceInput"></span></h3> <span class="text-muted" style="font-size:16px;">(max 5 min)</span>
         <div class="voice-langs">
           <button data-lang="cs">🇨🇿 CS</button>
           <button data-lang="en" class="active">🇬🇧 EN</button>
-          <button data-lang="de">🇩🇪 DE</button>
           <button data-lang="tr">🇹🇷 TR</button>
         </div>
         <div class="voice-input-area">
@@ -112,11 +119,12 @@
         </div>
         <div id="voice-not-supported" class="error-message" style="display:none;" data-i18n="comments.notSupported"></div>
       </div>
+      <button class="btn btn-primary save-basic-trigger" data-i18n="common.save" style="margin-top:16px;"></button>
     </div>
 
 
     <!-- Section F: History -->
-    <div class="card">
+    <div class="card" id="history-section">
       <h3 data-i18n="project.section.history"></h3>
       <div class="table-wrap">
         <table>

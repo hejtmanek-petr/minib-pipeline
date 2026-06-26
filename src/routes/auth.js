@@ -1,6 +1,7 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
 const { requireAuth } = require('../middleware/auth');
+const db = require('../db');
 
 const router = express.Router();
 
@@ -15,32 +16,51 @@ const loginLimiter = rateLimit({
   message: { error: 'Too many attempts, please try again later.' },
 });
 
+router.get('/users', (req, res) => {
+  const bottom = new Set(['Monika', 'Pavla', 'Petr']);
+  const all = db.prepare('SELECT id, name FROM users WHERE is_active = 1 ORDER BY name').all();
+  const users = [...all.filter(u => !bottom.has(u.name)), ...all.filter(u => bottom.has(u.name))];
+  res.json({ users });
+});
+
 router.post('/login', loginLimiter, (req, res) => {
-  const { code } = req.body || {};
-  const trimmed = (code || '').trim();
-  const codeFull = process.env.ACCESS_CODE_FULL || 'minib2024';
-  const codeMea  = process.env.ACCESS_CODE_MEA  || 'mea2024';
+  const { userId, password } = req.body || {};
 
-  let role = null;
-  if (trimmed === codeFull) role = 'full';
-  else if (trimmed === codeMea) role = 'mea';
-
-  if (!role) {
-    return res.status(401).json({ error: 'Nesprávný přístupový kód' });
+  if (!userId) {
+    return res.status(401).json({ error: 'Select a user' });
   }
 
-  res.cookie(COOKIE_NAME, role, {
+  const user = db.prepare('SELECT * FROM users WHERE id = ? AND is_active = 1').get(userId);
+  if (!user) {
+    return res.status(401).json({ error: 'User not found' });
+  }
+
+  // If password is set, verify it; if empty, allow login without password
+  if (user.password_hash && user.password_hash.length > 0) {
+    const bcrypt = require('bcrypt');
+    if (!password || !bcrypt.compareSync(password, user.password_hash)) {
+      return res.status(401).json({ error: 'Incorrect password' });
+    }
+  }
+
+  const roleKey = user.access_role || 'mea_sales';
+
+  const cookieValue = JSON.stringify({ id: user.id, role: roleKey });
+  res.cookie(COOKIE_NAME, cookieValue, {
     httpOnly: true,
     sameSite: 'lax',
     secure: process.env.NODE_ENV === 'production',
     maxAge: COOKIE_MAX_AGE,
   });
 
-  const user = role === 'full'
-    ? { id: 1, name: 'Admin', role: 'HQ', preferred_language: 'cs' }
-    : { id: 2, name: 'MEA', role: 'MEA', preferred_language: 'cs' };
-
-  res.json({ user });
+  res.json({
+    user: {
+      id: user.id,
+      name: user.name,
+      role: roleKey,
+      preferred_language: user.preferred_language || 'en',
+    },
+  });
 });
 
 router.post('/logout', (req, res) => {
@@ -51,6 +71,27 @@ router.post('/logout', (req, res) => {
 router.get('/logout', (req, res) => {
   res.clearCookie(COOKIE_NAME);
   res.redirect('/login.html');
+});
+
+router.post('/change-password', requireAuth, (req, res) => {
+  const { currentPassword, newPassword } = req.body || {};
+  const bcrypt = require('bcrypt');
+  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+
+  if (user.password_hash && user.password_hash.length > 0) {
+    if (!currentPassword || !bcrypt.compareSync(currentPassword, user.password_hash)) {
+      return res.status(401).json({ error: 'Incorrect current password' });
+    }
+  }
+
+  if (!newPassword || newPassword.length < 4) {
+    return res.status(400).json({ error: 'Password must be at least 4 characters' });
+  }
+
+  const hash = bcrypt.hashSync(newPassword, 10);
+  db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(hash, req.user.id);
+  res.json({ ok: true });
 });
 
 router.get('/me', requireAuth, (req, res) => {

@@ -13,8 +13,8 @@
   let meta = null;
 
   const COUNTRY_NAMES = {
-    cs: { 'TR':'Turecko','AZ':'Ázerbájdžán','Az':'Ázerbájdžán','GE':'Gruzie','KZ':'Kazachstán','UZ':'Uzbekistán','Mong':'Mongolsko','SY':'Sýrie','IQ':'Irák','TM':'Turkmenistán','EG':'Egypt','MA':'Maroko','DZ':'Alžírsko','LY':'Libye','TN':'Tunisko','TZ':'Tanzanie','UG':'Uganda','KW':'Kuvajt','AE':'SAE','OM':'Omán','JO':'Jordánsko','NC':'Severní Kypr','BY':'Bělorusko','RU':'Rusko' },
-    en: { 'TR':'Turkey','AZ':'Azerbaijan','Az':'Azerbaijan','GE':'Georgia','KZ':'Kazakhstan','UZ':'Uzbekistan','Mong':'Mongolia','SY':'Syria','IQ':'Iraq','TM':'Turkmenistan','EG':'Egypt','MA':'Morocco','DZ':'Algeria','LY':'Libya','TN':'Tunisia','TZ':'Tanzania','UG':'Uganda','KW':'Kuwait','AE':'UAE','OM':'Oman','JO':'Jordan','NC':'Northern Cyprus','BY':'Belarus','RU':'Russia' },
+    cs: { 'TR':'Türkiye','AZ':'Ázerbájdžán','UZ':'Uzbekistán','KZ':'Kazachstán','GE':'Gruzie','SY':'Sýrie','IQ':'Irák','TM':'Turkmenistán','MN':'Mongolsko','EG':'Egypt','MA':'Maroko','DZ':'Alžírsko','LY':'Libye','TN':'Tunisko','TZ':'Tanzanie','UG':'Uganda','KW':'Kuvajt','AE':'SAE','OM':'Omán','JO':'Jordánsko','NC':'Severní Kypr','BY':'Bělorusko','RU':'Rusko' },
+    en: { 'TR':'Türkiye','AZ':'Azerbaijan','UZ':'Uzbekistan','KZ':'Kazakhstan','GE':'Georgia','SY':'Syria','IQ':'Iraq','TM':'Turkmenistan','MN':'Mongolia','EG':'Egypt','MA':'Morocco','DZ':'Algeria','LY':'Libya','TN':'Tunisia','TZ':'Tanzania','UG':'Uganda','KW':'Kuwait','AE':'United Arab Emirates','OM':'Oman','JO':'Jordan','NC':'Northern Cyprus','BY':'Belarus','RU':'Russia' },
   };
   function countryLabel(code) {
     const map = COUNTRY_NAMES[I18N.getLang()] || COUNTRY_NAMES.cs;
@@ -35,10 +35,7 @@
     { field: 'country', type: 'select', options: () => meta.countries || [], labelFn: countryLabel },
     { field: 'project_name', type: 'text' },
     { field: 'company', type: 'text' },
-    { field: 'investor', type: 'text' },
     { field: 'client_name', type: 'text' },
-    { field: 'general_contractor', type: 'text' },
-    { field: 'installation_company', type: 'text' },
     { field: 'building_type', type: 'select', options: () => meta.building_types || [] },
     { field: 'owner', type: 'select', options: () => meta.owners || [] },
     { field: 'status', type: 'select', options: () => meta.statuses || [], i18nPrefix: 'status' },
@@ -46,7 +43,6 @@
     { field: 'products_and_quantity', type: 'textarea' },
     { field: 'competition', type: 'text' },
     { field: 'estimated_decision_date', type: 'month' },
-    { field: 'estimated_delivery_date', type: 'month' },
     { field: 'current_status_note', type: 'textarea' },
   ];
 
@@ -77,14 +73,14 @@
   }
 
   async function autoSaveField(field, value) {
-    showAutoStatus('Ukládám…', 'var(--color-text-muted)');
+    showAutoStatus('Saving…', 'var(--color-text-muted)');
     try {
       const body = { [field]: castFieldValue(field, value) };
       const res = await App.api(`/projects/${projectId}`, { method: 'PUT', body });
       project = res.project;
-      showAutoStatus('✓ Uloženo', 'var(--color-success)');
+      showAutoStatus('✓ Saved', 'var(--color-success)');
     } catch {
-      showAutoStatus('Chyba při ukládání', 'var(--color-danger)');
+      showAutoStatus('Error saving', 'var(--color-danger)');
     }
   }
 
@@ -172,8 +168,8 @@
       input = document.createElement('input');
       input.type = 'text';
       const fmt = (v) => v !== '' && v !== null && v !== undefined
-        ? Number(v).toLocaleString('cs-CZ', { maximumFractionDigits: 2 }) : '';
-      const unFmt = (v) => v.replace(/\s/g, '').replace(',', '.');
+        ? Number(v).toLocaleString('de-DE', { maximumFractionDigits: 2 }) : '';
+      const unFmt = (v) => v.replace(/[\s.]/g, '').replace(',', '.');
       input.value = fmt(raw);
       input.addEventListener('focus', () => { input.value = raw === null || raw === undefined ? '' : raw; });
       input.addEventListener('blur', () => { const n = parseFloat(unFmt(input.value)); input.value = isNaN(n) ? '' : fmt(n); raw = isNaN(n) ? null : n; if (debouncedSave) debouncedSave(raw); });
@@ -237,7 +233,7 @@
     }
     return { wrap, getValue: () => {
       if (config.type === 'number') {
-        const v = input.value.replace(/\s/g, '').replace(',', '.');
+        const v = input.value.replace(/[\s.]/g, '').replace(',', '.');
         const n = parseFloat(v);
         return isNaN(n) ? null : n;
       }
@@ -268,15 +264,16 @@
     });
   }
 
-  document.getElementById('save-basic-btn').addEventListener('click', async (e) => {
-    const btn = e.currentTarget;
-    const fields = basicFieldHandles
-      .filter((h) => h.field)
-      .map((h) => ({ field: h.field, value: h.getValue() }));
-    await saveFields(fields);
-    showSaved(btn);
-    renderBasicFields();
-    await loadHistory();
+  document.querySelectorAll('.save-basic-trigger').forEach((btn) => {
+    btn.addEventListener('click', async (e) => {
+      const fields = basicFieldHandles
+        .filter((h) => h.field)
+        .map((h) => ({ field: h.field, value: h.getValue() }));
+      await saveFields(fields);
+      document.querySelectorAll('.save-basic-trigger').forEach(b => showSaved(b));
+      renderBasicFields();
+      await loadHistory();
+    });
   });
 
   document.getElementById('save-commercial-btn').addEventListener('click', async (e) => {
@@ -341,14 +338,31 @@
       updatedEl.textContent = I18N.t('winprob.noAssessment');
     }
 
+    const reasoningWrap = document.getElementById('ai-reasoning-wrap');
     const reasoningEl = document.getElementById('ai-reasoning');
-    if (project.win_prob_ai_reasoning) {
-      reasoningEl.style.display = 'block';
-      reasoningEl.innerHTML = `<strong>${I18N.t('winprob.aiReasoning')}:</strong> ${project.win_prob_ai_reasoning}`;
+    const hasReasoning = project.win_prob_ai_reasoning_en || project.win_prob_ai_reasoning_cs || project.win_prob_ai_reasoning;
+    if (hasReasoning) {
+      reasoningWrap.style.display = '';
+      const lang = document.querySelector('#ai-reasoning-lang-bar .comment-lang-btn.active')?.dataset.lang || 'en';
+      showReasoningLang(lang);
     } else {
-      reasoningEl.style.display = 'none';
+      reasoningWrap.style.display = 'none';
     }
   }
+
+  function showReasoningLang(lang) {
+    const el = document.getElementById('ai-reasoning');
+    const text = project[`win_prob_ai_reasoning_${lang}`] || project.win_prob_ai_reasoning || '';
+    el.innerHTML = `<strong>${I18N.t('winprob.aiReasoning')}:</strong> ${text}`;
+  }
+
+  document.getElementById('ai-reasoning-lang-bar').addEventListener('click', (e) => {
+    const btn = e.target.closest('.comment-lang-btn');
+    if (!btn) return;
+    document.querySelectorAll('#ai-reasoning-lang-bar .comment-lang-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    showReasoningLang(btn.dataset.lang);
+  });
 
   document.getElementById('manual-prob').addEventListener('input', () => {
     const v = document.getElementById('manual-prob').value;
@@ -407,7 +421,7 @@
     const breakdown = document.getElementById('ai-value-breakdown');
     if (!display) return;
     if (p.ai_value_eur != null) {
-      display.textContent = Number(p.ai_value_eur).toLocaleString('cs-CZ', { maximumFractionDigits: 0 }) + ' €';
+      display.textContent = Number(p.ai_value_eur).toLocaleString('de-DE', { maximumFractionDigits: 0 }) + ' €';
       display.style.color = 'var(--primary)';
     } else {
       display.textContent = '—';
@@ -427,19 +441,19 @@
       const res = await App.api(`/ai/estimate-value/${projectId}`, { method: 'POST' });
       if (res.estimated_value_eur != null) {
         project.ai_value_eur = res.estimated_value_eur;
-        display.textContent = Number(res.estimated_value_eur).toLocaleString('cs-CZ', { maximumFractionDigits: 0 }) + ' €';
+        display.textContent = Number(res.estimated_value_eur).toLocaleString('de-DE', { maximumFractionDigits: 0 }) + ' €';
         display.style.color = 'var(--primary)';
       } else {
-        display.textContent = 'Nelze odhadnout';
+        display.textContent = 'Cannot estimate';
         display.style.color = 'var(--text-muted)';
       }
       if (breakdown && res.breakdown) breakdown.textContent = res.breakdown;
     } catch (err) {
-      display.textContent = 'Chyba: ' + err.message;
+      display.textContent = 'Error: ' + err.message;
       display.style.color = 'red';
     } finally {
       btn.disabled = false;
-      btn.textContent = '🤖 Odhadnout AI hodnotu';
+      btn.textContent = '🤖 Estimate AI value';
     }
   });
 
@@ -458,14 +472,14 @@
         ? `<span class="badge badge-source">🎤 ${I18N.t('comments.sourceVoice')}</span>`
         : `<span class="badge badge-source">✍️ ${I18N.t('comments.sourceText')}</span>`;
       const langBadge = c.original_language
-        ? `<span class="badge badge-orig-lang" title="Jazyk originálu">${c.original_language.toUpperCase()}</span>`
+        ? `<span class="badge badge-orig-lang" title="Original language">${c.original_language.toUpperCase()}</span>`
         : '';
       const audioPlayer = c.audio_url
-        ? `<span class="audio-toggle" data-src="${c.audio_url}" title="Přehrát nahrávku">🎤</span>`
+        ? `<span class="audio-toggle" data-src="${c.audio_url}" title="Play recording">🎤</span>`
         : '';
-      const langs = ['cs', 'en', 'de', 'tr'];
+      const langs = ['cs', 'en', 'tr'];
       const defaultLang = c.original_language || 'cs';
-      const hasTranslations = c.content_cs || c.content_en || c.content_de || c.content_tr;
+      const hasTranslations = c.content_cs || c.content_en || c.content_tr;
       const langBar = hasTranslations ? `<div class="comment-lang-bar" data-comment-id="${c.id}">
         ${langs.map((l) => `<button class="comment-lang-btn ${l === defaultLang ? 'active' : ''}" data-lang="${l}">${l.toUpperCase()}</button>`).join('')}
       </div>` : '';
@@ -777,22 +791,26 @@
 
     const deleteBtn = document.getElementById('btn-delete-project');
     if (deleteBtn) {
-      if (user.role !== 'HQ') {
+      if (user.role !== 'admin') {
         deleteBtn.style.display = 'none';
       } else {
         deleteBtn.addEventListener('click', async () => {
-          if (!confirm(`Opravdu smazat projekt "${project.project_name || project.project_code}"? Tato akce je nevratná.`)) return;
+          if (!confirm(`Delete project "${project.project_name || project.project_code}"? This action cannot be undone.`)) return;
           await App.api(`/projects/${projectId}`, { method: 'DELETE' });
           window.location.href = '/dashboard.html';
         });
       }
     }
 
-    if (user.role !== 'HQ' && meta.dealer_visibility && meta.dealer_visibility.hide_hq_only_sections) {
-      document.querySelectorAll('[data-visibility="hq-only"]').forEach((el) => el.classList.add('hidden-for-dealer'));
+    // MEA Sales: hide commercial values, AI values, and history
+    if (user.role === 'mea_sales') {
+      document.querySelectorAll('[data-visibility="hq-only"]').forEach((el) => el.style.display = 'none');
+      const historySection = document.getElementById('history-section');
+      if (historySection) historySection.style.display = 'none';
     }
 
-    await Promise.all([loadComments(), loadHistory()]);
+    await Promise.all([loadComments(), user.role !== 'mea_sales' ? loadHistory() : Promise.resolve()]);
+    App.restoreScroll();
   } catch (err) {
     console.error(err);
     if (err.status === 404) window.location.href = '/dashboard.html';

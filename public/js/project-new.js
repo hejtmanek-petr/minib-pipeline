@@ -5,8 +5,8 @@
   const meta = await App.api('/projects/meta');
 
   const COUNTRY_NAMES = {
-    cs: { 'TR':'Turecko','AZ':'Ázerbájdžán','Az':'Ázerbájdžán','GE':'Gruzie','KZ':'Kazachstán','UZ':'Uzbekistán','Mong':'Mongolsko','CAN':'Kanada','CZ':'Česko','SK':'Slovensko','Německo':'Německo','Slovinsko':'Slovinsko','Srbsko':'Srbsko','Itálie':'Itálie','Rakousko':'Rakousko','Rumunsko':'Rumunsko','Francie':'Francie','USA':'USA','Řecko':'Řecko','Portugalsko':'Portugalsko','Kanada':'Kanada','Arménie':'Arménie' },
-    en: { 'TR':'Turkey','AZ':'Azerbaijan','Az':'Azerbaijan','GE':'Georgia','KZ':'Kazakhstan','UZ':'Uzbekistan','Mong':'Mongolia','CAN':'Canada','CZ':'Czech Republic','SK':'Slovakia','Německo':'Germany','Slovinsko':'Slovenia','Srbsko':'Serbia','Itálie':'Italy','Rakousko':'Austria','Rumunsko':'Romania','Francie':'France','USA':'USA','Řecko':'Greece','Portugalsko':'Portugal','Kanada':'Canada','Arménie':'Armenia' },
+    cs: { 'TR':'Türkiye','AZ':'Ázerbájdžán','UZ':'Uzbekistán','KZ':'Kazachstán','GE':'Gruzie','SY':'Sýrie','IQ':'Irák','TM':'Turkmenistán','MN':'Mongolsko','EG':'Egypt','MA':'Maroko','DZ':'Alžírsko','LY':'Libye','TN':'Tunisko','TZ':'Tanzanie','UG':'Uganda','KW':'Kuvajt','AE':'SAE','OM':'Omán','JO':'Jordánsko','NC':'Severní Kypr','BY':'Bělorusko','RU':'Rusko' },
+    en: { 'TR':'Türkiye','AZ':'Azerbaijan','UZ':'Uzbekistan','KZ':'Kazakhstan','GE':'Georgia','SY':'Syria','IQ':'Iraq','TM':'Turkmenistan','MN':'Mongolia','EG':'Egypt','MA':'Morocco','DZ':'Algeria','LY':'Libya','TN':'Tunisia','TZ':'Tanzania','UG':'Uganda','KW':'Kuwait','AE':'United Arab Emirates','OM':'Oman','JO':'Jordan','NC':'Northern Cyprus','BY':'Belarus','RU':'Russia' },
   };
   function countryLabel(code) {
     const map = COUNTRY_NAMES[I18N.getLang()] || COUNTRY_NAMES.cs;
@@ -27,7 +27,7 @@
     });
   }
 
-  fillSelect('f-country', meta.countries || [], countryLabel);
+  fillSelect('f-country', (meta.countries || []).sort((a, b) => countryLabel(a).localeCompare(countryLabel(b))), countryLabel);
   fillSelect('f-building_type', meta.building_types || []);
   fillSelect('f-owner', meta.owners || []);
   fillSelect('f-status', meta.statuses || [], (v) => I18N.t('status.' + v));
@@ -47,8 +47,8 @@
     const selMonth = document.createElement('select');
 
     const emptyOpt = (s, t) => { const o = document.createElement('option'); o.value = ''; o.textContent = t; s.appendChild(o); };
-    emptyOpt(selYear, 'Rok');
-    emptyOpt(selMonth, 'Měsíc');
+    emptyOpt(selYear, 'Year');
+    emptyOpt(selMonth, 'Month');
 
     for (let y = 2026; y <= currentYear + 5; y++) {
       const o = document.createElement('option'); o.value = y; o.textContent = y; selYear.appendChild(o);
@@ -63,7 +63,6 @@
   }
 
   const decisionDate = buildMonthDropdown('f-decision-wrap');
-  const deliveryDate = buildMonthDropdown('f-delivery-wrap');
 
   function parseNum(id) {
     const v = document.getElementById(id).value.replace(/\s/g, '').replace(',', '.');
@@ -76,21 +75,15 @@
       country: document.getElementById('f-country').value || null,
       project_name: document.getElementById('f-project_name').value || null,
       company: document.getElementById('f-company').value || null,
-      investor: document.getElementById('f-investor').value || null,
-      client_name: document.getElementById('f-client_name').value || null,
-      general_contractor: document.getElementById('f-general_contractor').value || null,
-      installation_company: document.getElementById('f-installation_company').value || null,
       building_type: document.getElementById('f-building_type').value || null,
       owner: document.getElementById('f-owner').value || null,
-      status: document.getElementById('f-status').value || 'lead',
+      status: document.getElementById('f-status').value || 'active',
       phase: document.getElementById('f-phase').value || null,
       estimated_decision_date: decisionDate.getValue(),
-      estimated_delivery_date: deliveryDate.getValue(),
       products_and_quantity: document.getElementById('f-products_and_quantity').value || null,
       competition: document.getElementById('f-competition').value || null,
       current_status_note: document.getElementById('f-current_status_note').value || null,
       project_value_eur: parseNum('f-project_value_eur'),
-      project_value_local: parseNum('f-project_value_local'),
     };
     const res = await App.api('/projects', { method: 'POST', body });
     window.location.href = `/project-detail.html?id=${res.project.id}`;

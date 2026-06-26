@@ -3,7 +3,7 @@ const VoiceInput = (() => {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   const isSupported = !!SpeechRecognition;
 
-  const LANG_MAP = { cs: 'cs-CZ', en: 'en-US', de: 'de-DE', tr: 'tr-TR' };
+  const LANG_MAP = { cs: 'cs-CZ', en: 'en-US', tr: 'tr-TR' };
 
   let recognition = null;
   let mediaRecorder = null;
@@ -11,6 +11,7 @@ const VoiceInput = (() => {
   let audioBlob = null;
   let isRecording = false;
   let finalTranscript = '';
+  let maxTimer = null;
 
   function init({ onResult, onEnd, onError }) {
     if (!isSupported) return;
@@ -70,10 +71,13 @@ const VoiceInput = (() => {
     recognition.lang = LANG_MAP[language] || 'en-US';
     recognition.start();
     isRecording = true;
+
+    maxTimer = setTimeout(() => { if (isRecording) stop(); }, 5 * 60 * 1000);
   }
 
   function stop() {
     if (!recognition) return;
+    if (maxTimer) { clearTimeout(maxTimer); maxTimer = null; }
     recognition.stop();
   }
 

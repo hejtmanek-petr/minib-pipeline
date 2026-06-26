@@ -20,7 +20,7 @@ const EDITABLE_FIELDS = [
 router.use(requireAuth);
 
 function applyDealerFilter(req, where, params) {
-  if (req.user.role === 'HQ') return;
+  if (req.user.role === 'admin') return;
   let countries = [];
   try {
     countries = JSON.parse(req.user.countries || '[]');
@@ -82,14 +82,16 @@ router.get('/meta', (req, res) => {
   for (const s of settings) {
     try { meta[s.key] = JSON.parse(s.value); } catch (e) { meta[s.key] = s.value; }
   }
-  const fixedOwners = ['Cem', 'Hakan', 'Ogün', 'Okan', 'Pavla', 'Petr', 'Roman', 'Sefa', 'jiný'];
+  const fixedOwners = ['Cem', 'Hakan', 'Monika', 'Ogün', 'Okan', 'Pavla', 'Petr', 'Sefa', 'other'];
+  const excludedOwners = new Set(['Roman']);
   const dbOwners = db.prepare("SELECT DISTINCT owner FROM projects WHERE owner IS NOT NULL").all().map(r => r.owner);
-  const owners = [...new Set([...fixedOwners, ...dbOwners])].sort();
+  const owners = [...new Set([...fixedOwners, ...dbOwners])].filter(o => !excludedOwners.has(o)).sort();
   const dealers = db.prepare("SELECT id, name FROM users WHERE role = 'DEALER' AND is_active = 1 ORDER BY name").all();
   const dbCountries = db.prepare("SELECT DISTINCT country FROM projects WHERE country IS NOT NULL ORDER BY country").all().map(r => r.country);
+  const settingsCountries = meta.countries || [];
   meta.owners = owners;
   meta.dealers = dealers;
-  meta.countries = dbCountries;
+  meta.countries = [...new Set([...settingsCountries, ...dbCountries])].sort();
   res.json(meta);
 });
 
@@ -141,17 +143,17 @@ router.get('/export', async (req, res) => {
   const C_ORANGE = 'FFE65100';
   const C_BG_TOT = 'FFFFF0B3';
 
-  const STATUS_COLORS = { active: C_GREEN, won: C_GREEN, lost: C_RED, lead: C_MUTED, on_hold: C_ORANGE };
-  const STATUS_LABELS = { lead:'Nabídka', active:'Aktivní', won:'Vyhráno', lost:'Prohráno', on_hold:'Pozastaveno' };
-  const PHASE_LABELS  = { project_stage:'Projektová fáze', tender:'Tendr', order:'Objednávka', delivery:'Dodávka' };
-  const REGION_LABELS = { '':'Vše', mea:'MEA' };
-  const WIN_LABELS    = { '':'Vše', high:'≥ 70%', mid:'30–69%', low:'< 30%', none:'Bez hodnoty' };
+  const STATUS_COLORS = { active: C_GREEN, won: C_GREEN, lost: C_RED };
+  const STATUS_LABELS = { active:'Active', won:'Won', lost:'Lost' };
+  const PHASE_LABELS  = { project_stage:'Project Stage', tender:'Tender', order:'Order', delivery:'Delivery' };
+  const REGION_LABELS = { '':'All', mea:'MEA' };
+  const WIN_LABELS    = { '':'All', high:'≥ 70%', mid:'30–69%', low:'< 30%', none:'No value' };
 
-  const COUNTRY_NAMES = { TR:'Turecko',AZ:'Ázerbájdžán',Az:'Ázerbájdžán',GE:'Gruzie',KZ:'Kazachstán',UZ:'Uzbekistán',Mong:'Mongolsko',SY:'Sýrie',IQ:'Irák',TM:'Turkmenistán',EG:'Egypt',MA:'Maroko',DZ:'Alžírsko',LY:'Libye',TN:'Tunisko',TZ:'Tanzanie',UG:'Uganda',KW:'Kuvajt',AE:'SAE',OM:'Omán',JO:'Jordánsko',NC:'Severní Kypr',BY:'Bělorusko',RU:'Rusko' };
+  const COUNTRY_NAMES = { TR:'Türkiye',AZ:'Azerbaijan',UZ:'Uzbekistan',KZ:'Kazakhstan',GE:'Georgia',SY:'Syria',IQ:'Iraq',TM:'Turkmenistan',MN:'Mongolia',EG:'Egypt',MA:'Morocco',DZ:'Algeria',LY:'Libya',TN:'Tunisia',TZ:'Tanzania',UG:'Uganda',KW:'Kuwait',AE:'United Arab Emirates',OM:'Oman',JO:'Jordan',NC:'Northern Cyprus',BY:'Belarus',RU:'Russia' };
   const countryName = c => COUNTRY_NAMES[c] || c || '';
 
-  const HEADERS = ['Název projektu','Klient','Země','EUR','Artikly a počty ks','AI hodnota EUR','Status','Fáze','Win% / AI%','Datum rozhodnutí','Datum realizace','Investor','Generální dodavatel','Montážní firma','Obchodník'];
-  const COL_WIDTHS = [34,26,14,12,36,14,14,17,12,14,14,20,20,20,14];
+  const HEADERS = ['Project Name','Client','Country','EUR','Products & Qty','AI Value EUR','Status','Phase','Win% / AI%','Decision Date','Sales Person'];
+  const COL_WIDTHS = [34,26,14,12,36,14,14,17,12,14,14];
   const NUM_COLS = new Set([3,5]); // 0-based
 
   function thinBorder(color) {
@@ -171,7 +173,7 @@ router.get('/export', async (req, res) => {
   ws.addRow([]);
   const r1 = ws.lastRow;
   r1.height = 34;
-  ws.mergeCells(`A1:O1`);
+  ws.mergeCells(`A1:K1`);
   const c1 = r1.getCell(1);
   c1.value = 'MINIB Project Pipeline';
   c1.font = { name:'Arial', bold:true, size:16, color:{argb:C_WHITE} };
@@ -182,24 +184,24 @@ router.get('/export', async (req, res) => {
   ws.addRow([]);
   const r2 = ws.lastRow;
   r2.height = 5;
-  ws.mergeCells(`A2:O2`);
+  ws.mergeCells(`A2:K2`);
   r2.getCell(1).fill = { type:'pattern', pattern:'solid', fgColor:{argb:C_YELLOW} };
 
   // Row 3: Filter meta
   const filterParts = [
-    `Region: ${REGION_LABELS[region||''] || 'Vše'}`,
-    search  ? `Hledat: ${search}` : null,
-    country ? `Země: ${countryName(country)}` : null,
+    `Region: ${REGION_LABELS[region||''] || 'All'}`,
+    search  ? `Search: ${search}` : null,
+    country ? `Country: ${countryName(country)}` : null,
     win     ? `Win%: ${WIN_LABELS[win]}` : null,
     status  ? `Status: ${STATUS_LABELS[status]||status}` : null,
-    year    ? `Rok: ${year}` : null,
-    owner   ? `Obchodník: ${owner}` : null,
+    year    ? `Year: ${year}` : null,
+    owner   ? `Sales Person: ${owner}` : null,
   ].filter(Boolean).join('   |   ');
-  const metaText = `Exportováno: ${new Date().toLocaleString('cs-CZ')}     Filtry: ${filterParts}     Počet řádků: ${projects.length}`;
+  const metaText = `Exported: ${new Date().toLocaleString('en-GB')}     Filters: ${filterParts}     Rows: ${projects.length}`;
   ws.addRow([]);
   const r3 = ws.lastRow;
   r3.height = 40;
-  ws.mergeCells('A3:O3');
+  ws.mergeCells('A3:K3');
   const c3 = r3.getCell(1);
   c3.value = metaText;
   c3.font = { name:'Arial', size:14, italic:true, color:{argb:'FFAAAAAA'} };
@@ -242,8 +244,7 @@ router.get('/export', async (req, res) => {
       PHASE_LABELS[p.phase]||p.phase||'',
       winVal,
       p.estimated_decision_date ? String(p.estimated_decision_date).slice(0,7) : '',
-      p.estimated_delivery_date ? String(p.estimated_delivery_date).slice(0,7) : '',
-      p.investor||'', p.general_contractor||'', p.installation_company||'', p.owner||'',
+      p.owner||'',
     ];
 
     ws.addRow(rowData);
@@ -276,7 +277,7 @@ router.get('/export', async (req, res) => {
   // Totals row
   const dataStartRow = 6;
   const dataEndRow   = 5 + projects.length;
-  const totRow = ws.addRow([`CELKEM  (${projects.length} projektů)`, ...Array(HEADERS.length-1).fill(null)]);
+  const totRow = ws.addRow([`TOTAL  (${projects.length} projects)`, ...Array(HEADERS.length-1).fill(null)]);
   totRow.height = 24;
   totRow.eachCell({ includeEmpty:true }, (cell, ci) => {
     const ci0 = ci - 1;
@@ -322,7 +323,7 @@ router.get('/:id', (req, res) => {
   res.json({ project });
 });
 
-const MEA_CODES = new Set(['TR','AZ','Az','GE','KZ','UZ','Mong','SY','IQ','TM','EG','MA','DZ','LY','TN','TZ','UG','KW','AE','OM','JO','NC','BY','RU']);
+const MEA_CODES = new Set(['TR','AZ','UZ','KZ','GE','SY','IQ','TM','MN','EG','MA','DZ','LY','TN','TZ','UG','KW','AE','OM','JO','NC','BY','RU']);
 function codePrefix() {
   return 'MEA';
 }
@@ -359,7 +360,7 @@ router.post('/', (req, res) => {
     estimated_decision_date: body.estimated_decision_date || null,
     estimated_delivery_date: body.estimated_delivery_date || null,
     actual_order_date: body.actual_order_date || null,
-    status: body.status || 'lead',
+    status: body.status || 'active',
     phase: body.phase || 'project_stage',
     current_status_note: body.current_status_note || null,
     owner: body.owner || null,
@@ -379,7 +380,7 @@ router.post('/', (req, res) => {
 
 // DELETE /api/projects/:id
 router.delete('/:id', (req, res) => {
-  if (req.user.role !== 'HQ') return res.status(403).json({ error: 'HQ only' });
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'HQ only' });
   const project = db.prepare('SELECT id FROM projects WHERE id = ?').get(req.params.id);
   if (!project) return res.status(404).json({ error: 'Project not found' });
   db.prepare('DELETE FROM projects WHERE id = ?').run(req.params.id);
@@ -520,17 +521,23 @@ router.post('/:id/ai-assess', async (req, res) => {
   try {
     const result = await ai.assessWinProbability(project, comments, lang);
 
+    const reasoningMain = result.reasoning_en ?? result.reasoning ?? null;
     db.prepare(`
       UPDATE projects SET
         win_prob_ai = ?, win_prob_ai_min = ?, win_prob_ai_max = ?,
-        win_prob_ai_reasoning = ?, win_prob_ai_updated_at = datetime('now'),
+        win_prob_ai_reasoning = ?,
+        win_prob_ai_reasoning_cs = ?, win_prob_ai_reasoning_en = ?, win_prob_ai_reasoning_tr = ?,
+        win_prob_ai_updated_at = datetime('now'),
         updated_at = datetime('now')
       WHERE id = ?
     `).run(
       result.probability ?? null,
       result.probability_min ?? null,
       result.probability_max ?? null,
-      result.reasoning ?? null,
+      reasoningMain,
+      result.reasoning_cs ?? null,
+      result.reasoning_en ?? null,
+      result.reasoning_tr ?? null,
       project.id
     );
 

@@ -64,7 +64,7 @@ router.get('/pipeline', (req, res) => {
 // Report 2: Win/Loss analysis
 router.get('/winloss', (req, res) => {
   const projects = getProjects(req);
-  const statuses = ['lead', 'active', 'won', 'lost', 'on_hold'];
+  const statuses = ['active', 'won', 'lost'];
   const counts = {};
   for (const s of statuses) counts[s] = 0;
   for (const p of projects) {

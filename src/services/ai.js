@@ -10,7 +10,6 @@ function getClient() {
 const LANGUAGE_NAMES = {
   cs: 'Czech',
   en: 'English',
-  de: 'German',
   tr: 'Turkish',
 };
 
@@ -41,7 +40,6 @@ async function assessWinProbability(project, comments, lang) {
   const client = getClient();
   if (!client) throw new Error('AI not configured');
 
-  const langName = LANGUAGE_NAMES[lang] || 'English';
   const commentsText = comments
     .map((c) => `- [${c.created_at}] ${c.author_name}: ${c.content}`)
     .join('\n') || '(no comments yet)';
@@ -63,12 +61,14 @@ Respond ONLY with valid JSON (no markdown, no explanation outside JSON):
   "probability": <number 0-100>,
   "probability_min": <number 0-100>,
   "probability_max": <number 0-100>,
-  "reasoning": "<max 2 sentences, max 1000 characters, in ${langName}>"
+  "reasoning_cs": "<max 2 sentences, max 1000 characters, in Czech>",
+  "reasoning_en": "<max 2 sentences, max 1000 characters, in English>",
+  "reasoning_tr": "<max 2 sentences, max 1000 characters, in Turkish>"
 }`;
 
   const response = await client.messages.create({
     model: MODEL,
-    max_tokens: 1000,
+    max_tokens: 2000,
     messages: [{ role: 'user', content: prompt }],
   });
 
@@ -123,14 +123,15 @@ Your task:
 1. Identify the product type(s) and quantity from the text and comments (product codes like HC, KT, PB, T, etc. + number of pieces).
 2. Use the pricelist above to estimate total project value in EUR (quantity × price per type).
 3. IMPORTANT: If the exact model length or variant is NOT explicitly mentioned in the products text or comments, ALWAYS use the average price (avg) from the pricelist — never the min or max. Only use a specific price if the exact size/length is stated.
-4. If multiple product types, sum them.
-5. If quantity is missing or unclear, make a reasonable assumption and note it.
-6. If the text contains no useful product/quantity info, return null.
+4. IMPORTANT: Apply a 39% discount to ALL list prices. So the final price per piece = list price × 0.61.
+5. If multiple product types, sum them.
+6. If quantity is missing or unclear, make a reasonable assumption and note it.
+7. If the text contains no useful product/quantity info, return null.
 
 Respond ONLY with valid JSON, no markdown:
 {
   "estimated_value_eur": <number or null>,
-  "breakdown": "<short explanation: what products, how many, what price used>",
+  "breakdown": "<short explanation: what products, how many, what final price per piece used, total. NEVER mention any discount, discount percentage, or the multiplier 0.61 — just show the final prices as if they are the regular prices>",
   "confidence": "high" | "medium" | "low"
 }`;
 
@@ -151,12 +152,11 @@ async function translateComment(content, sourceLang) {
   if (!client) throw new Error('AI not configured');
 
   const srcName = LANGUAGE_NAMES[sourceLang] || 'English';
-  const prompt = `Translate the following text from ${srcName} into Czech, English, German and Turkish.
+  const prompt = `Translate the following text from ${srcName} into Czech, English and Turkish.
 Return ONLY valid JSON, no markdown, no explanation:
 {
   "cs": "<Czech translation>",
   "en": "<English translation>",
-  "de": "<German translation>",
   "tr": "<Turkish translation>"
 }
 
