@@ -1,234 +1,164 @@
 const express = require('express');
-const XLSX = require('xlsx');
 const db = require('../db');
 const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
-
 router.use(requireAuth);
 
-function applyDealerFilter(req, where, params) {
-  if (req.user.role === 'HQ') return;
-  let countries = [];
-  try {
-    countries = JSON.parse(req.user.countries || '[]');
-  } catch (e) { /* ignore */ }
-
-  const clauses = ['dealer_user_id = ?'];
-  params.push(req.user.id);
-  if (countries.length) {
-    clauses.push(`country IN (${countries.map(() => '?').join(',')})`);
-    params.push(...countries);
-  }
-  where.push(`(${clauses.join(' OR ')})`);
-}
+const COUNTRY_NAMES = { TR:'Türkiye',AZ:'Azerbaijan',UZ:'Uzbekistan',KZ:'Kazakhstan',GE:'Georgia',SY:'Syria',IQ:'Iraq',TM:'Turkmenistan',MN:'Mongolia',EG:'Egypt',MA:'Morocco',DZ:'Algeria',LY:'Libya',TN:'Tunisia',TZ:'Tanzania',UG:'Uganda',KW:'Kuwait',AE:'UAE',OM:'Oman',JO:'Jordan',NC:'Northern Cyprus',BY:'Belarus',RU:'Russia' };
 
 function buildFilters(req) {
-  const { sheet, owner, status, region, dateFrom, dateTo } = req.query;
+  const { owner, status, country, dateFrom, dateTo } = req.query;
   const where = [];
   const params = [];
-
-  applyDealerFilter(req, where, params);
-
-  if (sheet) { where.push('sheet = ?'); params.push(sheet); }
   if (owner) { where.push('owner = ?'); params.push(owner); }
   if (status) { where.push('status = ?'); params.push(status); }
-  if (region) { where.push('region = ?'); params.push(region); }
+  if (country) { where.push('country = ?'); params.push(country); }
   if (dateFrom) { where.push("estimated_decision_date >= ?"); params.push(dateFrom); }
-  if (dateTo) { where.push("estimated_decision_date <= ?"); params.push(dateTo); }
-
+  if (dateTo) { where.push("estimated_decision_date <= ?"); params.push(dateTo + '-99'); }
   return { where, params };
 }
 
 function getProjects(req) {
   const { where, params } = buildFilters(req);
-  const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
-  return db.prepare(`SELECT * FROM projects ${whereSql}`).all(...params);
+  const sql = where.length ? `WHERE ${where.join(' AND ')}` : '';
+  return db.prepare(`SELECT * FROM projects ${sql}`).all(...params);
 }
 
-// Report 1: Pipeline overview, grouped by phase
+// Pipeline by phase
 router.get('/pipeline', (req, res) => {
   const projects = getProjects(req);
   const phases = ['project_stage', 'tender', 'order', 'delivery'];
-  const groups = phases.map((phase) => {
-    const items = projects.filter((p) => (p.phase || 'project_stage') === phase);
-    return {
-      phase,
-      count: items.length,
-      total_value_eur: items.reduce((sum, p) => sum + (p.minib_price_eur || 0), 0),
-    };
+  const groups = phases.map(phase => {
+    const items = projects.filter(p => (p.phase || 'project_stage') === phase);
+    return { phase, count: items.length, value: items.reduce((s, p) => s + (p.project_value_eur || 0), 0) };
   });
   res.json({ groups, total: projects.length });
 });
 
-// Report 2: Win/Loss analysis
+// Win/Loss
 router.get('/winloss', (req, res) => {
   const projects = getProjects(req);
-  const statuses = ['active', 'won', 'lost'];
-  const counts = {};
-  for (const s of statuses) counts[s] = 0;
-  for (const p of projects) {
-    counts[p.status] = (counts[p.status] || 0) + 1;
-  }
-
-  const withProb = projects.filter((p) => p.win_prob_manual_min !== null && p.win_prob_manual_min !== undefined);
-  const avgWinProb = withProb.length
-    ? withProb.reduce((sum, p) => sum + p.win_prob_manual_min, 0) / withProb.length
-    : null;
-
-  res.json({ counts, avg_win_probability: avgWinProb, total: projects.length });
+  const counts = { active: 0, won: 0, lost: 0 };
+  for (const p of projects) counts[p.status] = (counts[p.status] || 0) + 1;
+  const withProb = projects.filter(p => p.win_prob_manual_min != null);
+  const avgProb = withProb.length ? withProb.reduce((s, p) => s + p.win_prob_manual_min, 0) / withProb.length : null;
+  const wonValue = projects.filter(p => p.status === 'won').reduce((s, p) => s + (p.project_value_eur || 0), 0);
+  const lostValue = projects.filter(p => p.status === 'lost').reduce((s, p) => s + (p.project_value_eur || 0), 0);
+  const activeValue = projects.filter(p => p.status === 'active').reduce((s, p) => s + (p.project_value_eur || 0), 0);
+  res.json({ counts, avg_win_probability: avgProb, total: projects.length, wonValue, lostValue, activeValue });
 });
 
-// Report 3: Geographic overview
+// Geography
 router.get('/geography', (req, res) => {
   const projects = getProjects(req);
   const byCountry = {};
   for (const p of projects) {
     const c = p.country || 'Unknown';
-    if (!byCountry[c]) byCountry[c] = { country: c, count: 0, total_value_eur: 0, probs: [] };
-    byCountry[c].count += 1;
-    byCountry[c].total_value_eur += p.minib_price_eur || 0;
-    if (p.win_prob_manual_min !== null && p.win_prob_manual_min !== undefined) {
-      byCountry[c].probs.push(p.win_prob_manual_min);
-    }
+    if (!byCountry[c]) byCountry[c] = { code: c, name: COUNTRY_NAMES[c] || c, count: 0, value: 0, won: 0, lost: 0, probs: [] };
+    byCountry[c].count++;
+    byCountry[c].value += p.project_value_eur || 0;
+    if (p.status === 'won') byCountry[c].won++;
+    if (p.status === 'lost') byCountry[c].lost++;
+    if (p.win_prob_manual_min != null) byCountry[c].probs.push(p.win_prob_manual_min);
   }
-  const result = Object.values(byCountry).map((c) => ({
-    country: c.country,
-    count: c.count,
-    total_value_eur: c.total_value_eur,
-    avg_win_probability: c.probs.length ? c.probs.reduce((a, b) => a + b, 0) / c.probs.length : null,
-  })).sort((a, b) => b.total_value_eur - a.total_value_eur);
-
+  const result = Object.values(byCountry).map(c => ({
+    ...c, avg_prob: c.probs.length ? Math.round(c.probs.reduce((a, b) => a + b, 0) / c.probs.length) : null,
+    win_rate: (c.won + c.lost) > 0 ? Math.round(c.won / (c.won + c.lost) * 100) : null,
+  })).sort((a, b) => b.value - a.value);
   res.json({ countries: result });
 });
 
-// Report 4: Owner performance
+// Owners
 router.get('/owners', (req, res) => {
   const projects = getProjects(req);
   const byOwner = {};
   for (const p of projects) {
     const o = p.owner || 'Unassigned';
-    if (!byOwner[o]) byOwner[o] = { owner: o, count: 0, total_value_eur: 0, probs: [], won: 0, lost: 0 };
-    byOwner[o].count += 1;
-    byOwner[o].total_value_eur += p.minib_price_eur || 0;
-    if (p.win_prob_manual_min !== null && p.win_prob_manual_min !== undefined) {
-      byOwner[o].probs.push(p.win_prob_manual_min);
-    }
-    if (p.status === 'won') byOwner[o].won += 1;
-    if (p.status === 'lost') byOwner[o].lost += 1;
+    if (!byOwner[o]) byOwner[o] = { owner: o, count: 0, value: 0, won: 0, lost: 0, active: 0, probs: [] };
+    byOwner[o].count++;
+    byOwner[o].value += p.project_value_eur || 0;
+    if (p.status === 'won') byOwner[o].won++;
+    if (p.status === 'lost') byOwner[o].lost++;
+    if (p.status === 'active') byOwner[o].active++;
+    if (p.win_prob_manual_min != null) byOwner[o].probs.push(p.win_prob_manual_min);
   }
-  const result = Object.values(byOwner).map((o) => ({
-    owner: o.owner,
-    count: o.count,
-    total_value_eur: o.total_value_eur,
-    avg_win_probability: o.probs.length ? o.probs.reduce((a, b) => a + b, 0) / o.probs.length : null,
-    won: o.won,
-    lost: o.lost,
-  })).sort((a, b) => b.total_value_eur - a.total_value_eur);
-
+  const result = Object.values(byOwner).map(o => ({
+    ...o, avg_prob: o.probs.length ? Math.round(o.probs.reduce((a, b) => a + b, 0) / o.probs.length) : null,
+    win_rate: (o.won + o.lost) > 0 ? Math.round(o.won / (o.won + o.lost) * 100) : null,
+  })).sort((a, b) => b.value - a.value);
   res.json({ owners: result });
 });
 
-// Report 5: Order timeline (by month/quarter from estimated_decision_date)
+// Timeline
 router.get('/timeline', (req, res) => {
   const projects = getProjects(req);
-  const today = new Date().toISOString().slice(0, 10);
-
+  const today = new Date().toISOString().slice(0, 7);
   const buckets = {};
   const overdue = [];
-
   for (const p of projects) {
     const d = p.estimated_decision_date;
     let bucket = 'Unknown';
     if (d) {
-      const isoMatch = String(d).match(/^(\d{4})-(\d{2})/);
-      const quarterMatch = String(d).match(/(\d{4}).*?Q([1-4])|Q([1-4]).*?(\d{4})/i);
-      if (isoMatch) {
-        bucket = `${isoMatch[1]}-${isoMatch[2]}`;
-        if (d < today && (p.status === 'active' || p.status === 'lead')) {
-          overdue.push(p);
-        }
-      } else if (quarterMatch) {
-        const year = quarterMatch[1] || quarterMatch[4];
-        const q = quarterMatch[2] || quarterMatch[3];
-        bucket = `${year}-Q${q}`;
-      } else {
-        bucket = String(d);
+      const m = String(d).match(/^(\d{4})-(\d{2})/);
+      if (m) {
+        bucket = `${m[1]}-${m[2]}`;
+        if (bucket < today && p.status === 'active') overdue.push(p);
       }
     }
-    if (!buckets[bucket]) buckets[bucket] = { period: bucket, count: 0, total_value_eur: 0 };
-    buckets[bucket].count += 1;
-    buckets[bucket].total_value_eur += p.minib_price_eur || 0;
+    if (!buckets[bucket]) buckets[bucket] = { period: bucket, count: 0, value: 0, won: 0 };
+    buckets[bucket].count++;
+    buckets[bucket].value += p.project_value_eur || 0;
+    if (p.status === 'won') buckets[bucket].won++;
   }
-
-  const result = Object.values(buckets).sort((a, b) => a.period.localeCompare(b.period));
   res.json({
-    timeline: result,
-    overdue: overdue.map((p) => ({
-      id: p.id, project_code: p.project_code, project_name: p.project_name,
-      estimated_decision_date: p.estimated_decision_date, status: p.status, owner: p.owner,
-    })),
+    timeline: Object.values(buckets).sort((a, b) => a.period.localeCompare(b.period)),
+    overdue: overdue.map(p => ({ id: p.id, project_code: p.project_code, project_name: p.project_name, estimated_decision_date: p.estimated_decision_date, owner: p.owner })),
   });
 });
 
-// Report 6: Pipeline value by region
-router.get('/pipeline-value', (req, res) => {
-  const projects = getProjects(req).filter((p) => p.status === 'active' || p.status === 'lead');
-  const byRegion = {};
+// Forecast — weighted pipeline
+router.get('/forecast', (req, res) => {
+  const projects = getProjects(req).filter(p => p.status === 'active');
+  const byMonth = {};
   for (const p of projects) {
-    const r = p.region || 'Unknown';
-    if (!byRegion[r]) byRegion[r] = { region: r, count: 0, total_value_eur: 0, projects_without_price: 0 };
-    byRegion[r].count += 1;
-    if (p.minib_price_eur === null || p.minib_price_eur === undefined) {
-      byRegion[r].projects_without_price += 1;
-    } else {
-      byRegion[r].total_value_eur += p.minib_price_eur;
-    }
+    const d = p.estimated_decision_date;
+    const month = d ? String(d).slice(0, 7) : 'Unknown';
+    if (!byMonth[month]) byMonth[month] = { month, value: 0, weighted: 0, count: 0 };
+    const val = p.project_value_eur || 0;
+    const prob = p.win_prob_manual_min ?? p.win_prob_ai ?? 50;
+    byMonth[month].value += val;
+    byMonth[month].weighted += val * prob / 100;
+    byMonth[month].count++;
   }
-  res.json({ regions: Object.values(byRegion) });
+  res.json({ forecast: Object.values(byMonth).sort((a, b) => a.month.localeCompare(b.month)) });
 });
 
-// Export endpoint - dumps the (filtered) project list as CSV or XLSX
-router.get('/export', (req, res) => {
+// Activity
+router.get('/activity', (req, res) => {
   const projects = getProjects(req);
-  const format = req.query.format === 'csv' ? 'csv' : 'xlsx';
+  const ids = projects.map(p => p.id);
+  if (!ids.length) return res.json({ monthly: [], stale: [] });
 
-  const rows = projects.map((p) => ({
-    'Project Code': p.project_code,
-    'Sheet': p.sheet,
-    'Country': p.country,
-    'Region': p.region,
-    'Project Name': p.project_name,
-    'Company': p.company,
-    'Owner': p.owner,
-    'Status': p.status,
-    'Phase': p.phase,
-    'MINIB Price EUR': p.minib_price_eur,
-    'Win % (min)': p.win_prob_manual_min,
-    'Win % (max)': p.win_prob_manual_max,
-    'AI Win %': p.win_prob_ai,
-    'Estimated Decision Date': p.estimated_decision_date,
-    'Estimated Delivery Date': p.estimated_delivery_date,
-    'Products and Quantity': p.products_and_quantity,
-    'Competition': p.competition,
-    'Status Note': p.current_status_note,
-  }));
-
-  const ws = XLSX.utils.json_to_sheet(rows);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Projects');
-
-  if (format === 'csv') {
-    const csv = XLSX.utils.sheet_to_csv(ws);
-    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-    res.setHeader('Content-Disposition', 'attachment; filename="minib-projects.csv"');
-    res.send(csv);
-  } else {
-    const buf = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
-    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', 'attachment; filename="minib-projects.xlsx"');
-    res.send(buf);
+  const comments = db.prepare(`SELECT project_id, created_at FROM comments WHERE project_id IN (${ids.join(',')})`).all();
+  const byMonth = {};
+  for (const c of comments) {
+    const m = c.created_at ? c.created_at.slice(0, 7) : 'Unknown';
+    byMonth[m] = (byMonth[m] || 0) + 1;
   }
+  const monthly = Object.entries(byMonth).map(([month, count]) => ({ month, count })).sort((a, b) => a.month.localeCompare(b.month));
+
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString();
+  const lastCommentByProject = {};
+  for (const c of comments) {
+    if (!lastCommentByProject[c.project_id] || c.created_at > lastCommentByProject[c.project_id]) {
+      lastCommentByProject[c.project_id] = c.created_at;
+    }
+  }
+  const stale = projects.filter(p => p.status === 'active' && (!lastCommentByProject[p.id] || lastCommentByProject[p.id] < thirtyDaysAgo))
+    .map(p => ({ id: p.id, project_code: p.project_code, project_name: p.project_name, owner: p.owner, last_comment: lastCommentByProject[p.id] || null }));
+
+  res.json({ monthly, stale });
 });
 
 module.exports = router;

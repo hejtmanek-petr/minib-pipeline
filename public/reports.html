@@ -8,6 +8,46 @@
   <link rel="stylesheet" href="/css/components.css">
   <link rel="stylesheet" href="/css/responsive.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .report-tabs { display:flex; gap:4px; margin-bottom:20px; flex-wrap:wrap; }
+    .report-tab { padding:10px 18px; border:none; background:#f0f0f0; color:#666; font-weight:600; font-size:13px; border-radius:8px 8px 0 0; cursor:pointer; transition:all 0.2s; }
+    .report-tab:hover { background:#e0e0e0; color:#333; }
+    .report-tab.active { background:#FFC600; color:#2A2A2A; }
+    .report-section { display:none; }
+    .report-section.active { display:block; }
+    .report-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
+    .report-grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:16px; }
+    .chart-card { background:#fff; border-radius:10px; padding:20px; box-shadow:0 1px 6px rgba(0,0,0,0.06); }
+    .chart-card h4 { margin:0 0 12px; font-size:14px; color:#888; text-transform:uppercase; letter-spacing:0.5px; }
+    .chart-wrap { position:relative; height:280px; }
+    .stat-card { background:#fff; border-radius:10px; padding:20px; box-shadow:0 1px 6px rgba(0,0,0,0.06); text-align:center; }
+    .stat-value { font-size:28px; font-weight:900; color:#2A2A2A; margin:8px 0 4px; }
+    .stat-value.yellow { color:#D4A800; }
+    .stat-value.green { color:#2E7D32; }
+    .stat-value.red { color:#C0272D; }
+    .stat-label { font-size:11px; color:#999; text-transform:uppercase; letter-spacing:0.5px; font-weight:600; }
+    .report-table { width:100%; border-collapse:collapse; font-size:13px; }
+    .report-table th { background:#FAFAFA; color:#888; font-size:11px; text-transform:uppercase; letter-spacing:0.5px; padding:10px 12px; text-align:left; border-bottom:2px solid #f0f0f0; }
+    .report-table td { padding:10px 12px; border-bottom:1px solid #f5f5f5; }
+    .report-table tr:hover td { background:#FFFDE7; }
+    .report-table .money { text-align:right; font-weight:600; }
+    .report-table .num { text-align:center; }
+    .bar-inline { display:inline-block; height:8px; border-radius:4px; vertical-align:middle; margin-left:6px; }
+    .filters-row { display:flex; gap:12px; margin-bottom:16px; flex-wrap:wrap; align-items:flex-end; }
+    .filters-row .form-group { min-width:120px; margin:0; }
+    .filters-row label { font-size:11px; color:#999; text-transform:uppercase; font-weight:600; margin-bottom:2px; display:block; }
+    .filters-row select, .filters-row input { padding:6px 10px; font-size:13px; border:1px solid #ddd; border-radius:6px; }
+    .stale-tag { background:#FFF3E0; color:#E65100; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:600; }
+    .overdue-tag { background:#FFEBEE; color:#C0272D; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:600; }
+    @media(max-width:768px) {
+      .report-grid, .report-grid-3 { grid-template-columns:1fr; }
+      .report-tabs { gap:2px; }
+      .report-tab { padding:8px 12px; font-size:12px; }
+      .chart-wrap { height:220px; }
+      .stat-value { font-size:22px; }
+      .filters-row { flex-direction:column; }
+    }
+  </style>
 </head>
 <body>
   <header id="app-header" class="app-header"></header>
@@ -15,112 +55,43 @@
   <main class="app-main">
     <div class="page-title">
       <h1 data-i18n="reports.title"></h1>
-      <div class="flex gap-8">
-        <button class="btn btn-secondary" id="export-csv" data-i18n="common.exportCsv"></button>
-        <button class="btn btn-secondary" id="export-xlsx" data-i18n="common.exportExcel"></button>
-      </div>
     </div>
 
-    <div class="filters-bar">
+    <div class="filters-row" id="report-filters">
       <div class="form-group">
-        <label data-i18n="dashboard.filters.sheet"></label>
-        <select id="filter-sheet">
-          <option value="" data-i18n="common.all"></option>
-          <option value="TR">TR</option>
-          <option value="CIS">CIS</option>
+        <label>Owner</label>
+        <select id="f-owner"><option value="">All</option></select>
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <select id="f-status">
+          <option value="">All</option>
+          <option value="active">Active</option>
+          <option value="won">Won</option>
+          <option value="lost">Lost</option>
         </select>
       </div>
       <div class="form-group">
-        <label data-i18n="dashboard.filters.owner"></label>
-        <select id="filter-owner"><option value="" data-i18n="common.all"></option></select>
-      </div>
-      <div class="form-group">
-        <label data-i18n="dashboard.filters.status"></label>
-        <select id="filter-status">
-          <option value="" data-i18n="common.all"></option>
-          <option value="lead" data-i18n="status.lead"></option>
-          <option value="active" data-i18n="status.active"></option>
-          <option value="won" data-i18n="status.won"></option>
-          <option value="lost" data-i18n="status.lost"></option>
-          <option value="on_hold" data-i18n="status.on_hold"></option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label data-i18n="reports.filters.dateFrom"></label>
-        <input type="text" id="filter-date-from" placeholder="2026-01">
-      </div>
-      <div class="form-group">
-        <label data-i18n="reports.filters.dateTo"></label>
-        <input type="text" id="filter-date-to" placeholder="2026-12">
+        <label>Country</label>
+        <select id="f-country"><option value="">All</option></select>
       </div>
     </div>
 
-    <div class="tabs">
-      <button class="tab-btn active" data-tab="pipeline" data-i18n="reports.tab.pipeline"></button>
-      <button class="tab-btn" data-tab="winloss" data-i18n="reports.tab.winloss"></button>
-      <button class="tab-btn" data-tab="geography" data-i18n="reports.tab.geography"></button>
-      <button class="tab-btn" data-tab="owners" data-i18n="reports.tab.owners"></button>
-      <button class="tab-btn" data-tab="timeline" data-i18n="reports.tab.timeline"></button>
-      <button class="tab-btn" data-tab="value" data-i18n="reports.tab.value"></button>
+    <div class="report-tabs" id="report-tabs">
+      <button class="report-tab active" data-tab="overview">Overview</button>
+      <button class="report-tab" data-tab="geography">Geography</button>
+      <button class="report-tab" data-tab="owners">Owners</button>
+      <button class="report-tab" data-tab="forecast">Forecast</button>
+      <button class="report-tab" data-tab="timeline">Timeline</button>
+      <button class="report-tab" data-tab="activity">Activity</button>
     </div>
 
-    <div class="tab-content active" id="tab-pipeline">
-      <div class="card"><div class="chart-wrap"><canvas id="chart-pipeline"></canvas></div></div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th data-i18n="project.field.phase"></th><th>#</th><th data-i18n="dashboard.table.price"></th></tr></thead>
-          <tbody id="pipeline-tbody"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="tab-content" id="tab-winloss">
-      <div class="card"><div class="chart-wrap"><canvas id="chart-winloss"></canvas></div></div>
-      <div class="card" id="winloss-summary"></div>
-    </div>
-
-    <div class="tab-content" id="tab-geography">
-      <div class="card"><div class="chart-wrap"><canvas id="chart-geography"></canvas></div></div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th data-i18n="project.field.country"></th><th>#</th><th data-i18n="dashboard.table.price"></th><th data-i18n="dashboard.table.win"></th></tr></thead>
-          <tbody id="geography-tbody"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="tab-content" id="tab-owners">
-      <div class="card"><div class="chart-wrap"><canvas id="chart-owners"></canvas></div></div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th data-i18n="project.field.owner"></th><th>#</th><th data-i18n="dashboard.table.price"></th><th data-i18n="dashboard.table.win"></th><th data-i18n="status.won"></th><th data-i18n="status.lost"></th></tr></thead>
-          <tbody id="owners-tbody"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="tab-content" id="tab-timeline">
-      <div class="card"><div class="chart-wrap"><canvas id="chart-timeline"></canvas></div></div>
-      <div class="card">
-        <h3 data-i18n="reports.overdue"></h3>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th data-i18n="dashboard.table.code"></th><th data-i18n="dashboard.table.name"></th><th data-i18n="dashboard.table.decisionDate"></th><th data-i18n="project.field.owner"></th></tr></thead>
-            <tbody id="overdue-tbody"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <div class="tab-content" id="tab-value">
-      <div class="card"><div class="chart-wrap"><canvas id="chart-value"></canvas></div></div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th data-i18n="project.field.region"></th><th>#</th><th data-i18n="dashboard.table.price"></th></tr></thead>
-          <tbody id="value-tbody"></tbody>
-        </table>
-      </div>
-    </div>
+    <div class="report-section active" id="sec-overview"></div>
+    <div class="report-section" id="sec-geography"></div>
+    <div class="report-section" id="sec-owners"></div>
+    <div class="report-section" id="sec-forecast"></div>
+    <div class="report-section" id="sec-timeline"></div>
+    <div class="report-section" id="sec-activity"></div>
   </main>
 
   <script src="/js/i18n.js"></script>
