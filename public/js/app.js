@@ -104,7 +104,7 @@ const App = (() => {
 
     header.innerHTML = `
       <button class="hamburger-btn" id="hamburger-btn" style="display:none;">&#9776;</button>
-      <div class="logo"><img src="/img/minib-logo-claim-EN-nahled.jpg" alt="MINIB" style="height:36px;"></div>
+      <a href="/dashboard.html" class="logo"><img src="/img/minib-logo-claim-EN-nahled.jpg" alt="MINIB" style="height:36px;"></a>
       <nav class="app-nav" id="app-nav">${navHtml}</nav>
       <div class="header-right">
         <div class="lang-switch">

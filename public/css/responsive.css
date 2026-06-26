@@ -71,12 +71,15 @@
   .kpi-value { font-size: 20px; }
   .kpi-label { font-size: 11px; }
 
-  /* --- Filters --- */
+  /* --- Filters: collapsible on mobile --- */
+  .filters-toggle { display: block !important; width: 100%; text-align: left; font-size: 14px; }
   .filters-bar {
     flex-direction: column;
     align-items: stretch;
     gap: 6px;
+    display: none;
   }
+  .filters-bar.open { display: flex; }
   .filters-bar .form-group { min-width: 0; }
   .filters-bar input[type="text"] { min-width: 0; }
 
@@ -121,9 +124,8 @@
   /* --- AI reasoning lang bar inline --- */
   #ai-reasoning-lang-bar { flex-wrap: wrap; }
 
-  /* --- Export button --- */
-  .form-group-btn { flex-direction: column; }
-  .form-group-btn .btn { width: 100%; }
+  /* --- Export button: hide on mobile --- */
+  #btn-export-excel { display: none; }
 }
 
 /* Small phones */

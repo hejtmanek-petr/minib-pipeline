@@ -164,6 +164,14 @@
 
   document.getElementById('btn-export-excel').addEventListener('click', exportExcel);
 
+  // Filters toggle (mobile)
+  document.getElementById('filters-toggle').addEventListener('click', () => {
+    const bar = document.getElementById('filters-bar');
+    const btn = document.getElementById('filters-toggle');
+    bar.classList.toggle('open');
+    btn.innerHTML = bar.classList.contains('open') ? '&#9650; Filters' : '&#9660; Filters';
+  });
+
   // Sorting
   document.querySelectorAll('th[data-sort]').forEach((th) => {
     th.addEventListener('click', () => {
