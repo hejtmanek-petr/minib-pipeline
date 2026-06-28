@@ -10,7 +10,7 @@
       'MN': 'Mongolsko', 'EG': 'Egypt', 'MA': 'Maroko', 'DZ': 'Alžírsko',
       'LY': 'Libye', 'TN': 'Tunisko', 'TZ': 'Tanzanie', 'UG': 'Uganda',
       'KW': 'Kuvajt', 'AE': 'SAE', 'OM': 'Omán', 'JO': 'Jordánsko',
-      'NC': 'Severní Kypr', 'BY': 'Bělorusko', 'RU': 'Rusko',
+      'NC': 'Severní Kypr', 'BY': 'Bělorusko', 'RU': 'Rusko', 'CA': 'Kanada',
     },
     en: {
       'TR': 'Türkiye', 'AZ': 'Azerbaijan', 'UZ': 'Uzbekistan', 'KZ': 'Kazakhstan',
@@ -18,7 +18,7 @@
       'MN': 'Mongolia', 'EG': 'Egypt', 'MA': 'Morocco', 'DZ': 'Algeria',
       'LY': 'Libya', 'TN': 'Tunisia', 'TZ': 'Tanzania', 'UG': 'Uganda',
       'KW': 'Kuwait', 'AE': 'United Arab Emirates', 'OM': 'Oman', 'JO': 'Jordan',
-      'NC': 'Northern Cyprus', 'BY': 'Belarus', 'RU': 'Russia',
+      'NC': 'Northern Cyprus', 'BY': 'Belarus', 'RU': 'Russia', 'CA': 'Canada',
     },
   };
   function countryName(c) {
