@@ -63,10 +63,11 @@
         <td>${p.project_name || ''}</td>
         <td>${countryName(p.country)}</td>
         ${hidePrices ? '' : `<td>${p.project_value_eur != null ? Number(p.project_value_eur).toLocaleString('de-DE', {maximumFractionDigits:0}) + ' €' : '-'}</td>`}
+        <td>${p.win_prob_manual_min != null ? `<span class="${App.winBadgeClass(p.win_prob_manual_min)}">${p.win_prob_manual_min}%</span>` : '<span class="text-muted">-</span>'}</td>
         <td>${p.products_and_quantity || ''}</td>
         <td><span class="${App.statusBadgeClass(p.status)}">${I18N.t('status.' + (p.status || 'active'))}</span> <span class="text-muted">${p.phase ? I18N.t('phase.' + p.phase) : ''}</span></td>
-        <td>${winCell(p)}</td>
         ${hidePrices ? '' : `<td>${p.ai_value_eur != null ? '🤖 ' + Number(p.ai_value_eur).toLocaleString('de-DE', {maximumFractionDigits:0}) + ' €' : '<span class="text-muted">-</span>'}</td>`}
+        <td>${p.win_prob_ai != null ? `<span class="${App.winBadgeClass(p.win_prob_ai)}">${Math.round(p.win_prob_ai)}%</span>` : '<span class="text-muted">-</span>'}</td>
         <td>${p.company || ''}</td>
         <td>${p.estimated_decision_date ? String(p.estimated_decision_date).slice(0,7) : '-'}</td>
         <td>${p.owner || ''}</td>
