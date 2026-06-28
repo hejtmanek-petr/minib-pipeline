@@ -408,6 +408,24 @@ router.put('/:id', (req, res) => {
   });
   tx();
 
+  // Auto-manage AI value based on EUR
+  if ('project_value_eur' in updates) {
+    const updated = db.prepare('SELECT * FROM projects WHERE id = ?').get(project.id);
+    if (updated.project_value_eur != null) {
+      // EUR filled → clear AI value
+      db.prepare('UPDATE projects SET ai_value_eur = NULL WHERE id = ?').run(project.id);
+    } else if (updated.products_and_quantity) {
+      // EUR cleared → estimate AI value in background
+      const ai = require('../services/ai');
+      const comments = db.prepare('SELECT content FROM comments WHERE project_id = ? ORDER BY created_at DESC LIMIT 10').all(project.id);
+      ai.estimateProjectValue(updated.products_and_quantity, comments).then(result => {
+        if (result.estimated_value_eur != null) {
+          db.prepare('UPDATE projects SET ai_value_eur = ? WHERE id = ?').run(result.estimated_value_eur, project.id);
+        }
+      }).catch(() => {});
+    }
+  }
+
   const updated = db.prepare('SELECT * FROM projects WHERE id = ?').get(project.id);
   res.json({ project: updated });
 });
