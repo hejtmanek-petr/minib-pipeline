@@ -201,7 +201,7 @@
         const data = await res.json();
         if (!res.ok) { errEl.textContent = T[lang].error; return; }
         const params = new URLSearchParams(window.location.search);
-        window.location.href = params.get('next') || '/dashboard.html';
+        window.location.href = params.get('next') || '/reports.html';
       } catch (e) {
         errEl.textContent = T[lang].connErr;
       }
