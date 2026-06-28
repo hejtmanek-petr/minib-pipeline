@@ -1,5 +1,5 @@
 (async () => {
-  const isUsersPage = !!document.getElementById('users-tbody');
+  const isUsersPage = !!document.getElementById('add-user-btn');
   const user = await App.init(isUsersPage ? 'users' : 'settings', { requireHQ: true });
   if (!user) return;
 
