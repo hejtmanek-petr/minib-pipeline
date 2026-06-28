@@ -413,48 +413,54 @@
     }
   });
 
-  // --- AI Value estimate ---
+  // --- AI Value estimate (admin/mea_management only, when no manual value) ---
+  const aiEstimateSection = document.getElementById('ai-estimate-section');
+  const canSeeEstimate = user.role === 'admin' || user.role === 'mea_management';
 
-  function renderAiValue(p) {
-    const display = document.getElementById('ai-value-display');
-    const breakdown = document.getElementById('ai-value-breakdown');
-    if (!display) return;
-    if (p.ai_value_eur != null) {
-      display.textContent = Number(p.ai_value_eur).toLocaleString('de-DE', { maximumFractionDigits: 0 }) + ' €';
-      display.style.color = 'var(--primary)';
+  function updateAiEstimateVisibility() {
+    if (!aiEstimateSection) return;
+    if (canSeeEstimate && (project.project_value_eur == null || project.project_value_eur === '')) {
+      aiEstimateSection.style.display = '';
+      const display = document.getElementById('ai-value-display');
+      if (project.ai_value_eur != null) {
+        display.textContent = Number(project.ai_value_eur).toLocaleString('de-DE', { maximumFractionDigits: 0 }) + ' €';
+        display.style.color = 'var(--primary)';
+      }
     } else {
-      display.textContent = '—';
-      display.style.color = '';
+      aiEstimateSection.style.display = 'none';
     }
-    if (breakdown) breakdown.textContent = '';
   }
 
-  document.getElementById('btn-estimate-value').addEventListener('click', async (e) => {
-    const btn = e.currentTarget;
-    const display = document.getElementById('ai-value-display');
-    const breakdown = document.getElementById('ai-value-breakdown');
-    btn.disabled = true;
-    btn.textContent = '⏳ Odhaduji...';
-    display.textContent = '...';
-    try {
-      const res = await App.api(`/ai/estimate-value/${projectId}`, { method: 'POST' });
-      if (res.estimated_value_eur != null) {
-        project.ai_value_eur = res.estimated_value_eur;
-        display.textContent = Number(res.estimated_value_eur).toLocaleString('de-DE', { maximumFractionDigits: 0 }) + ' €';
-        display.style.color = 'var(--primary)';
-      } else {
-        display.textContent = 'Cannot estimate';
-        display.style.color = 'var(--text-muted)';
+  if (document.getElementById('btn-estimate-value')) {
+    document.getElementById('btn-estimate-value').addEventListener('click', async (e) => {
+      const btn = e.currentTarget;
+      const display = document.getElementById('ai-value-display');
+      const breakdown = document.getElementById('ai-value-breakdown');
+      btn.disabled = true;
+      btn.textContent = '⏳ Estimating...';
+      display.textContent = '...';
+      try {
+        const res = await App.api(`/ai/estimate-value/${projectId}`, { method: 'POST' });
+        if (res.estimated_value_eur != null) {
+          project.ai_value_eur = res.estimated_value_eur;
+          display.textContent = Number(res.estimated_value_eur).toLocaleString('de-DE', { maximumFractionDigits: 0 }) + ' €';
+          display.style.color = 'var(--primary)';
+        } else {
+          display.textContent = 'Cannot estimate';
+          display.style.color = 'var(--text-muted)';
+        }
+        if (breakdown && res.breakdown) breakdown.textContent = res.breakdown;
+      } catch (err) {
+        display.textContent = 'Error: ' + err.message;
+        display.style.color = 'red';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '🤖 Estimate AI value';
       }
-      if (breakdown && res.breakdown) breakdown.textContent = res.breakdown;
-    } catch (err) {
-      display.textContent = 'Error: ' + err.message;
-      display.style.color = 'red';
-    } finally {
-      btn.disabled = false;
-      btn.textContent = '🤖 Estimate AI value';
-    }
-  });
+    });
+  }
+
+  updateAiEstimateVisibility();
 
   // --- Comments ---
 

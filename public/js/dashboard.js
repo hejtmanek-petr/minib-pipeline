@@ -65,7 +65,6 @@
         <td>${countryName(p.country)}</td>
         ${hidePrices ? '' : `<td>${p.project_value_eur != null ? Number(p.project_value_eur).toLocaleString('de-DE', {maximumFractionDigits:0}) + ' €' : '-'}</td>`}
         <td>${p.products_and_quantity || ''}</td>
-        ${hidePrices ? '' : `<td>${p.ai_value_eur != null ? '🤖 ' + Number(p.ai_value_eur).toLocaleString('de-DE', {maximumFractionDigits:0}) + ' €' : '<span class="text-muted">-</span>'}</td>`}
         <td><span class="${App.statusBadgeClass(p.status)}">${I18N.t('status.' + (p.status || 'active'))}</span> <span class="text-muted">${p.phase ? I18N.t('phase.' + p.phase) : ''}</span></td>
         <td>${winCell(p)}</td>
         <td>${p.estimated_decision_date ? String(p.estimated_decision_date).slice(0,7) : '-'}</td>
@@ -247,7 +246,6 @@
 
     if (hidePrices) {
       document.querySelector('th[data-sort="project_value_eur"]')?.closest('th')?.remove();
-      document.querySelector('th[data-sort="ai_value_eur"]')?.closest('th')?.remove();
       const pipelineCard = document.getElementById('kpi-pipeline')?.closest('.kpi-card');
       if (pipelineCard) pipelineCard.style.display = 'none';
     }
