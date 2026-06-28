@@ -105,8 +105,11 @@ for (const sql of migrations) {
     const data = JSON.parse(fs.readFileSync(syncPath, 'utf-8'));
     if (!data.projects || !data.projects.length) return;
 
-    const currentCount = db.prepare('SELECT count(*) as c FROM projects').get().c;
-    if (currentCount === data.projects.length) return;
+    const currentFirst = db.prepare('SELECT project_code FROM projects ORDER BY id LIMIT 1').get();
+    if (currentFirst && currentFirst.project_code === data.projects[0].project_code) {
+      const currentCount = db.prepare('SELECT count(*) as c FROM projects').get().c;
+      if (currentCount === data.projects.length) return;
+    }
 
     console.log('Syncing data:', data.projects.length, 'projects,', data.comments.length, 'comments');
     const tx = db.transaction(() => {
