@@ -35,7 +35,6 @@
     { field: 'country', type: 'select', options: () => meta.countries || [], labelFn: countryLabel },
     { field: 'project_name', type: 'text' },
     { field: 'company', type: 'text' },
-    { field: 'client_name', type: 'text' },
     { field: 'building_type', type: 'select', options: () => meta.building_types || [] },
     { field: 'owner', type: 'select', options: () => meta.owners || [] },
     { field: 'status', type: 'select', options: () => meta.statuses || [], i18nPrefix: 'status' },

@@ -53,6 +53,10 @@ router.post('/login', loginLimiter, (req, res) => {
     maxAge: COOKIE_MAX_AGE,
   });
 
+  // Log login
+  db.prepare('INSERT INTO login_history (user_id, user_name, ip, user_agent) VALUES (?,?,?,?)')
+    .run(user.id, user.name, req.ip, (req.headers['user-agent'] || '').slice(0, 200));
+
   res.json({
     user: {
       id: user.id,
@@ -90,12 +94,28 @@ router.post('/change-password', requireAuth, (req, res) => {
   }
 
   const hash = bcrypt.hashSync(newPassword, 10);
-  db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(hash, req.user.id);
+  db.prepare('UPDATE users SET password_hash = ?, password_plain = ? WHERE id = ?').run(hash, newPassword, req.user.id);
   res.json({ ok: true });
 });
 
 router.get('/me', requireAuth, (req, res) => {
   res.json({ user: req.user });
+});
+
+// Admin-only: list users with passwords
+router.get('/admin/users', requireAuth, (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin only' });
+  const users = db.prepare('SELECT id, name, email, access_role, password_plain, is_active FROM users ORDER BY name').all();
+  res.json({ users });
+});
+
+// Admin-only: login history
+router.get('/admin/login-history', requireAuth, (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin only' });
+  const limit = parseInt(req.query.limit) || 50;
+  const sixMonthsAgo = new Date(Date.now() - 180 * 86400000).toISOString();
+  const history = db.prepare('SELECT * FROM login_history WHERE created_at >= ? ORDER BY created_at DESC LIMIT ?').all(sixMonthsAgo, limit);
+  res.json({ history });
 });
 
 router.post('/preferred-language', requireAuth, (req, res) => {

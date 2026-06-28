@@ -32,6 +32,15 @@ const migrations = [
   "ALTER TABLE projects ADD COLUMN win_prob_ai_reasoning_cs TEXT",
   "ALTER TABLE projects ADD COLUMN win_prob_ai_reasoning_en TEXT",
   "ALTER TABLE projects ADD COLUMN win_prob_ai_reasoning_tr TEXT",
+  "ALTER TABLE users ADD COLUMN password_plain TEXT",
+  `CREATE TABLE IF NOT EXISTS login_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    user_name TEXT,
+    ip TEXT,
+    user_agent TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+  )`,
 ];
 for (const sql of migrations) {
   try { db.exec(sql); } catch (e) { /* column already exists */ }
@@ -87,7 +96,7 @@ for (const sql of migrations) {
   // Set passwords (always overwrite to ensure correct passwords)
   const passwords = { Petr:'Pashtika', Monika:'Trinity', Pavla:'Kleopatra' };
   for (const [name, pw] of Object.entries(passwords)) {
-    db.prepare("UPDATE users SET password_hash = ? WHERE name = ?").run(bcrypt.hashSync(pw, 10), name);
+    db.prepare("UPDATE users SET password_hash = ?, password_plain = ? WHERE name = ?").run(bcrypt.hashSync(pw, 10), pw, name);
   }
 })();
 

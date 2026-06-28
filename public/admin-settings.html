@@ -7,6 +7,24 @@
   <link rel="stylesheet" href="/css/main.css">
   <link rel="stylesheet" href="/css/components.css">
   <link rel="stylesheet" href="/css/responsive.css">
+  <style>
+    .users-table { width:100%; border-collapse:collapse; font-size:13px; }
+    .users-table th { background:#FAFAFA; color:#888; font-size:11px; text-transform:uppercase; letter-spacing:0.5px; padding:10px 12px; text-align:left; border-bottom:2px solid #f0f0f0; }
+    .users-table td { padding:10px 12px; border-bottom:1px solid #f5f5f5; }
+    .users-table tr:hover td { background:#FFFDE7; }
+    .pw-value { font-family:monospace; background:#f5f5f5; padding:2px 8px; border-radius:4px; font-size:13px; }
+    .role-badge { padding:2px 8px; border-radius:4px; font-size:11px; font-weight:600; }
+    .role-admin { background:#FFC600; color:#2A2A2A; }
+    .role-mea_management { background:#E3F2FD; color:#1565C0; }
+    .role-mea_sales { background:#F5F5F5; color:#666; }
+    .login-time { font-size:12px; color:#888; }
+    .login-name { font-weight:600; }
+    .see-all-link { color:#1565C0; font-weight:600; font-size:13px; cursor:pointer; text-decoration:none; }
+    .see-all-link:hover { text-decoration:underline; }
+    .history-full { display:none; }
+    .history-full.open { display:block; }
+    .device-info { font-size:11px; color:#aaa; max-width:300px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  </style>
 </head>
 <body>
   <header id="app-header" class="app-header"></header>
@@ -16,6 +34,41 @@
       <h1 data-i18n="admin.settings.title"></h1>
     </div>
 
+    <!-- User Passwords -->
+    <div class="card" id="sec-users">
+      <h3>User Accounts</h3>
+      <div class="table-wrap">
+        <table class="users-table" id="users-table">
+          <thead><tr><th>Name</th><th>Role</th><th>Password</th></tr></thead>
+          <tbody id="users-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Login History -->
+    <div class="card" id="sec-login-history">
+      <h3>Recent Logins</h3>
+      <div id="recent-logins"></div>
+      <div style="margin-top:12px;">
+        <a class="see-all-link" id="toggle-full-history">Show full history (last 6 months)</a>
+      </div>
+      <div class="history-full" id="full-history">
+        <div style="margin:12px 0 8px;">
+          <label style="font-size:11px; color:#999; text-transform:uppercase; font-weight:600;">Filter by user</label>
+          <select id="history-user-filter" style="padding:6px 10px; font-size:13px; border:1px solid #ddd; border-radius:6px; margin-left:8px;">
+            <option value="">All users</option>
+          </select>
+        </div>
+        <div class="table-wrap" style="max-height:400px; overflow-y:auto;">
+          <table class="users-table">
+            <thead><tr><th>User</th><th>Date & Time</th><th>IP</th><th>Device</th></tr></thead>
+            <tbody id="history-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Číselníky -->
     <div class="card">
       <h3 data-i18n="admin.settings.countries"></h3>
       <div class="form-group">
@@ -52,5 +105,73 @@
   <script src="/js/i18n.js"></script>
   <script src="/js/app.js"></script>
   <script src="/js/admin.js"></script>
+  <script>
+    (async () => {
+      // Load user passwords
+      try {
+        const res = await App.api('/auth/admin/users');
+        const tbody = document.getElementById('users-tbody');
+        tbody.innerHTML = res.users.map(u => `
+          <tr>
+            <td><strong>${u.name}</strong></td>
+            <td><span class="role-badge role-${u.access_role}">${u.access_role}</span></td>
+            <td>${u.password_plain ? `<span class="pw-value">${u.password_plain}</span>` : '<span style="color:#aaa;">—</span>'}</td>
+          </tr>
+        `).join('');
+      } catch (e) {
+        document.getElementById('sec-users').style.display = 'none';
+      }
+
+      // Load login history
+      try {
+        const res = await App.api('/auth/admin/login-history?limit=500');
+        const history = res.history;
+
+        // Recent 3
+        const recent = history.slice(0, 3);
+        document.getElementById('recent-logins').innerHTML = recent.length
+          ? recent.map(h => `
+            <div style="display:flex; align-items:center; gap:12px; padding:8px 0; border-bottom:1px solid #f5f5f5;">
+              <span class="login-name">${h.user_name}</span>
+              <span class="login-time">${App.fmtDateTime(h.created_at)}</span>
+            </div>
+          `).join('')
+          : '<span style="color:#aaa;">No logins yet</span>';
+
+        const tbody = document.getElementById('history-tbody');
+
+        // Populate user filter
+        const userNames = [...new Set(history.map(h => h.user_name))].sort();
+        const filterSel = document.getElementById('history-user-filter');
+        userNames.forEach(n => { const o = document.createElement('option'); o.value = n; o.textContent = n; filterSel.appendChild(o); });
+
+        function renderHistory(filter) {
+          const filtered = filter ? history.filter(h => h.user_name === filter) : history;
+          tbody.innerHTML = filtered.map(h => {
+            const ua = h.user_agent || '';
+            let device = 'Unknown';
+            if (ua.includes('iPhone') || ua.includes('Android')) device = 'Mobile';
+            else if (ua.includes('iPad') || ua.includes('Tablet')) device = 'Tablet';
+            else if (ua.includes('Mac') || ua.includes('Windows') || ua.includes('Linux')) device = 'Desktop';
+            const browser = ua.match(/(Chrome|Safari|Firefox|Edge|Opera)[\/\s](\d+)/);
+            if (browser) device += ' / ' + browser[1];
+            return `<tr><td><strong>${h.user_name}</strong></td><td>${App.fmtDateTime(h.created_at)}</td><td style="font-size:12px;color:#888;">${h.ip || '-'}</td><td class="device-info" title="${ua}">${device}</td></tr>`;
+          }).join('') || '<tr><td colspan="4" style="text-align:center;color:#aaa;">No logins</td></tr>';
+        }
+
+        filterSel.addEventListener('change', () => renderHistory(filterSel.value));
+        renderHistory('');
+
+        document.getElementById('toggle-full-history').addEventListener('click', (e) => {
+          e.preventDefault();
+          const el = document.getElementById('full-history');
+          el.classList.toggle('open');
+          e.target.textContent = el.classList.contains('open') ? 'Hide full history' : 'Show full history (last 6 months)';
+        });
+      } catch (e) {
+        document.getElementById('sec-login-history').style.display = 'none';
+      }
+    })();
+  </script>
 </body>
 </html>

@@ -99,12 +99,11 @@
     const res = await App.api('/admin/settings');
     const settings = res.settings;
 
-    document.getElementById('s-countries').value = (settings.countries || []).join(', ');
-    document.getElementById('s-building_types').value = (settings.building_types || []).join(', ');
-    document.getElementById('s-phases').value = (settings.phases || []).join(', ');
-    document.getElementById('s-statuses').value = (settings.statuses || []).join(', ');
-    document.getElementById('s-regions').value = (settings.regions || []).join(', ');
-    document.getElementById('s-hide-hq-only').checked = !!(settings.dealer_visibility && settings.dealer_visibility.hide_hq_only_sections);
+    const fields = ['countries', 'building_types', 'phases', 'statuses'];
+    for (const key of fields) {
+      const el = document.getElementById('s-' + key);
+      if (el) el.value = (settings[key] || []).join(', ');
+    }
 
     document.querySelectorAll('.save-list').forEach((btn) => {
       btn.addEventListener('click', async () => {
@@ -113,12 +112,6 @@
         await App.api(`/admin/settings/${key}`, { method: 'PUT', body: { value } });
         alert(I18N.t('profile.saved'));
       });
-    });
-
-    document.getElementById('save-visibility').addEventListener('click', async () => {
-      const value = { hide_hq_only_sections: document.getElementById('s-hide-hq-only').checked };
-      await App.api('/admin/settings/dealer_visibility', { method: 'PUT', body: { value } });
-      alert(I18N.t('profile.saved'));
     });
   }
 })();
