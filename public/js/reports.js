@@ -230,8 +230,8 @@
       data: {
         labels: res.owners.map(o => o.owner),
         datasets: [
-          { label: 'Won', data: res.owners.map(o => o.won), backgroundColor: GREEN, borderRadius: 4 },
-          { label: 'Lost', data: res.owners.map(o => o.lost), backgroundColor: RED, borderRadius: 4 },
+          { label: 'Won', data: res.owners.map(o => o.won), backgroundColor: '#A5D6A7', borderRadius: 4 },
+          { label: 'Lost', data: res.owners.map(o => o.lost), backgroundColor: '#EF9A9A', borderRadius: 4 },
         ],
       },
       options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, grid: { color: '#f0f0f0' } } } },
