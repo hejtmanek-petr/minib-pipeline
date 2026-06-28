@@ -36,7 +36,7 @@
   "common.noData": "No data",
 
   "dashboard.title": "Dashboard",
-  "dashboard.kpi.activeProjects": "Active Projects",
+  "dashboard.kpi.activeProjects": "Projects",
   "dashboard.kpi.pipelineValue": "Pipeline Value (EUR)",
   "dashboard.kpi.avgWinProb": "Avg. Win Probability",
   "dashboard.kpi.regionSplit": "TR vs CIS",

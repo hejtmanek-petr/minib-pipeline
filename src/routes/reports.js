@@ -8,12 +8,13 @@ router.use(requireAuth);
 const COUNTRY_NAMES = { TR:'Türkiye',AZ:'Azerbaijan',UZ:'Uzbekistan',KZ:'Kazakhstan',GE:'Georgia',SY:'Syria',IQ:'Iraq',TM:'Turkmenistan',MN:'Mongolia',EG:'Egypt',MA:'Morocco',DZ:'Algeria',LY:'Libya',TN:'Tunisia',TZ:'Tanzania',UG:'Uganda',KW:'Kuwait',AE:'UAE',OM:'Oman',JO:'Jordan',NC:'Northern Cyprus',BY:'Belarus',RU:'Russia',CA:'Canada' };
 
 function buildFilters(req) {
-  const { owner, status, country, dateFrom, dateTo } = req.query;
+  const { owner, status, country, year, dateFrom, dateTo } = req.query;
   const where = [];
   const params = [];
   if (owner) { where.push('owner = ?'); params.push(owner); }
   if (status) { where.push('status = ?'); params.push(status); }
   if (country) { where.push('country = ?'); params.push(country); }
+  if (year) { where.push("estimated_decision_date LIKE ?"); params.push(year + '%'); }
   if (dateFrom) { where.push("estimated_decision_date >= ?"); params.push(dateFrom); }
   if (dateTo) { where.push("estimated_decision_date <= ?"); params.push(dateTo + '-99'); }
   return { where, params };

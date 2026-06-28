@@ -36,7 +36,7 @@
   "common.noData": "Žádná data",
 
   "dashboard.title": "Přehled",
-  "dashboard.kpi.activeProjects": "Aktivní projekty",
+  "dashboard.kpi.activeProjects": "Projekty",
   "dashboard.kpi.pipelineValue": "Hodnota pipeline (EUR)",
   "dashboard.kpi.avgWinProb": "Prům. pravděpodobnost výhry",
   "dashboard.kpi.regionSplit": "TR vs CIS",

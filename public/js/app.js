@@ -91,8 +91,10 @@ const App = (() => {
     const navItems = [
       { href: '/dashboard.html', key: 'nav.dashboard', id: 'dashboard' },
       { href: '/project-new.html', key: 'nav.newProject', id: 'new-project' },
-      { href: '/reports.html', key: 'nav.reports', id: 'reports' },
     ];
+    if (user && user.role !== 'mea_sales') {
+      navItems.push({ href: '/reports.html', key: 'nav.reports', id: 'reports' });
+    }
     if (user && user.role === 'admin') {
       navItems.push({ href: '/admin-settings.html', key: 'nav.settings', id: 'settings' });
     }

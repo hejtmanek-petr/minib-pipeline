@@ -1,7 +1,16 @@
 (async () => {
   const user = await App.init('reports');
   if (!user) return;
+  if (user.role === 'mea_sales') { window.location.href = '/dashboard.html'; return; }
   const hidePrices = user.role === 'mea_sales';
+
+  const CN = { TR:'Türkiye',AZ:'Azerbaijan',UZ:'Uzbekistan',KZ:'Kazakhstan',GE:'Georgia',SY:'Syria',IQ:'Iraq',TM:'Turkmenistan',MN:'Mongolia',EG:'Egypt',MA:'Morocco',DZ:'Algeria',LY:'Libya',TN:'Tunisia',TZ:'Tanzania',UG:'Uganda',KW:'Kuwait',AE:'UAE',OM:'Oman',JO:'Jordan',NC:'Northern Cyprus',BY:'Belarus',RU:'Russia',CA:'Canada' };
+  function cName(code) { return CN[code] || code || ''; }
+  const CC = { TR:'#EF9A9A',AZ:'#90CAF9',UZ:'#A5D6A7',KZ:'#FFF59D',GE:'#CE93D8',SY:'#BCAAA4',IQ:'#80CBC4',TM:'#FFAB91',MN:'#9FA8DA',EG:'#E6EE9C',MA:'#F48FB1',DZ:'#80DEEA',LY:'#FFE082',TN:'#B39DDB',TZ:'#C5E1A5',UG:'#F8BBD0',KW:'#80CBC4',AE:'#B39DDB',OM:'#FFCC80',JO:'#C8E6C9',NC:'#BBDEFB',BY:'#B0BEC5',RU:'#EF9A9A',CA:'#F8BBD0' };
+  function cColor(code) { return CC[code] || '#8A8C8E'; }
+  const OC = { Cem:'#90CAF9', Hakan:'#A5D6A7', Sefa:'#FFAB91', Ogün:'#CE93D8', Okan:'#FFF59D', Monika:'#F48FB1', Pavla:'#80DEEA', Petr:'#FFE082' };
+  function oColor(name) { return OC[name] || '#B0BEC5'; }
+  const PASTEL_SEQ = ['#EF9A9A','#90CAF9','#A5D6A7','#FFF59D','#CE93D8','#FFAB91','#80DEEA','#F48FB1','#FFE082','#B39DDB','#C5E1A5','#FFCC80'];
 
   const YELLOW = '#FFC600';
   const DARK = '#2A2A2A';
@@ -22,9 +31,11 @@
     const owner = document.getElementById('f-owner').value;
     const status = document.getElementById('f-status').value;
     const country = document.getElementById('f-country').value;
+    const year = document.getElementById('f-year').value;
     if (owner) p.set('owner', owner);
     if (status) p.set('status', status);
     if (country) p.set('country', country);
+    if (year) p.set('year', year);
     return p.toString();
   }
 
@@ -40,7 +51,7 @@
   });
 
   // Filters
-  ['f-owner','f-status','f-country'].forEach(id => {
+  ['f-owner','f-status','f-country','f-year'].forEach(id => {
     document.getElementById(id).addEventListener('change', () => {
       const tab = document.querySelector('.report-tab.active').dataset.tab;
       loadTab(tab);
@@ -99,14 +110,14 @@
       type: 'doughnut',
       data: {
         labels: ['Active', 'Won', 'Lost'],
-        datasets: [{ data: [winloss.counts.active, winloss.counts.won, winloss.counts.lost], backgroundColor: [YELLOW, GREEN, RED], borderWidth: 0 }],
+        datasets: [{ data: [winloss.counts.active, winloss.counts.won, winloss.counts.lost], backgroundColor: ['#FFE082', '#A5D6A7', '#EF9A9A'], borderWidth: 0 }],
       },
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } },
     });
 
     kill('phase');
     const phaseLabels = pipeline.groups.map(g => g.phase.replace('project_stage', 'Project Stage').replace('tender', 'Tender').replace('order', 'Order').replace('delivery', 'Delivery'));
-    const phaseColors = ['#90CAF9', '#FFC600', '#FF8F00', '#2E7D32'];
+    const phaseColors = ['#90CAF9', '#FFF59D', '#FFCC80', '#A5D6A7'];
     charts.phase = new Chart(document.getElementById('ch-phase'), {
       type: 'bar',
       data: {
@@ -139,7 +150,7 @@
             <thead><tr><th>Country</th><th class="num">Projects</th>${hidePrices ? '' : '<th class="money">Value EUR</th>'}<th class="num">Won</th><th class="num">Lost</th><th class="num">Win Rate</th><th class="num">Avg Win%</th></tr></thead>
             <tbody>${res.countries.map(c => `
               <tr>
-                <td><strong>${c.name}</strong></td>
+                <td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${cColor(c.code)};margin-right:6px;vertical-align:middle;"></span><strong>${c.name}</strong></td>
                 <td class="num">${c.count}</td>
                 ${hidePrices ? '' : `<td class="money">€ ${fmt(c.value)}</td>`}
                 <td class="num">${c.won}</td>
@@ -159,13 +170,13 @@
       data: {
         labels: top.map(c => c.name),
         datasets: hidePrices
-          ? [{ label: 'Projects', data: top.map(c => c.count), backgroundColor: YELLOW, borderRadius: 4 }]
-          : [{ label: 'Value €', data: top.map(c => c.value), backgroundColor: YELLOW, borderRadius: 4 }],
+          ? [{ label: 'Projects', data: top.map(c => c.count), backgroundColor: top.map(c => cColor(c.code)), borderRadius: 4 }]
+          : [{ label: 'Value €', data: top.map(c => c.value), backgroundColor: top.map(c => cColor(c.code)), borderRadius: 4 }],
       },
       options: {
         responsive: true, maintainAspectRatio: false, indexAxis: 'y',
         plugins: { legend: { display: false } },
-        scales: { x: { grid: { color: '#f0f0f0' } }, y: { grid: { display: false } } },
+        scales: { x: { grid: { color: '#f0f0f0' }, title: { display: true, text: 'EUR', color: '#999', font: { size: 11 } } }, y: { grid: { display: false } } },
       },
     });
   }
@@ -187,7 +198,7 @@
             <thead><tr><th>Owner</th><th class="num">Active</th><th class="num">Won</th><th class="num">Lost</th>${hidePrices ? '' : '<th class="money">Value EUR</th>'}<th class="num">Win Rate</th><th class="num">Avg Win%</th></tr></thead>
             <tbody>${res.owners.map(o => `
               <tr>
-                <td><strong>${o.owner}</strong></td>
+                <td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${oColor(o.owner)};margin-right:6px;vertical-align:middle;"></span><strong>${o.owner}</strong></td>
                 <td class="num">${o.active}</td>
                 <td class="num" style="color:${GREEN}">${o.won}</td>
                 <td class="num" style="color:${RED}">${o.lost}</td>
@@ -207,8 +218,8 @@
       data: {
         labels: res.owners.map(o => o.owner),
         datasets: hidePrices
-          ? [{ label: 'Projects', data: res.owners.map(o => o.count), backgroundColor: YELLOW, borderRadius: 4 }]
-          : [{ label: 'Value €', data: res.owners.map(o => o.value), backgroundColor: YELLOW, borderRadius: 4 }],
+          ? [{ label: 'Projects', data: res.owners.map(o => o.count), backgroundColor: res.owners.map(o => oColor(o.owner)), borderRadius: 4 }]
+          : [{ label: 'Value €', data: res.owners.map(o => o.value), backgroundColor: res.owners.map(o => oColor(o.owner)), borderRadius: 4 }],
       },
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: '#f0f0f0' } }, x: { grid: { display: false } } } },
     });
@@ -264,10 +275,10 @@
       data: {
         labels: res.forecast.map(f => f.month),
         datasets: hidePrices
-          ? [{ label: 'Projects', data: res.forecast.map(f => f.count), backgroundColor: YELLOW, borderRadius: 4 }]
+          ? [{ label: 'Projects', data: res.forecast.map(f => f.count), backgroundColor: res.forecast.map((f,i) => PASTEL_SEQ[i % PASTEL_SEQ.length]), borderRadius: 4 }]
           : [
-              { label: 'Pipeline', data: res.forecast.map(f => f.value), backgroundColor: YELLOW + '88', borderRadius: 4 },
-              { label: 'Weighted', data: res.forecast.map(f => Math.round(f.weighted)), backgroundColor: GREEN, borderRadius: 4 },
+              { label: 'Pipeline', data: res.forecast.map(f => f.value), backgroundColor: res.forecast.map((f,i) => PASTEL_SEQ[i % PASTEL_SEQ.length] + '88'), borderRadius: 4 },
+              { label: 'Weighted', data: res.forecast.map(f => Math.round(f.weighted)), backgroundColor: res.forecast.map((f,i) => PASTEL_SEQ[i % PASTEL_SEQ.length]), borderRadius: 4 },
             ],
       },
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, scales: { y: { grid: { color: '#f0f0f0' } }, x: { grid: { display: false } } } },
@@ -304,8 +315,8 @@
       data: {
         labels: res.timeline.map(t => t.period),
         datasets: hidePrices
-          ? [{ label: 'Projects', data: res.timeline.map(t => t.count), backgroundColor: YELLOW, borderRadius: 4 }]
-          : [{ label: 'Value €', data: res.timeline.map(t => t.value), backgroundColor: YELLOW, borderRadius: 4 }],
+          ? [{ label: 'Projects', data: res.timeline.map(t => t.count), backgroundColor: res.timeline.map(t => { const y = t.period.slice(0,4); return y === '2026' ? '#90CAF9' : y === '2027' ? '#A5D6A7' : y === '2028' ? '#FFE082' : '#B0BEC5'; }), borderRadius: 4 }]
+          : [{ label: 'Value €', data: res.timeline.map(t => t.value), backgroundColor: res.timeline.map(t => { const y = t.period.slice(0,4); return y === '2026' ? '#90CAF9' : y === '2027' ? '#A5D6A7' : y === '2028' ? '#FFE082' : '#B0BEC5'; }), borderRadius: 4 }],
       },
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: '#f0f0f0' } }, x: { grid: { display: false } } } },
     });
@@ -345,7 +356,7 @@
         type: 'bar',
         data: {
           labels: res.monthly.map(m => m.month),
-          datasets: [{ label: 'Comments', data: res.monthly.map(m => m.count), backgroundColor: YELLOW, borderRadius: 4 }],
+          datasets: [{ label: 'Comments', data: res.monthly.map(m => m.count), backgroundColor: res.monthly.map((m,i) => PASTEL_SEQ[i % PASTEL_SEQ.length]), borderRadius: 4 }],
         },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: '#f0f0f0' }, beginAtZero: true }, x: { grid: { display: false } } } },
       });
@@ -357,7 +368,7 @@
   const ownerSelect = document.getElementById('f-owner');
   meta.owners.forEach(o => { const opt = document.createElement('option'); opt.value = o; opt.textContent = o; ownerSelect.appendChild(opt); });
   const countrySelect = document.getElementById('f-country');
-  meta.countries.forEach(c => { const opt = document.createElement('option'); opt.value = c; opt.textContent = c; countrySelect.appendChild(opt); });
+  meta.countries.sort((a, b) => cName(a).localeCompare(cName(b))).forEach(c => { const opt = document.createElement('option'); opt.value = c; opt.textContent = cName(c); countrySelect.appendChild(opt); });
 
   loadOverview(buildQuery());
 })();

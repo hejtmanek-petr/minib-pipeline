@@ -84,12 +84,9 @@
   }
 
   function renderKpis(projects) {
-    const active = projects.filter((p) => p.status === 'active');
-    document.getElementById('kpi-active').textContent = active.length;
+    document.getElementById('kpi-active').textContent = projects.length;
 
-    const openProjects = projects.filter((p) => p.status !== 'lost');
-    const eurProjects = openProjects.filter((p) => p.project_value_eur != null);
-    const totalEur = eurProjects.reduce((s, p) => s + p.project_value_eur, 0);
+    const totalEur = projects.reduce((s, p) => s + (p.project_value_eur ?? p.ai_value_eur ?? 0), 0);
     document.getElementById('kpi-pipeline').textContent = '€ ' + App.fmtMoney(totalEur);
 
     const withProb = projects.filter((p) => p.win_prob_manual_min !== null && p.win_prob_manual_min !== undefined);
