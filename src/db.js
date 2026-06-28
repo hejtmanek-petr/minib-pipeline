@@ -90,11 +90,8 @@ for (const sql of migrations) {
   }
 
   // Clear passwords for users without assigned password (allow login without password)
-  const usersWithPassword = new Set(['Petr', 'Monika', 'Pavla']);
-  db.prepare("UPDATE users SET password_hash = '' WHERE name NOT IN ('Petr','Monika','Pavla')").run();
-
   // Set passwords (always overwrite to ensure correct passwords)
-  const passwords = { Petr:'Pashtika', Monika:'Trinity', Pavla:'Kleopatra' };
+  const passwords = { Petr:'Pashtika', Monika:'Trinity', Pavla:'Kleopatra', Cem:'MEA8547#C', Hakan:'MEA3921#H', Ogün:'MEA6284#O', Okan:'MEA7135#K', Sefa:'MEA4693#S' };
   for (const [name, pw] of Object.entries(passwords)) {
     db.prepare("UPDATE users SET password_hash = ?, password_plain = ? WHERE name = ?").run(bcrypt.hashSync(pw, 10), pw, name);
   }

@@ -78,6 +78,7 @@
       const res = await App.api(`/projects/${projectId}`, { method: 'PUT', body });
       project = res.project;
       showAutoStatus('✓ Saved', 'var(--color-success)');
+      if (typeof updateAiEstimateVisibility === 'function') updateAiEstimateVisibility();
     } catch {
       showAutoStatus('Error saving', 'var(--color-danger)');
     }
@@ -283,6 +284,7 @@
     await saveFields(fields);
     showSaved(btn);
     renderCommercialFields();
+    updateAiEstimateVisibility();
     await loadHistory();
   });
 
