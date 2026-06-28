@@ -133,7 +133,7 @@
     label.textContent = fieldLabel(config.field);
     wrap.appendChild(label);
 
-    const raw = project[config.field];
+    let raw = project[config.field];
 
     if (config.readonly) {
       const valueEl = document.createElement('div');
@@ -461,8 +461,6 @@
       }
     });
   }
-
-  updateAiEstimateVisibility();
 
   // --- Comments ---
 
@@ -792,7 +790,6 @@
   }
 
   // --- Init ---
-
   try {
     const [projectRes, metaRes] = await Promise.all([
       App.api(`/projects/${projectId}`),
@@ -807,8 +804,8 @@
 
     renderBasicFields();
     renderCommercialFields();
-    renderAiValue(project);
     renderGauges();
+    updateAiEstimateVisibility();
 
     const deleteBtn = document.getElementById('btn-delete-project');
     if (deleteBtn) {
