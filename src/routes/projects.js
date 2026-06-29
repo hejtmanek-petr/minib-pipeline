@@ -140,9 +140,9 @@ router.get('/export', async (req, res) => {
   const COUNTRY_NAMES = { TR:'Türkiye',AZ:'Azerbaijan',UZ:'Uzbekistan',KZ:'Kazakhstan',GE:'Georgia',SY:'Syria',IQ:'Iraq',TM:'Turkmenistan',MN:'Mongolia',EG:'Egypt',MA:'Morocco',DZ:'Algeria',LY:'Libya',TN:'Tunisia',TZ:'Tanzania',UG:'Uganda',KW:'Kuwait',AE:'United Arab Emirates',OM:'Oman',JO:'Jordan',NC:'Northern Cyprus',BY:'Belarus',RU:'Russia',CA:'Canada' };
   const countryName = c => COUNTRY_NAMES[c] || c || '';
 
-  const HEADERS = ['Project Name','Client','Country','EUR','Products & Qty','AI Value EUR','Status','Phase','Win% / AI%','Decision Date','Sales Person'];
-  const COL_WIDTHS = [34,26,14,12,36,14,14,17,12,14,14];
-  const NUM_COLS = new Set([3,5]); // 0-based
+  const HEADERS = ['Project Name','Client','Country','EUR Value','Win%','Products & Qty','Status / Phase','AI Value','AI%','Decision Date','Created','Modified','Owner'];
+  const COL_WIDTHS = [34,26,14,14,10,36,17,14,10,14,12,12,14];
+  const NUM_COLS = new Set([3,7]); // 0-based: EUR Value, AI Value
 
   function thinBorder(color) {
     const s = { style:'thin', color:{argb:color} };
@@ -161,7 +161,7 @@ router.get('/export', async (req, res) => {
   ws.addRow([]);
   const r1 = ws.lastRow;
   r1.height = 34;
-  ws.mergeCells(`A1:K1`);
+  ws.mergeCells(`A1:M1`);
   const c1 = r1.getCell(1);
   c1.value = 'MINIB Project Pipeline';
   c1.font = { name:'Arial', bold:true, size:16, color:{argb:C_WHITE} };
@@ -172,7 +172,7 @@ router.get('/export', async (req, res) => {
   ws.addRow([]);
   const r2 = ws.lastRow;
   r2.height = 5;
-  ws.mergeCells(`A2:K2`);
+  ws.mergeCells(`A2:M2`);
   r2.getCell(1).fill = { type:'pattern', pattern:'solid', fgColor:{argb:C_YELLOW} };
 
   // Row 3: Filter meta
@@ -188,7 +188,7 @@ router.get('/export', async (req, res) => {
   ws.addRow([]);
   const r3 = ws.lastRow;
   r3.height = 40;
-  ws.mergeCells('A3:K3');
+  ws.mergeCells('A3:M3');
   const c3 = r3.getCell(1);
   c3.value = metaText;
   c3.font = { name:'Arial', size:14, italic:true, color:{argb:'FFAAAAAA'} };
@@ -223,14 +223,20 @@ router.get('/export', async (req, res) => {
     const eur  = p.project_value_eur != null ? p.project_value_eur : null;
     const aiV  = p.ai_value_eur != null ? p.ai_value_eur : null;
 
+    const statusPhase = (STATUS_LABELS[p.status]||p.status||'') + (p.phase ? ' / ' + (PHASE_LABELS[p.phase]||p.phase) : '');
+    const createdAt = p.created_at ? p.created_at.slice(0,10).split('-').reverse().join('.') : '';
+    const updatedAt = p.updated_at ? p.updated_at.slice(0,10).split('-').reverse().join('.') : '';
+
     const rowData = [
       p.project_name||'', p.company||'', countryName(p.country),
-      eur, p.products_and_quantity||'',
+      eur,
+      manual != null ? manual + '%' : '',
+      p.products_and_quantity||'',
+      statusPhase,
       aiV,
-      STATUS_LABELS[p.status]||p.status||'',
-      PHASE_LABELS[p.phase]||p.phase||'',
-      winVal,
+      aiP != null ? Math.round(aiP) + '%' : '',
       p.estimated_decision_date ? String(p.estimated_decision_date).slice(0,7) : '',
+      createdAt, updatedAt,
       p.owner||'',
     ];
 
