@@ -105,7 +105,9 @@ router.get('/me', requireAuth, (req, res) => {
 // Admin-only: list users with passwords
 router.get('/admin/users', requireAuth, (req, res) => {
   if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin only' });
-  const users = db.prepare('SELECT id, name, email, access_role, password_plain, is_active FROM users ORDER BY name').all();
+  const roleOrder = { admin: 1, mea_management: 2, mea_sales: 3 };
+  const users = db.prepare('SELECT id, name, email, access_role, password_plain, is_active FROM users ORDER BY name').all()
+    .sort((a, b) => (roleOrder[a.access_role] || 9) - (roleOrder[b.access_role] || 9) || a.name.localeCompare(b.name));
   res.json({ users });
 });
 

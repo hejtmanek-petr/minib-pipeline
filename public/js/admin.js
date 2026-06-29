@@ -99,16 +99,26 @@
     const res = await App.api('/admin/settings');
     const settings = res.settings;
 
+    const CN = { TR:'Türkiye',AZ:'Azerbaijan',UZ:'Uzbekistan',KZ:'Kazakhstan',GE:'Georgia',SY:'Syria',IQ:'Iraq',TM:'Turkmenistan',MN:'Mongolia',EG:'Egypt',MA:'Morocco',DZ:'Algeria',LY:'Libya',TN:'Tunisia',TZ:'Tanzania',UG:'Uganda',KW:'Kuwait',AE:'United Arab Emirates',OM:'Oman',JO:'Jordan',NC:'Northern Cyprus',BY:'Belarus',RU:'Russia',CA:'Canada',OT:'Other' };
+
     const fields = ['countries', 'building_types', 'phases', 'statuses'];
     for (const key of fields) {
       const el = document.getElementById('s-' + key);
-      if (el) el.value = (settings[key] || []).join(', ');
+      if (!el) continue;
+      if (key === 'countries') {
+        el.value = (settings[key] || []).map(c => CN[c] ? `${CN[c]} (${c})` : c).join(', ');
+      } else {
+        el.value = (settings[key] || []).join(', ');
+      }
     }
 
     document.querySelectorAll('.save-list').forEach((btn) => {
       btn.addEventListener('click', async () => {
         const key = btn.dataset.key;
-        const value = document.getElementById(`s-${key}`).value.split(',').map((s) => s.trim()).filter(Boolean);
+        let value = document.getElementById(`s-${key}`).value.split(',').map((s) => s.trim()).filter(Boolean);
+        if (key === 'countries') {
+          value = value.map(v => { const m = v.match(/\(([A-Z]{2})\)/); return m ? m[1] : v; });
+        }
         await App.api(`/admin/settings/${key}`, { method: 'PUT', body: { value } });
         alert(I18N.t('profile.saved'));
       });
