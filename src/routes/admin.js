@@ -103,6 +103,12 @@ router.delete('/users/:id', (req, res) => {
 
 // --- Settings / lookups ---
 
+router.get('/settings-history', (req, res) => {
+  db.prepare("DELETE FROM settings_history WHERE created_at < datetime('now', '-3 months')").run();
+  const history = db.prepare('SELECT * FROM settings_history ORDER BY created_at DESC LIMIT 100').all();
+  res.json({ history });
+});
+
 router.get('/settings', (req, res) => {
   const rows = db.prepare('SELECT key, value FROM app_settings').all();
   const settings = {};
@@ -117,10 +123,20 @@ router.put('/settings/:key', (req, res) => {
   const { value } = req.body || {};
   if (value === undefined) return res.status(400).json({ error: 'value is required' });
 
+  const old = db.prepare('SELECT value FROM app_settings WHERE key = ?').get(key);
+  const oldValue = old ? old.value : null;
+  const newValue = JSON.stringify(value);
+
   db.prepare(`
     INSERT INTO app_settings (key, value, updated_at) VALUES (?, ?, datetime('now'))
     ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = datetime('now')
-  `).run(key, JSON.stringify(value));
+  `).run(key, newValue);
+
+  db.prepare('INSERT INTO settings_history (user_id, user_name, setting_key, old_value, new_value) VALUES (?,?,?,?,?)')
+    .run(req.user.id, req.user.name, key, oldValue, newValue);
+
+  // Cleanup: delete entries older than 3 months
+  db.prepare("DELETE FROM settings_history WHERE created_at < datetime('now', '-3 months')").run();
 
   res.json({ key, value });
 });

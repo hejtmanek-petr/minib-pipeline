@@ -33,6 +33,15 @@ const migrations = [
   "ALTER TABLE projects ADD COLUMN win_prob_ai_reasoning_en TEXT",
   "ALTER TABLE projects ADD COLUMN win_prob_ai_reasoning_tr TEXT",
   "ALTER TABLE users ADD COLUMN password_plain TEXT",
+  `CREATE TABLE IF NOT EXISTS settings_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    user_name TEXT,
+    setting_key TEXT NOT NULL,
+    old_value TEXT,
+    new_value TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+  )`,
   `CREATE TABLE IF NOT EXISTS login_history (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,

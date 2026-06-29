@@ -100,6 +100,12 @@
       </div>
       <button class="btn btn-primary save-list" data-key="statuses" data-i18n="common.save"></button>
     </div>
+
+    <!-- Settings Change History -->
+    <div class="card" id="sec-settings-history">
+      <h3>Settings Change History <span class="text-muted" style="font-size:12px;">(last 3 months)</span></h3>
+      <div id="settings-history-content"></div>
+    </div>
   </main>
 
   <script src="/js/i18n.js"></script>
@@ -170,6 +176,34 @@
         });
       } catch (e) {
         document.getElementById('sec-login-history').style.display = 'none';
+      }
+
+      // Load settings change history
+      try {
+        const res = await App.api('/admin/settings-history');
+        const container = document.getElementById('settings-history-content');
+        if (res.history.length) {
+          container.innerHTML = `
+            <div class="table-wrap" style="max-height:400px; overflow-y:auto;">
+              <table class="users-table">
+                <thead><tr><th>User</th><th>Setting</th><th>Old Value</th><th>New Value</th><th>Date & Time</th></tr></thead>
+                <tbody>${res.history.map(h => `
+                  <tr>
+                    <td><strong>${h.user_name || '-'}</strong></td>
+                    <td><span class="role-badge role-mea_management">${h.setting_key}</span></td>
+                    <td style="max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; color:#888;" title="${(h.old_value || '').replace(/"/g, '&quot;')}">${h.old_value || '-'}</td>
+                    <td style="max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px;" title="${(h.new_value || '').replace(/"/g, '&quot;')}">${h.new_value || '-'}</td>
+                    <td>${App.fmtDateTime(h.created_at)}</td>
+                  </tr>
+                `).join('')}</tbody>
+              </table>
+            </div>
+          `;
+        } else {
+          container.innerHTML = '<span class="text-muted">No changes yet</span>';
+        }
+      } catch (e) {
+        document.getElementById('sec-settings-history').style.display = 'none';
       }
     })();
   </script>
