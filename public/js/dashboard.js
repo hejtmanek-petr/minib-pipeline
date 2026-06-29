@@ -117,7 +117,7 @@
       if (year && !(p.estimated_decision_date && String(p.estimated_decision_date).includes(year))) return false;
       if (search) {
         const norm = (s) => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-        const haystack = norm(`${p.project_name || ''} ${p.company || ''} ${p.country || ''} ${p.owner || ''}`);
+        const haystack = norm(`${p.project_name || ''} ${p.company || ''} ${p.country || ''} ${p.owner || ''} ${p.products_and_quantity || ''}`);
         if (!haystack.includes(norm(search))) return false;
       }
       return true;
