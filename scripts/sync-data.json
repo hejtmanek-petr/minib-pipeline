@@ -2542,7 +2542,7 @@
   "settings": [
     {
       "key": "countries",
-      "value": "[\"TR\",\"AZ\",\"UZ\",\"KZ\",\"GE\",\"SY\",\"IQ\",\"TM\",\"MN\",\"EG\",\"MA\",\"DZ\",\"LY\",\"TN\",\"TZ\",\"UG\",\"KW\",\"AE\",\"OM\",\"JO\",\"NC\",\"BY\",\"RU\"]",
+      "value": "[\"TR\",\"AZ\",\"UZ\",\"KZ\",\"GE\",\"SY\",\"IQ\",\"TM\",\"MN\",\"EG\",\"MA\",\"DZ\",\"LY\",\"TN\",\"TZ\",\"UG\",\"KW\",\"AE\",\"OM\",\"JO\",\"NC\",\"BY\",\"RU\",\"OT\"]",
       "updated_at": "2026-06-11 08:51:55"
     },
     {

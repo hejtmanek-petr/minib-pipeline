@@ -135,7 +135,7 @@ tbody tr:hover { background: #F9F4F4; }
   letter-spacing: 0.03em;
 }
 
-.badge-status-active { background: #E5EEF8; color: var(--status-active); }
+.badge-status-active { background: #E3F2FD; color: var(--status-active); }
 .badge-status-lead { background: #ECECED; color: var(--status-lead); }
 .badge-status-won { background: #E5F2E6; color: var(--status-won); }
 .badge-status-lost { background: #FBE6E7; color: var(--status-lost); }

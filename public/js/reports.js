@@ -7,6 +7,7 @@
   const CN = { TR:'Türkiye',AZ:'Azerbaijan',UZ:'Uzbekistan',KZ:'Kazakhstan',GE:'Georgia',SY:'Syria',IQ:'Iraq',TM:'Turkmenistan',MN:'Mongolia',EG:'Egypt',MA:'Morocco',DZ:'Algeria',LY:'Libya',TN:'Tunisia',TZ:'Tanzania',UG:'Uganda',KW:'Kuwait',AE:'UAE',OM:'Oman',JO:'Jordan',NC:'Northern Cyprus',BY:'Belarus',RU:'Russia',CA:'Canada' };
   function cName(code) { return CN[code] || code || ''; }
   const CC = { TR:'#EF9A9A',AZ:'#90CAF9',UZ:'#A5D6A7',KZ:'#FFF59D',GE:'#CE93D8',SY:'#BCAAA4',IQ:'#80CBC4',TM:'#FFAB91',MN:'#9FA8DA',EG:'#E6EE9C',MA:'#F48FB1',DZ:'#80DEEA',LY:'#FFE082',TN:'#B39DDB',TZ:'#C5E1A5',UG:'#F8BBD0',KW:'#80CBC4',AE:'#B39DDB',OM:'#FFCC80',JO:'#C8E6C9',NC:'#BBDEFB',BY:'#B0BEC5',RU:'#EF9A9A',CA:'#F8BBD0' };
+  CC['OT'] = '#E0E0E0';
   function cColor(code) { return CC[code] || '#8A8C8E'; }
   const OC = { Cem:'#90CAF9', Hakan:'#A5D6A7', Sefa:'#FFAB91', Ogün:'#CE93D8', Okan:'#FFF59D', Monika:'#F48FB1', Pavla:'#80DEEA', Petr:'#FFE082' };
   function oColor(name) { return OC[name] || '#B0BEC5'; }

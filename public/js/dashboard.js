@@ -58,9 +58,8 @@
     tbody.innerHTML = projects.map((p) => `
       <tr data-id="${p.id}">
         <td class="status-bar-cell"><span class="status-bar status-${statusOf(p)}"></span></td>
-        <td class="text-muted">${p.created_at ? (() => { const d = new Date(p.created_at); return `${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()}`; })() : '-'}</td>
-        <td class="text-muted">${p.updated_at ? (() => { const d = new Date(p.updated_at); return `${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()}`; })() : '-'}</td>
         <td>${p.project_name || ''}</td>
+        <td>${p.company || ''}</td>
         <td>${countryName(p.country)}</td>
         ${hidePrices ? '' : `<td>${p.project_value_eur != null ? Number(p.project_value_eur).toLocaleString('de-DE', {maximumFractionDigits:0}) + ' €' : '-'}</td>`}
         <td>${p.win_prob_manual_min != null ? `<span class="${App.winBadgeClass(p.win_prob_manual_min)}">${p.win_prob_manual_min}%</span>` : '<span class="text-muted">-</span>'}</td>
@@ -68,8 +67,9 @@
         <td><span class="${App.statusBadgeClass(p.status)}">${I18N.t('status.' + (p.status || 'active'))}</span> <span class="text-muted">${p.phase ? I18N.t('phase.' + p.phase) : ''}</span></td>
         ${hidePrices ? '' : `<td>${p.ai_value_eur != null ? '🤖 ' + Number(p.ai_value_eur).toLocaleString('de-DE', {maximumFractionDigits:0}) + ' €' : '<span class="text-muted">-</span>'}</td>`}
         <td>${p.win_prob_ai != null ? `<span class="${App.winBadgeClass(p.win_prob_ai)}">${Math.round(p.win_prob_ai)}%</span>` : '<span class="text-muted">-</span>'}</td>
-        <td>${p.company || ''}</td>
         <td>${p.estimated_decision_date ? String(p.estimated_decision_date).slice(0,7) : '-'}</td>
+        <td class="text-muted">${p.created_at ? (() => { const d = new Date(p.created_at); return `${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()}`; })() : '-'}</td>
+        <td class="text-muted">${p.updated_at ? (() => { const d = new Date(p.updated_at); return `${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()}`; })() : '-'}</td>
         <td>${p.owner || ''}</td>
       </tr>
     `).join('');
