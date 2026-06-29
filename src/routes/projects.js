@@ -177,7 +177,6 @@ router.get('/export', async (req, res) => {
 
   // Row 3: Filter meta
   const filterParts = [
-    `Region: ${REGION_LABELS[region||''] || 'All'}`,
     search  ? `Search: ${search}` : null,
     country ? `Country: ${countryName(country)}` : null,
     win     ? `Win%: ${WIN_LABELS[win]}` : null,
