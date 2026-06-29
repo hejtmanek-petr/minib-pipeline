@@ -114,10 +114,9 @@ for (const sql of migrations) {
     const data = JSON.parse(fs.readFileSync(syncPath, 'utf-8'));
     if (!data.projects || !data.projects.length) return;
 
-    const currentSum = db.prepare('SELECT coalesce(sum(coalesce(ai_value_eur,0)),0) as s FROM projects').get().s;
-    const dataSum = data.projects.reduce((s, p) => s + (p.ai_value_eur || 0), 0);
-    const currentCount = db.prepare('SELECT count(*) as c FROM projects').get().c;
-    if (currentCount === data.projects.length && Math.abs(currentSum - dataSum) < 1) return;
+    const syncVersion = data._syncVersion || 0;
+    const currentVersion = db.prepare("SELECT value FROM app_settings WHERE key = 'sync_version'").get();
+    if (currentVersion && parseInt(currentVersion.value) >= syncVersion) return;
 
     console.log('Syncing data:', data.projects.length, 'projects,', data.comments.length, 'comments');
     const tx = db.transaction(() => {
@@ -134,9 +133,10 @@ for (const sql of migrations) {
       for (const s of data.settings) {
         db.prepare('INSERT OR REPLACE INTO app_settings (key, value) VALUES (?, ?)').run(s.key, s.value);
       }
+      db.prepare("INSERT OR REPLACE INTO app_settings (key, value) VALUES ('sync_version', ?)").run(String(syncVersion));
     });
     tx();
-    console.log('Data sync complete!');
+    console.log('Data sync complete! Version:', syncVersion);
   } catch (e) {
     console.error('Data sync failed:', e.message);
   }
