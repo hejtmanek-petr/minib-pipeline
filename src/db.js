@@ -145,4 +145,7 @@ for (const sql of migrations) {
 // Always enforce: never show AI value when manual EUR value is set
 db.prepare('UPDATE projects SET ai_value_eur = NULL WHERE project_value_eur IS NOT NULL AND ai_value_eur IS NOT NULL').run();
 
+// Manual cleanup: clear AI value for MEA-2026-060
+db.prepare("UPDATE projects SET ai_value_eur = NULL WHERE project_code = 'MEA-2026-060'").run();
+
 module.exports = db;
