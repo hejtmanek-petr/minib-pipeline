@@ -167,7 +167,7 @@
     const bar = document.getElementById('filters-bar');
     const btn = document.getElementById('filters-toggle');
     bar.classList.toggle('open');
-    btn.innerHTML = bar.classList.contains('open') ? '&#9650; Filters' : '&#9660; Filters';
+    btn.innerHTML = (bar.classList.contains('open') ? '&#9650; ' : '&#9660; ') + I18N.t('dashboard.filters.toggle');
   });
 
   // Sorting

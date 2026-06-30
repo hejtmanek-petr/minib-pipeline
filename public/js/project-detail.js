@@ -439,7 +439,7 @@
       const display = document.getElementById('ai-value-display');
       const breakdown = document.getElementById('ai-value-breakdown');
       btn.disabled = true;
-      btn.textContent = '⏳ Estimating...';
+      btn.textContent = '⏳ ' + I18N.t('project.estimating');
       display.textContent = '...';
       try {
         const res = await App.api(`/ai/estimate-value/${projectId}`, { method: 'POST' });
@@ -448,16 +448,16 @@
           display.textContent = Number(res.estimated_value_eur).toLocaleString('de-DE', { maximumFractionDigits: 0 }) + ' €';
           display.style.color = 'var(--primary)';
         } else {
-          display.textContent = 'Cannot estimate';
+          display.textContent = I18N.t('project.cannotEstimate');
           display.style.color = 'var(--text-muted)';
         }
         if (breakdown && res.breakdown) breakdown.textContent = res.breakdown;
       } catch (err) {
-        display.textContent = 'Error: ' + err.message;
+        display.textContent = I18N.t('common.error') + ': ' + err.message;
         display.style.color = 'red';
       } finally {
         btn.disabled = false;
-        btn.textContent = '🤖 Estimate AI value';
+        btn.textContent = '🤖 ' + I18N.t('project.estimateAiValue');
       }
     });
   }

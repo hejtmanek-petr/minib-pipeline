@@ -4,8 +4,13 @@
   if (user.role === 'mea_sales') { window.location.href = '/dashboard.html'; return; }
   const hidePrices = user.role === 'mea_sales';
 
-  const CN = { TR:'Türkiye',AZ:'Azerbaijan',UZ:'Uzbekistan',KZ:'Kazakhstan',GE:'Georgia',SY:'Syria',IQ:'Iraq',TM:'Turkmenistan',MN:'Mongolia',EG:'Egypt',MA:'Morocco',DZ:'Algeria',LY:'Libya',TN:'Tunisia',TZ:'Tanzania',UG:'Uganda',KW:'Kuwait',AE:'UAE',OM:'Oman',JO:'Jordan',NC:'Northern Cyprus',BY:'Belarus',RU:'Russia',CA:'Canada' };
-  function cName(code) { return CN[code] || code || ''; }
+  const t = (key) => I18N.t(key);
+
+  const CN = {
+    en: { TR:'Türkiye',AZ:'Azerbaijan',UZ:'Uzbekistan',KZ:'Kazakhstan',GE:'Georgia',SY:'Syria',IQ:'Iraq',TM:'Turkmenistan',MN:'Mongolia',EG:'Egypt',MA:'Morocco',DZ:'Algeria',LY:'Libya',TN:'Tunisia',TZ:'Tanzania',UG:'Uganda',KW:'Kuwait',AE:'UAE',OM:'Oman',JO:'Jordan',NC:'Northern Cyprus',BY:'Belarus',RU:'Russia',CA:'Canada',OT:'Other' },
+    cs: { TR:'Türkiye',AZ:'Ázerbájdžán',UZ:'Uzbekistán',KZ:'Kazachstán',GE:'Gruzie',SY:'Sýrie',IQ:'Irák',TM:'Turkmenistán',MN:'Mongolsko',EG:'Egypt',MA:'Maroko',DZ:'Alžírsko',LY:'Libye',TN:'Tunisko',TZ:'Tanzanie',UG:'Uganda',KW:'Kuvajt',AE:'SAE',OM:'Omán',JO:'Jordánsko',NC:'Severní Kypr',BY:'Bělorusko',RU:'Rusko',CA:'Kanada',OT:'Ostatní' },
+  };
+  function cName(code) { const map = CN[I18N.getLang()] || CN.en; return map[code] || code || ''; }
   const CC = { TR:'#EF9A9A',AZ:'#90CAF9',UZ:'#A5D6A7',KZ:'#FFF59D',GE:'#CE93D8',SY:'#BCAAA4',IQ:'#80CBC4',TM:'#FFAB91',MN:'#9FA8DA',EG:'#E6EE9C',MA:'#F48FB1',DZ:'#80DEEA',LY:'#FFE082',TN:'#B39DDB',TZ:'#C5E1A5',UG:'#F8BBD0',KW:'#80CBC4',AE:'#B39DDB',OM:'#FFCC80',JO:'#C8E6C9',NC:'#BBDEFB',BY:'#B0BEC5',RU:'#EF9A9A',CA:'#F8BBD0' };
   CC['OT'] = '#E0E0E0';
   function cColor(code) { return CC[code] || '#8A8C8E'; }
@@ -79,30 +84,30 @@
 
     const statsHtml = hidePrices ? `
       <div class="report-grid">
-        <div class="stat-card"><div class="stat-label">Total Projects</div><div class="stat-value">${winloss.total}</div></div>
-        <div class="stat-card"><div class="stat-label">Active</div><div class="stat-value yellow">${winloss.counts.active}</div></div>
-        <div class="stat-card"><div class="stat-label">Won</div><div class="stat-value green">${winloss.counts.won}</div></div>
-        <div class="stat-card"><div class="stat-label">Lost</div><div class="stat-value red">${winloss.counts.lost}</div></div>
+        <div class="stat-card"><div class="stat-label">${t('reports.stat.totalProjects')}</div><div class="stat-value">${winloss.total}</div></div>
+        <div class="stat-card"><div class="stat-label">${t('reports.stat.active')}</div><div class="stat-value yellow">${winloss.counts.active}</div></div>
+        <div class="stat-card"><div class="stat-label">${t('reports.stat.won')}</div><div class="stat-value green">${winloss.counts.won}</div></div>
+        <div class="stat-card"><div class="stat-label">${t('reports.stat.lost')}</div><div class="stat-value red">${winloss.counts.lost}</div></div>
       </div>
     ` : `
       <div class="report-grid">
-        <div class="stat-card"><div class="stat-label">Total Projects</div><div class="stat-value">${winloss.total}</div></div>
-        <div class="stat-card"><div class="stat-label">Active Pipeline</div><div class="stat-value yellow">€ ${fmt(winloss.activeValue)}</div></div>
-        <div class="stat-card"><div class="stat-label">Won Value</div><div class="stat-value green">€ ${fmt(winloss.wonValue)}</div></div>
-        <div class="stat-card"><div class="stat-label">Lost Value</div><div class="stat-value red">€ ${fmt(winloss.lostValue)}</div></div>
+        <div class="stat-card"><div class="stat-label">${t('reports.stat.totalProjects')}</div><div class="stat-value">${winloss.total}</div></div>
+        <div class="stat-card"><div class="stat-label">${t('reports.stat.activePipeline')}</div><div class="stat-value yellow">€ ${fmt(winloss.activeValue)}</div></div>
+        <div class="stat-card"><div class="stat-label">${t('reports.stat.wonValue')}</div><div class="stat-value green">€ ${fmt(winloss.wonValue)}</div></div>
+        <div class="stat-card"><div class="stat-label">${t('reports.stat.lostValue')}</div><div class="stat-value red">€ ${fmt(winloss.lostValue)}</div></div>
       </div>
       <div class="report-grid">
-        <div class="stat-card"><div class="stat-label">Avg Win Probability</div><div class="stat-value">${pct(winloss.avg_win_probability)}</div></div>
-        <div class="stat-card"><div class="stat-label">Win Rate</div><div class="stat-value green">${(winloss.counts.won + winloss.counts.lost) > 0 ? Math.round(winloss.counts.won / (winloss.counts.won + winloss.counts.lost) * 100) + '%' : '-'}</div></div>
-        <div class="stat-card"><div class="stat-label">Active</div><div class="stat-value">${winloss.counts.active}</div></div>
-        <div class="stat-card"><div class="stat-label">Won / Lost</div><div class="stat-value">${winloss.counts.won} / ${winloss.counts.lost}</div></div>
+        <div class="stat-card"><div class="stat-label">${t('reports.stat.avgWinProb')}</div><div class="stat-value">${pct(winloss.avg_win_probability)}</div></div>
+        <div class="stat-card"><div class="stat-label">${t('reports.stat.winRate')}</div><div class="stat-value green">${(winloss.counts.won + winloss.counts.lost) > 0 ? Math.round(winloss.counts.won / (winloss.counts.won + winloss.counts.lost) * 100) + '%' : '-'}</div></div>
+        <div class="stat-card"><div class="stat-label">${t('reports.stat.active')}</div><div class="stat-value">${winloss.counts.active}</div></div>
+        <div class="stat-card"><div class="stat-label">${t('reports.stat.wonLost')}</div><div class="stat-value">${winloss.counts.won} / ${winloss.counts.lost}</div></div>
       </div>
     `;
 
     sec.innerHTML = statsHtml + `
       <div class="report-grid">
-        <div class="chart-card"><h4>Projects by Status</h4><div class="chart-wrap"><canvas id="ch-status"></canvas></div></div>
-        <div class="chart-card"><h4>Pipeline by Phase</h4><div class="chart-wrap"><canvas id="ch-phase"></canvas></div></div>
+        <div class="chart-card"><h4>${t('reports.chart.projectsByStatus')}</h4><div class="chart-wrap"><canvas id="ch-status"></canvas></div></div>
+        <div class="chart-card"><h4>${t('reports.chart.pipelineByPhase')}</h4><div class="chart-wrap"><canvas id="ch-phase"></canvas></div></div>
       </div>
     `;
 
@@ -110,22 +115,22 @@
     charts.status = new Chart(document.getElementById('ch-status'), {
       type: 'doughnut',
       data: {
-        labels: ['Active', 'Won', 'Lost'],
+        labels: [t('status.active'), t('status.won'), t('status.lost')],
         datasets: [{ data: [winloss.counts.active, winloss.counts.won, winloss.counts.lost], backgroundColor: ['#FFE082', '#A5D6A7', '#EF9A9A'], borderWidth: 0 }],
       },
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } },
     });
 
     kill('phase');
-    const phaseLabels = pipeline.groups.map(g => g.phase.replace('project_stage', 'Project Stage').replace('tender', 'Tender').replace('order', 'Order').replace('delivery', 'Delivery'));
+    const phaseLabels = pipeline.groups.map(g => t('phase.' + g.phase));
     const phaseColors = ['#90CAF9', '#FFF59D', '#FFCC80', '#A5D6A7'];
     charts.phase = new Chart(document.getElementById('ch-phase'), {
       type: 'bar',
       data: {
         labels: phaseLabels,
         datasets: hidePrices
-          ? [{ label: 'Projects', data: pipeline.groups.map(g => g.count), backgroundColor: phaseColors, borderRadius: 4 }]
-          : [{ label: 'Value €', data: pipeline.groups.map(g => g.value), backgroundColor: phaseColors, borderRadius: 4 }],
+          ? [{ label: t('reports.legend.projects'), data: pipeline.groups.map(g => g.count), backgroundColor: phaseColors, borderRadius: 4 }]
+          : [{ label: t('reports.legend.value'), data: pipeline.groups.map(g => g.value), backgroundColor: phaseColors, borderRadius: 4 }],
       },
       options: {
         responsive: true, maintainAspectRatio: false, indexAxis: 'y',
@@ -139,16 +144,16 @@
   async function loadGeography(qs) {
     const res = await App.api('/reports/geography?' + qs);
     const sec = document.getElementById('sec-geography');
+    res.countries.forEach(c => { c.name = cName(c.code); });
     const top = res.countries.slice(0, 15);
-    const maxVal = Math.max(...top.map(c => c.value), 1);
 
     sec.innerHTML = `
-      <div class="chart-card" style="margin-bottom:16px;"><h4>Pipeline by Country</h4><div class="chart-wrap" style="height:${Math.max(280, top.length * 32)}px;"><canvas id="ch-geo"></canvas></div></div>
+      <div class="chart-card" style="margin-bottom:16px;"><h4>${t('reports.chart.pipelineByCountry')}</h4><div class="chart-wrap" style="height:${Math.max(280, top.length * 32)}px;"><canvas id="ch-geo"></canvas></div></div>
       <div class="chart-card">
-        <h4>All Countries</h4>
+        <h4>${t('reports.chart.allCountries')}</h4>
         <div class="table-wrap">
           <table class="report-table">
-            <thead><tr><th>Country</th><th class="num">Projects</th>${hidePrices ? '' : '<th class="money">Value EUR</th>'}<th class="num">Won</th><th class="num">Lost</th><th class="num">Win Rate</th><th class="num">Avg Win%</th></tr></thead>
+            <thead><tr><th>${t('reports.table.country')}</th><th class="num">${t('reports.table.projects')}</th>${hidePrices ? '' : `<th class="money">${t('reports.table.valueEur')}</th>`}<th class="num">${t('reports.table.won')}</th><th class="num">${t('reports.table.lost')}</th><th class="num">${t('reports.table.winRate')}</th><th class="num">${t('reports.table.avgWin')}</th></tr></thead>
             <tbody>${res.countries.map(c => `
               <tr>
                 <td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${cColor(c.code)};margin-right:6px;vertical-align:middle;"></span><strong>${c.name}</strong></td>
@@ -171,8 +176,8 @@
       data: {
         labels: top.map(c => c.name),
         datasets: hidePrices
-          ? [{ label: 'Projects', data: top.map(c => c.count), backgroundColor: top.map(c => cColor(c.code)), borderRadius: 4 }]
-          : [{ label: 'Value €', data: top.map(c => c.value), backgroundColor: top.map(c => cColor(c.code)), borderRadius: 4 }],
+          ? [{ label: t('reports.legend.projects'), data: top.map(c => c.count), backgroundColor: top.map(c => cColor(c.code)), borderRadius: 4 }]
+          : [{ label: t('reports.legend.value'), data: top.map(c => c.value), backgroundColor: top.map(c => cColor(c.code)), borderRadius: 4 }],
       },
       options: {
         responsive: true, maintainAspectRatio: false, indexAxis: 'y',
@@ -189,14 +194,14 @@
 
     sec.innerHTML = `
       <div class="report-grid">
-        <div class="chart-card"><h4>${hidePrices ? 'Projects by Owner' : 'Pipeline Value by Owner'}</h4><div class="chart-wrap"><canvas id="ch-own-val"></canvas></div></div>
-        <div class="chart-card"><h4>Win / Loss by Owner</h4><div class="chart-wrap"><canvas id="ch-own-wl"></canvas></div></div>
+        <div class="chart-card"><h4>${hidePrices ? t('reports.chart.projectsByOwner') : t('reports.chart.pipelineByOwner')}</h4><div class="chart-wrap"><canvas id="ch-own-val"></canvas></div></div>
+        <div class="chart-card"><h4>${t('reports.chart.winLossByOwner')}</h4><div class="chart-wrap"><canvas id="ch-own-wl"></canvas></div></div>
       </div>
       <div class="chart-card">
-        <h4>Owner Performance</h4>
+        <h4>${t('reports.chart.ownerPerformance')}</h4>
         <div class="table-wrap">
           <table class="report-table">
-            <thead><tr><th>Owner</th><th class="num">Active</th><th class="num">Won</th><th class="num">Lost</th>${hidePrices ? '' : '<th class="money">Value EUR</th>'}<th class="num">Win Rate</th><th class="num">Avg Win%</th></tr></thead>
+            <thead><tr><th>${t('reports.table.owner')}</th><th class="num">${t('reports.table.active')}</th><th class="num">${t('reports.table.won')}</th><th class="num">${t('reports.table.lost')}</th>${hidePrices ? '' : `<th class="money">${t('reports.table.valueEur')}</th>`}<th class="num">${t('reports.table.winRate')}</th><th class="num">${t('reports.table.avgWin')}</th></tr></thead>
             <tbody>${res.owners.map(o => `
               <tr>
                 <td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${oColor(o.owner)};margin-right:6px;vertical-align:middle;"></span><strong>${o.owner}</strong></td>
@@ -219,8 +224,8 @@
       data: {
         labels: res.owners.map(o => o.owner),
         datasets: hidePrices
-          ? [{ label: 'Projects', data: res.owners.map(o => o.count), backgroundColor: res.owners.map(o => oColor(o.owner)), borderRadius: 4 }]
-          : [{ label: 'Value €', data: res.owners.map(o => o.value), backgroundColor: res.owners.map(o => oColor(o.owner)), borderRadius: 4 }],
+          ? [{ label: t('reports.legend.projects'), data: res.owners.map(o => o.count), backgroundColor: res.owners.map(o => oColor(o.owner)), borderRadius: 4 }]
+          : [{ label: t('reports.legend.value'), data: res.owners.map(o => o.value), backgroundColor: res.owners.map(o => oColor(o.owner)), borderRadius: 4 }],
       },
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: '#f0f0f0' } }, x: { grid: { display: false } } } },
     });
@@ -231,8 +236,8 @@
       data: {
         labels: res.owners.map(o => o.owner),
         datasets: [
-          { label: 'Won', data: res.owners.map(o => o.won), backgroundColor: '#A5D6A7', borderRadius: 4 },
-          { label: 'Lost', data: res.owners.map(o => o.lost), backgroundColor: '#EF9A9A', borderRadius: 4 },
+          { label: t('status.won'), data: res.owners.map(o => o.won), backgroundColor: '#A5D6A7', borderRadius: 4 },
+          { label: t('status.lost'), data: res.owners.map(o => o.lost), backgroundColor: '#EF9A9A', borderRadius: 4 },
         ],
       },
       options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, grid: { color: '#f0f0f0' } } } },
@@ -248,16 +253,16 @@
 
     sec.innerHTML = (hidePrices ? '' : `
       <div class="report-grid">
-        <div class="stat-card"><div class="stat-label">Total Active Pipeline</div><div class="stat-value yellow">€ ${fmt(totalValue)}</div></div>
-        <div class="stat-card"><div class="stat-label">Weighted Forecast</div><div class="stat-value green">€ ${fmt(totalWeighted)}</div></div>
+        <div class="stat-card"><div class="stat-label">${t('reports.chart.totalActivePipeline')}</div><div class="stat-value yellow">€ ${fmt(totalValue)}</div></div>
+        <div class="stat-card"><div class="stat-label">${t('reports.chart.weightedForecastLabel')}</div><div class="stat-value green">€ ${fmt(totalWeighted)}</div></div>
       </div>
     `) + `
-      <div class="chart-card" style="margin-bottom:16px;"><h4>Weighted Forecast by Month</h4><div class="chart-wrap"><canvas id="ch-forecast"></canvas></div></div>
+      <div class="chart-card" style="margin-bottom:16px;"><h4>${t('reports.chart.weightedForecast')}</h4><div class="chart-wrap"><canvas id="ch-forecast"></canvas></div></div>
       <div class="chart-card">
-        <h4>Forecast Detail</h4>
+        <h4>${t('reports.chart.forecastDetail')}</h4>
         <div class="table-wrap">
           <table class="report-table">
-            <thead><tr><th>Month</th><th class="num">Projects</th>${hidePrices ? '' : '<th class="money">Pipeline</th><th class="money">Weighted</th>'}</tr></thead>
+            <thead><tr><th>${t('reports.table.month')}</th><th class="num">${t('reports.table.projects')}</th>${hidePrices ? '' : `<th class="money">${t('reports.table.pipeline')}</th><th class="money">${t('reports.table.weighted')}</th>`}</tr></thead>
             <tbody>${res.forecast.map(f => `
               <tr>
                 <td><strong>${f.month}</strong></td>
@@ -276,10 +281,10 @@
       data: {
         labels: res.forecast.map(f => f.month),
         datasets: hidePrices
-          ? [{ label: 'Projects', data: res.forecast.map(f => f.count), backgroundColor: res.forecast.map((f,i) => PASTEL_SEQ[i % PASTEL_SEQ.length]), borderRadius: 4 }]
+          ? [{ label: t('reports.legend.projects'), data: res.forecast.map(f => f.count), backgroundColor: res.forecast.map((f,i) => PASTEL_SEQ[i % PASTEL_SEQ.length]), borderRadius: 4 }]
           : [
-              { label: 'Pipeline', data: res.forecast.map(f => f.value), backgroundColor: res.forecast.map((f,i) => PASTEL_SEQ[i % PASTEL_SEQ.length] + '88'), borderRadius: 4 },
-              { label: 'Weighted', data: res.forecast.map(f => Math.round(f.weighted)), backgroundColor: res.forecast.map((f,i) => PASTEL_SEQ[i % PASTEL_SEQ.length]), borderRadius: 4 },
+              { label: t('reports.table.pipeline'), data: res.forecast.map(f => f.value), backgroundColor: res.forecast.map((f,i) => PASTEL_SEQ[i % PASTEL_SEQ.length] + '88'), borderRadius: 4 },
+              { label: t('reports.table.weighted'), data: res.forecast.map(f => Math.round(f.weighted)), backgroundColor: res.forecast.map((f,i) => PASTEL_SEQ[i % PASTEL_SEQ.length]), borderRadius: 4 },
             ],
       },
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, scales: { y: { grid: { color: '#f0f0f0' } }, x: { grid: { display: false } } } },
@@ -292,13 +297,13 @@
     const sec = document.getElementById('sec-timeline');
 
     sec.innerHTML = `
-      <div class="chart-card" style="margin-bottom:16px;"><h4>Projects by Decision Month</h4><div class="chart-wrap"><canvas id="ch-timeline"></canvas></div></div>
+      <div class="chart-card" style="margin-bottom:16px;"><h4>${t('reports.chart.projectsByMonth')}</h4><div class="chart-wrap"><canvas id="ch-timeline"></canvas></div></div>
       ${res.overdue.length ? `
         <div class="chart-card">
-          <h4>Overdue Projects <span class="overdue-tag">${res.overdue.length}</span></h4>
+          <h4>${t('reports.chart.overdueProjects')} <span class="overdue-tag">${res.overdue.length}</span></h4>
           <div class="table-wrap">
             <table class="report-table">
-              <thead><tr><th>Code</th><th>Project</th><th>Decision Date</th><th>Owner</th></tr></thead>
+              <thead><tr><th>${t('reports.table.code')}</th><th>${t('reports.table.project')}</th><th>${t('reports.table.decisionDate')}</th><th>${t('reports.table.owner')}</th></tr></thead>
               <tbody>${res.overdue.map(p => `
                 <tr style="cursor:pointer" onclick="window.location='/project-detail.html?id=${p.id}'">
                   <td>${p.project_code}</td><td>${p.project_name || ''}</td><td class="overdue-tag">${p.estimated_decision_date}</td><td>${p.owner || ''}</td>
@@ -316,8 +321,8 @@
       data: {
         labels: res.timeline.map(t => t.period),
         datasets: hidePrices
-          ? [{ label: 'Projects', data: res.timeline.map(t => t.count), backgroundColor: res.timeline.map(t => { const y = t.period.slice(0,4); return y === '2026' ? '#90CAF9' : y === '2027' ? '#A5D6A7' : y === '2028' ? '#FFE082' : '#B0BEC5'; }), borderRadius: 4 }]
-          : [{ label: 'Value €', data: res.timeline.map(t => t.value), backgroundColor: res.timeline.map(t => { const y = t.period.slice(0,4); return y === '2026' ? '#90CAF9' : y === '2027' ? '#A5D6A7' : y === '2028' ? '#FFE082' : '#B0BEC5'; }), borderRadius: 4 }],
+          ? [{ label: t('reports.legend.projects'), data: res.timeline.map(tl => tl.count), backgroundColor: res.timeline.map(tl => { const y = tl.period.slice(0,4); return y === '2026' ? '#90CAF9' : y === '2027' ? '#A5D6A7' : y === '2028' ? '#FFE082' : '#B0BEC5'; }), borderRadius: 4 }]
+          : [{ label: t('reports.legend.value'), data: res.timeline.map(tl => tl.value), backgroundColor: res.timeline.map(tl => { const y = tl.period.slice(0,4); return y === '2026' ? '#90CAF9' : y === '2027' ? '#A5D6A7' : y === '2028' ? '#FFE082' : '#B0BEC5'; }), borderRadius: 4 }],
       },
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: '#f0f0f0' } }, x: { grid: { display: false } } } },
     });
@@ -330,19 +335,19 @@
 
     sec.innerHTML = `
       <div class="report-grid">
-        <div class="stat-card"><div class="stat-label">Total Comments</div><div class="stat-value">${res.monthly.reduce((s, m) => s + m.count, 0)}</div></div>
-        <div class="stat-card"><div class="stat-label">Stale Projects (30+ days)</div><div class="stat-value red">${res.stale.length}</div></div>
+        <div class="stat-card"><div class="stat-label">${t('reports.chart.totalComments')}</div><div class="stat-value">${res.monthly.reduce((s, m) => s + m.count, 0)}</div></div>
+        <div class="stat-card"><div class="stat-label">${t('reports.chart.staleProjects')}</div><div class="stat-value red">${res.stale.length}</div></div>
       </div>
-      <div class="chart-card" style="margin-bottom:16px;"><h4>Comments per Month</h4><div class="chart-wrap"><canvas id="ch-activity"></canvas></div></div>
+      <div class="chart-card" style="margin-bottom:16px;"><h4>${t('reports.chart.commentsPerMonth')}</h4><div class="chart-wrap"><canvas id="ch-activity"></canvas></div></div>
       ${res.stale.length ? `
         <div class="chart-card">
-          <h4>Stale Projects <span class="stale-tag">No comments for 30+ days</span></h4>
+          <h4>${t('reports.chart.staleProjects')} <span class="stale-tag">${t('reports.chart.noCommentsTag')}</span></h4>
           <div class="table-wrap">
             <table class="report-table">
-              <thead><tr><th>Code</th><th>Project</th><th>Owner</th><th>Last Comment</th></tr></thead>
+              <thead><tr><th>${t('reports.table.code')}</th><th>${t('reports.table.project')}</th><th>${t('reports.table.owner')}</th><th>${t('reports.table.lastComment')}</th></tr></thead>
               <tbody>${res.stale.map(p => `
                 <tr style="cursor:pointer" onclick="window.location='/project-detail.html?id=${p.id}'">
-                  <td>${p.project_code}</td><td>${p.project_name || ''}</td><td>${p.owner || ''}</td><td>${p.last_comment ? App.fmtDateTime(p.last_comment) : '<span class="stale-tag">Never</span>'}</td>
+                  <td>${p.project_code}</td><td>${p.project_name || ''}</td><td>${p.owner || ''}</td><td>${p.last_comment ? App.fmtDateTime(p.last_comment) : `<span class="stale-tag">${t('reports.table.never')}</span>`}</td>
                 </tr>
               `).join('')}</tbody>
             </table>
@@ -357,7 +362,7 @@
         type: 'bar',
         data: {
           labels: res.monthly.map(m => m.month),
-          datasets: [{ label: 'Comments', data: res.monthly.map(m => m.count), backgroundColor: res.monthly.map((m,i) => PASTEL_SEQ[i % PASTEL_SEQ.length]), borderRadius: 4 }],
+          datasets: [{ label: t('reports.legend.comments'), data: res.monthly.map(m => m.count), backgroundColor: res.monthly.map((m,i) => PASTEL_SEQ[i % PASTEL_SEQ.length]), borderRadius: 4 }],
         },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: '#f0f0f0' }, beginAtZero: true }, x: { grid: { display: false } } } },
       });

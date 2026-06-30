@@ -36,10 +36,10 @@
 
     <!-- User Passwords -->
     <div class="card" id="sec-users">
-      <h3>User Accounts</h3>
+      <h3 data-i18n="admin.settings.accounts"></h3>
       <div class="table-wrap">
         <table class="users-table" id="users-table">
-          <thead><tr><th>Name</th><th>Role</th><th>Password</th></tr></thead>
+          <thead><tr><th data-i18n="admin.settings.colName"></th><th data-i18n="admin.settings.colRole"></th><th data-i18n="admin.settings.colPassword"></th></tr></thead>
           <tbody id="users-tbody"></tbody>
         </table>
       </div>
@@ -47,21 +47,21 @@
 
     <!-- Login History -->
     <div class="card" id="sec-login-history">
-      <h3>Recent Logins</h3>
+      <h3 data-i18n="admin.settings.recentLogins"></h3>
       <div id="recent-logins"></div>
       <div style="margin-top:12px;">
-        <a class="see-all-link" id="toggle-full-history">Show full history (last 6 months)</a>
+        <a class="see-all-link" id="toggle-full-history" data-i18n="admin.settings.showFullHistory"></a>
       </div>
       <div class="history-full" id="full-history">
         <div style="margin:12px 0 8px;">
-          <label style="font-size:11px; color:#999; text-transform:uppercase; font-weight:600;">Filter by user</label>
+          <label style="font-size:11px; color:#999; text-transform:uppercase; font-weight:600;" data-i18n="admin.settings.filterByUser"></label>
           <select id="history-user-filter" style="padding:6px 10px; font-size:13px; border:1px solid #ddd; border-radius:6px; margin-left:8px;">
-            <option value="">All users</option>
+            <option value="" data-i18n="admin.settings.allUsers"></option>
           </select>
         </div>
         <div class="table-wrap" style="max-height:400px; overflow-y:auto;">
           <table class="users-table">
-            <thead><tr><th>User</th><th>Date & Time</th><th>IP</th><th>Device</th></tr></thead>
+            <thead><tr><th data-i18n="admin.settings.colUser"></th><th data-i18n="admin.settings.colDateTime"></th><th data-i18n="admin.settings.colIp"></th><th data-i18n="admin.settings.colDevice"></th></tr></thead>
             <tbody id="history-tbody"></tbody>
           </table>
         </div>
@@ -103,7 +103,7 @@
 
     <!-- Settings Change History -->
     <div class="card" id="sec-settings-history">
-      <h3>Settings Change History <span class="text-muted" style="font-size:12px;">(last 3 months)</span></h3>
+      <h3><span data-i18n="admin.settings.changeHistory"></span> <span class="text-muted" style="font-size:12px;" data-i18n="admin.settings.last3Months"></span></h3>
       <div id="settings-history-content"></div>
     </div>
   </main>
@@ -113,6 +113,9 @@
   <script src="/js/admin.js"></script>
   <script>
     (async () => {
+      await I18N.load(I18N.getLang());
+      I18N.applyTranslations(document);
+
       // Load user passwords
       try {
         const res = await App.api('/auth/admin/users');
@@ -142,7 +145,7 @@
               <span class="login-time">${App.fmtDateTime(h.created_at)}</span>
             </div>
           `).join('')
-          : '<span style="color:#aaa;">No logins yet</span>';
+          : `<span style="color:#aaa;">${I18N.t('admin.settings.noLogins')}</span>`;
 
         const tbody = document.getElementById('history-tbody');
 
@@ -162,7 +165,7 @@
             const browser = ua.match(/(Chrome|Safari|Firefox|Edge|Opera)[\/\s](\d+)/);
             if (browser) device += ' / ' + browser[1];
             return `<tr><td><strong>${h.user_name}</strong></td><td>${App.fmtDateTime(h.created_at)}</td><td style="font-size:12px;color:#888;">${h.ip || '-'}</td><td class="device-info" title="${ua}">${device}</td></tr>`;
-          }).join('') || '<tr><td colspan="4" style="text-align:center;color:#aaa;">No logins</td></tr>';
+          }).join('') || `<tr><td colspan="4" style="text-align:center;color:#aaa;">${I18N.t('admin.settings.noLogins')}</td></tr>`;
         }
 
         filterSel.addEventListener('change', () => renderHistory(filterSel.value));
@@ -172,7 +175,7 @@
           e.preventDefault();
           const el = document.getElementById('full-history');
           el.classList.toggle('open');
-          e.target.textContent = el.classList.contains('open') ? 'Hide full history' : 'Show full history (last 6 months)';
+          e.target.textContent = el.classList.contains('open') ? I18N.t('admin.settings.hideFullHistory') : I18N.t('admin.settings.showFullHistory');
         });
       } catch (e) {
         document.getElementById('sec-login-history').style.display = 'none';
@@ -186,7 +189,7 @@
           container.innerHTML = `
             <div class="table-wrap" style="max-height:400px; overflow-y:auto;">
               <table class="users-table">
-                <thead><tr><th>User</th><th>Setting</th><th>Old Value</th><th>New Value</th><th>Date & Time</th></tr></thead>
+                <thead><tr><th>${I18N.t('admin.settings.colUser')}</th><th>${I18N.t('admin.settings.colSetting')}</th><th>${I18N.t('admin.settings.colOldValue')}</th><th>${I18N.t('admin.settings.colNewValue')}</th><th>${I18N.t('admin.settings.colDateTime')}</th></tr></thead>
                 <tbody>${res.history.map(h => `
                   <tr>
                     <td><strong>${h.user_name || '-'}</strong></td>
@@ -200,7 +203,7 @@
             </div>
           `;
         } else {
-          container.innerHTML = '<span class="text-muted">No changes yet</span>';
+          container.innerHTML = `<span class="text-muted">${I18N.t('admin.settings.noChanges')}</span>`;
         }
       } catch (e) {
         document.getElementById('sec-settings-history').style.display = 'none';

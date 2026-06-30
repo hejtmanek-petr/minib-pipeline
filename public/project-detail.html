@@ -15,8 +15,8 @@
     <a href="/dashboard.html" class="breadcrumb-back">&#8592; <span data-i18n="nav.dashboard"></span></a>
     <span class="breadcrumb-sep">/</span>
     <span class="breadcrumb-current" id="breadcrumb-project-name"></span>
-    <a href="/dashboard.html" class="btn btn-primary" style="margin-left:auto;">&#8592; Overview</a>
-    <button id="btn-delete-project" class="btn btn-danger">&#128465; Delete project</button>
+    <a href="/dashboard.html" class="btn btn-primary" style="margin-left:auto;">&#8592; <span data-i18n="nav.dashboard"></span></a>
+    <button id="btn-delete-project" class="btn btn-danger">&#128465; <span data-i18n="project.deleteProject"></span></button>
   </div>
 
   <main class="app-main">
@@ -44,11 +44,11 @@
       <div id="ai-estimate-section" style="display:none; margin-top:20px; padding-top:16px; border-top:1px solid var(--border);">
         <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
           <div>
-            <div class="field-label" style="font-size:0.78rem; color:var(--text-muted); margin-bottom:4px;">🤖 AI value (estimate from products)</div>
+            <div class="field-label" style="font-size:0.78rem; color:var(--text-muted); margin-bottom:4px;">🤖 <span data-i18n="project.aiValueLabel"></span></div>
             <div id="ai-value-display" style="font-size:1.1rem; font-weight:600;">—</div>
           </div>
           <div id="ai-value-breakdown" style="font-size:0.82rem; color:var(--text-muted); max-width:400px;"></div>
-          <button id="btn-estimate-value" class="btn btn-secondary" style="margin-left:auto;">🤖 Estimate AI value</button>
+          <button id="btn-estimate-value" class="btn btn-secondary" style="margin-left:auto;">🤖 <span data-i18n="project.estimateAiValue"></span></button>
         </div>
       </div>
     </div>
