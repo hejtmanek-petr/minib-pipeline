@@ -32,6 +32,7 @@
     { field: 'created_at', type: 'text', readonly: true, displayFn: fmtDate },
     { field: 'updated_at', type: 'text', readonly: true, displayFn: fmtDate },
     { field: 'project_code', type: 'text', readonly: true },
+    { field: 'order_number', type: 'text' },
     { field: 'country', type: 'select', options: () => meta.countries || [], labelFn: countryLabel },
     { field: 'project_name', type: 'text' },
     { field: 'company', type: 'text' },

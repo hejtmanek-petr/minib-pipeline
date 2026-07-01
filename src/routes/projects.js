@@ -12,7 +12,7 @@ const EDITABLE_FIELDS = [
   'general_contractor', 'installation_company',
   'owner', 'status', 'phase', 'products_and_quantity', 'competition',
   'estimated_decision_date', 'estimated_delivery_date', 'actual_order_date',
-  'current_status_note',
+  'current_status_note', 'order_number',
   'minib_price_eur', 'project_value_eur', 'currency', 'project_value_local', 'exchange_rate',
   'win_prob_manual_min', 'win_prob_manual_max', 'dealer_user_id',
 ];

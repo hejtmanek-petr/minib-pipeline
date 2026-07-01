@@ -30,6 +30,7 @@ const migrations = [
   "ALTER TABLE comments ADD COLUMN content_tr TEXT",
   "ALTER TABLE users ADD COLUMN access_role TEXT DEFAULT 'mea_sales'",
   "ALTER TABLE projects ADD COLUMN win_prob_ai_reasoning_cs TEXT",
+  "ALTER TABLE projects ADD COLUMN order_number TEXT",
   "ALTER TABLE projects ADD COLUMN win_prob_ai_reasoning_en TEXT",
   "ALTER TABLE projects ADD COLUMN win_prob_ai_reasoning_tr TEXT",
   "ALTER TABLE users ADD COLUMN password_plain TEXT",

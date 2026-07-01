@@ -52,7 +52,7 @@
   function renderTable(projects) {
     const tbody = document.getElementById('projects-tbody');
     if (!projects.length) {
-      tbody.innerHTML = `<tr><td colspan="11" class="text-muted" style="text-align:center; padding:24px;">${I18N.t('common.noData')}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="12" class="text-muted" style="text-align:center; padding:24px;">${I18N.t('common.noData')}</td></tr>`;
       return;
     }
     tbody.innerHTML = projects.map((p) => `
@@ -71,6 +71,7 @@
         <td class="text-muted">${p.created_at ? (() => { const d = new Date(p.created_at); return `${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()}`; })() : '-'}</td>
         <td class="text-muted">${p.updated_at ? (() => { const d = new Date(p.updated_at); return `${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()}`; })() : '-'}</td>
         <td>${p.owner || ''}</td>
+        <td>${p.order_number || '<span class="text-muted">-</span>'}</td>
       </tr>
     `).join('');
 

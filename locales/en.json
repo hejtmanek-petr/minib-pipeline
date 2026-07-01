@@ -62,6 +62,7 @@
   "dashboard.table.generalContractor": "Gen. Contractor",
   "dashboard.table.installationCompany": "Installation Co.",
   "dashboard.table.owner": "Owner",
+  "dashboard.table.orderNumber": "Order Number",
   "dashboard.table.phase": "Status / Phase",
   "dashboard.table.price": "MINIB Price EUR",
   "dashboard.table.value": "Project Value (EUR)",
@@ -96,6 +97,7 @@
   "project.section.products": "Products & Specification",
   "project.section.history": "Change History",
 
+  "project.field.order_number": "Order Number",
   "project.field.project_code": "Project Code",
   "project.field.sheet": "Sheet",
   "project.field.country": "Country",

@@ -62,6 +62,7 @@
   "dashboard.table.generalContractor": "Gen. dodavatel",
   "dashboard.table.installationCompany": "Montážní firma",
   "dashboard.table.owner": "Obchodník",
+  "dashboard.table.orderNumber": "Číslo objednávky",
   "dashboard.table.phase": "Status / Fáze",
   "dashboard.table.price": "MINIB cena EUR",
   "dashboard.table.value": "Hodnota projektu (EUR)",
@@ -96,6 +97,7 @@
   "project.section.products": "Produkty a specifikace",
   "project.section.history": "Historie změn",
 
+  "project.field.order_number": "Číslo objednávky",
   "project.field.project_code": "Kód projektu",
   "project.field.sheet": "List",
   "project.field.country": "Země",
