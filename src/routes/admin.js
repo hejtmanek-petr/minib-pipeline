@@ -2,6 +2,7 @@ const express = require('express');
 const crypto = require('crypto');
 const bcrypt = require('bcrypt');
 const db = require('../db');
+const { generateCsv } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { requireHQ } = require('../middleware/permissions');
 const ai = require('../services/ai');
@@ -226,54 +227,23 @@ router.get('/backup/download', requireAdmin, (req, res) => {
   res.json({ _exportedAt: new Date().toISOString(), projects, comments, settings });
 });
 
-// GET /api/admin/backup/export-csv — export projects as CSV for Excel
+// GET /api/admin/backup/export-csv — export current projects as CSV for Excel
 router.get('/backup/export-csv', requireAdmin, (req, res) => {
   const projects = db.prepare('SELECT * FROM projects ORDER BY project_code').all();
   const now = new Date().toISOString().slice(0, 10);
-
-  const COLS = [
-    { key: 'project_code', label: 'Project Code' },
-    { key: 'project_name', label: 'Project Name' },
-    { key: 'country', label: 'Country' },
-    { key: 'sheet', label: 'Region' },
-    { key: 'company', label: 'Client' },
-    { key: 'investor', label: 'Investor' },
-    { key: 'general_contractor', label: 'General Contractor' },
-    { key: 'installation_company', label: 'Installation Company' },
-    { key: 'building_type', label: 'Building Type' },
-    { key: 'status', label: 'Status' },
-    { key: 'phase', label: 'Phase' },
-    { key: 'products_and_quantity', label: 'Articles & Quantities' },
-    { key: 'competition', label: 'Competition' },
-    { key: 'estimated_decision_date', label: 'Decision Date' },
-    { key: 'estimated_delivery_date', label: 'Delivery Date' },
-    { key: 'actual_order_date', label: 'Order Date' },
-    { key: 'project_value_eur', label: 'Project Value EUR' },
-    { key: 'minib_price_eur', label: 'MINIB Price EUR' },
-    { key: 'currency', label: 'Currency' },
-    { key: 'project_value_local', label: 'Value Local Currency' },
-    { key: 'exchange_rate', label: 'Exchange Rate' },
-    { key: 'win_prob_manual_min', label: 'Win Prob Min %' },
-    { key: 'win_prob_manual_max', label: 'Win Prob Max %' },
-    { key: 'current_status_note', label: 'Status Note' },
-    { key: 'created_at', label: 'Created At' },
-    { key: 'updated_at', label: 'Updated At' },
-  ];
-
-  function csvCell(val) {
-    if (val === null || val === undefined) return '';
-    const str = String(val).replace(/\r?\n/g, ' ');
-    if (str.includes('"') || str.includes(';') || str.includes(',')) {
-      return '"' + str.replace(/"/g, '""') + '"';
-    }
-    return str;
-  }
-
-  const header = COLS.map(c => csvCell(c.label)).join(';');
-  const rows = projects.map(p => COLS.map(c => csvCell(p[c.key])).join(';'));
-  const csv = '﻿' + [header, ...rows].join('\r\n'); // BOM for Excel UTF-8
-
   res.setHeader('Content-Disposition', `attachment; filename="minib-projects-${now}.csv"`);
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.send(generateCsv(projects));
+});
+
+// GET /api/admin/backup/snapshot/:id/csv — download CSV from a specific snapshot
+router.get('/backup/snapshot/:id/csv', requireAdmin, (req, res) => {
+  const snap = db.prepare('SELECT id, label, created_at, csv_data, projects_json FROM project_snapshots WHERE id = ?').get(req.params.id);
+  if (!snap) return res.status(404).json({ error: 'Snapshot not found' });
+  const csv = snap.csv_data || generateCsv(JSON.parse(snap.projects_json));
+  const date = snap.created_at.slice(0, 10);
+  const safeName = snap.label.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 40);
+  res.setHeader('Content-Disposition', `attachment; filename="minib-${safeName}-${date}.csv"`);
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');
   res.send(csv);
 });
@@ -298,8 +268,8 @@ router.post('/backup/snapshot', requireAdmin, (req, res) => {
   const projects = db.prepare('SELECT * FROM projects').all();
   const comments = db.prepare('SELECT * FROM comments').all();
   const tag = (label || '').trim() || ('manual:' + new Date().toISOString().slice(0, 16));
-  db.prepare("INSERT INTO project_snapshots (label, projects_json, comments_json) VALUES (?, ?, ?)")
-    .run(tag, JSON.stringify(projects), JSON.stringify(comments));
+  db.prepare("INSERT INTO project_snapshots (label, projects_json, comments_json, csv_data) VALUES (?, ?, ?, ?)")
+    .run(tag, JSON.stringify(projects), JSON.stringify(comments), generateCsv(projects));
   res.json({ ok: true, label: tag, projects: projects.length });
 });
 

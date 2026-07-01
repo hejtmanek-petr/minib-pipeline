@@ -225,6 +225,7 @@
                     <td>${App.fmtDateTime(s.created_at)}</td>
                     <td style="text-align:center;">${s.projects_count || '—'}</td>
                     <td style="white-space:nowrap;">
+                      <a class="btn btn-secondary" href="/api/admin/backup/snapshot/${s.id}/csv" download style="font-size:12px; padding:4px 10px; margin-right:4px;">CSV</a>
                       <button class="btn btn-secondary btn-restore" data-id="${s.id}" style="font-size:12px; padding:4px 10px; margin-right:4px;">${I18N.t('admin.backup.restore')}</button>
                       <button class="btn btn-danger btn-snap-delete" data-id="${s.id}" style="font-size:12px; padding:4px 10px;">${I18N.t('admin.backup.delete')}</button>
                     </td>

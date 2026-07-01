@@ -55,8 +55,10 @@ const migrations = [
     label TEXT,
     projects_json TEXT NOT NULL,
     comments_json TEXT NOT NULL,
+    csv_data TEXT,
     created_at TEXT DEFAULT (datetime('now'))
   )`,
+  "ALTER TABLE project_snapshots ADD COLUMN csv_data TEXT",
 ];
 for (const sql of migrations) {
   try { db.exec(sql); } catch (e) { /* column already exists */ }
@@ -149,7 +151,52 @@ for (const sql of migrations) {
   }
 })();
 
-// Auto-snapshot on startup (max 1 per day, keep 30 days)
+// Shared CSV generator for snapshots
+const CSV_COLS = [
+  { key: 'project_code', label: 'Project Code' },
+  { key: 'project_name', label: 'Project Name' },
+  { key: 'country', label: 'Country' },
+  { key: 'sheet', label: 'Region' },
+  { key: 'company', label: 'Client' },
+  { key: 'investor', label: 'Investor' },
+  { key: 'general_contractor', label: 'General Contractor' },
+  { key: 'installation_company', label: 'Installation Company' },
+  { key: 'building_type', label: 'Building Type' },
+  { key: 'status', label: 'Status' },
+  { key: 'phase', label: 'Phase' },
+  { key: 'products_and_quantity', label: 'Articles & Quantities' },
+  { key: 'competition', label: 'Competition' },
+  { key: 'estimated_decision_date', label: 'Decision Date' },
+  { key: 'estimated_delivery_date', label: 'Delivery Date' },
+  { key: 'actual_order_date', label: 'Order Date' },
+  { key: 'project_value_eur', label: 'Project Value EUR' },
+  { key: 'minib_price_eur', label: 'MINIB Price EUR' },
+  { key: 'currency', label: 'Currency' },
+  { key: 'project_value_local', label: 'Value Local Currency' },
+  { key: 'exchange_rate', label: 'Exchange Rate' },
+  { key: 'win_prob_manual_min', label: 'Win Prob Min %' },
+  { key: 'win_prob_manual_max', label: 'Win Prob Max %' },
+  { key: 'current_status_note', label: 'Status Note' },
+  { key: 'created_at', label: 'Created At' },
+  { key: 'updated_at', label: 'Updated At' },
+];
+
+function csvCell(val) {
+  if (val === null || val === undefined) return '';
+  const str = String(val).replace(/\r?\n/g, ' ');
+  if (str.includes('"') || str.includes(';') || str.includes(',')) {
+    return '"' + str.replace(/"/g, '""') + '"';
+  }
+  return str;
+}
+
+function generateCsv(projects) {
+  const header = CSV_COLS.map(c => csvCell(c.label)).join(';');
+  const rows = projects.map(p => CSV_COLS.map(c => csvCell(p[c.key])).join(';'));
+  return '﻿' + [header, ...rows].join('\r\n');
+}
+
+// Auto-snapshot on startup (max 1 per day, keep 90 days)
 (function autoSnapshot() {
   try {
     const today = new Date().toISOString().slice(0, 10);
@@ -157,8 +204,8 @@ for (const sql of migrations) {
     if (!existing) {
       const projects = db.prepare('SELECT * FROM projects').all();
       const comments = db.prepare('SELECT * FROM comments').all();
-      db.prepare("INSERT INTO project_snapshots (label, projects_json, comments_json) VALUES (?, ?, ?)")
-        .run('auto:' + today, JSON.stringify(projects), JSON.stringify(comments));
+      db.prepare("INSERT INTO project_snapshots (label, projects_json, comments_json, csv_data) VALUES (?, ?, ?, ?)")
+        .run('auto:' + today, JSON.stringify(projects), JSON.stringify(comments), generateCsv(projects));
       db.prepare("DELETE FROM project_snapshots WHERE created_at < datetime('now', '-90 days')").run();
       console.log('Auto-snapshot created for', today);
     }
@@ -174,3 +221,5 @@ db.prepare('UPDATE projects SET ai_value_eur = NULL WHERE project_value_eur IS N
 db.prepare("UPDATE projects SET ai_value_eur = NULL WHERE project_code = 'MEA-2026-060'").run();
 
 module.exports = db;
+module.exports.generateCsv = generateCsv;
+module.exports.CSV_COLS = CSV_COLS;
