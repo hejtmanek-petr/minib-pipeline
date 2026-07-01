@@ -208,4 +208,79 @@ router.post('/translate-comments', async (req, res) => {
   console.log('Bulk translation complete.');
 });
 
+// --- Backup / Snapshots (admin only) ---
+
+function requireAdmin(req, res, next) {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin only' });
+  next();
+}
+
+// GET /api/admin/backup/download — full JSON export
+router.get('/backup/download', requireAdmin, (req, res) => {
+  const projects = db.prepare('SELECT * FROM projects').all();
+  const comments = db.prepare('SELECT * FROM comments').all();
+  const settings = db.prepare('SELECT key, value FROM app_settings').all();
+  const now = new Date().toISOString().slice(0, 10);
+  res.setHeader('Content-Disposition', `attachment; filename="minib-backup-${now}.json"`);
+  res.setHeader('Content-Type', 'application/json');
+  res.json({ _exportedAt: new Date().toISOString(), projects, comments, settings });
+});
+
+// GET /api/admin/backup/snapshots — list snapshots
+router.get('/backup/snapshots', requireAdmin, (req, res) => {
+  const rows = db.prepare(
+    'SELECT id, label, created_at, projects_json FROM project_snapshots ORDER BY created_at DESC LIMIT 60'
+  ).all();
+  const snapshots = rows.map(s => ({
+    id: s.id,
+    label: s.label,
+    created_at: s.created_at,
+    projects_count: JSON.parse(s.projects_json).length,
+  }));
+  res.json({ snapshots });
+});
+
+// POST /api/admin/backup/snapshot — create manual snapshot
+router.post('/backup/snapshot', requireAdmin, (req, res) => {
+  const { label } = req.body || {};
+  const projects = db.prepare('SELECT * FROM projects').all();
+  const comments = db.prepare('SELECT * FROM comments').all();
+  const tag = (label || '').trim() || ('manual:' + new Date().toISOString().slice(0, 16));
+  db.prepare("INSERT INTO project_snapshots (label, projects_json, comments_json) VALUES (?, ?, ?)")
+    .run(tag, JSON.stringify(projects), JSON.stringify(comments));
+  res.json({ ok: true, label: tag, projects: projects.length });
+});
+
+// POST /api/admin/backup/restore/:id — restore from snapshot
+router.post('/backup/restore/:id', requireAdmin, (req, res) => {
+  const snap = db.prepare('SELECT * FROM project_snapshots WHERE id = ?').get(req.params.id);
+  if (!snap) return res.status(404).json({ error: 'Snapshot not found' });
+
+  const projects = JSON.parse(snap.projects_json);
+  const comments = JSON.parse(snap.comments_json);
+
+  db.transaction(() => {
+    db.prepare('DELETE FROM comments').run();
+    db.prepare('DELETE FROM projects').run();
+    if (projects.length) {
+      const cols = Object.keys(projects[0]);
+      const stmt = db.prepare(`INSERT OR REPLACE INTO projects (${cols.join(',')}) VALUES (${cols.map(() => '?').join(',')})`);
+      for (const p of projects) stmt.run(...cols.map(c => p[c] ?? null));
+    }
+    if (comments.length) {
+      const cols = Object.keys(comments[0]);
+      const stmt = db.prepare(`INSERT OR REPLACE INTO comments (${cols.join(',')}) VALUES (${cols.map(() => '?').join(',')})`);
+      for (const c of comments) stmt.run(...cols.map(col => c[col] ?? null));
+    }
+  })();
+
+  res.json({ ok: true, restored: { projects: projects.length, comments: comments.length } });
+});
+
+// DELETE /api/admin/backup/snapshot/:id
+router.delete('/backup/snapshot/:id', requireAdmin, (req, res) => {
+  db.prepare('DELETE FROM project_snapshots WHERE id = ?').run(req.params.id);
+  res.json({ ok: true });
+});
+
 module.exports = router;

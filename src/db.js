@@ -50,6 +50,13 @@ const migrations = [
     user_agent TEXT,
     created_at TEXT DEFAULT (datetime('now'))
   )`,
+  `CREATE TABLE IF NOT EXISTS project_snapshots (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    label TEXT,
+    projects_json TEXT NOT NULL,
+    comments_json TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now'))
+  )`,
 ];
 for (const sql of migrations) {
   try { db.exec(sql); } catch (e) { /* column already exists */ }
@@ -139,6 +146,24 @@ for (const sql of migrations) {
     console.log('Data sync complete! Version:', syncVersion);
   } catch (e) {
     console.error('Data sync failed:', e.message);
+  }
+})();
+
+// Auto-snapshot on startup (max 1 per day, keep 30 days)
+(function autoSnapshot() {
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    const existing = db.prepare("SELECT id FROM project_snapshots WHERE created_at >= ? LIMIT 1").get(today + ' 00:00:00');
+    if (!existing) {
+      const projects = db.prepare('SELECT * FROM projects').all();
+      const comments = db.prepare('SELECT * FROM comments').all();
+      db.prepare("INSERT INTO project_snapshots (label, projects_json, comments_json) VALUES (?, ?, ?)")
+        .run('auto:' + today, JSON.stringify(projects), JSON.stringify(comments));
+      db.prepare("DELETE FROM project_snapshots WHERE created_at < datetime('now', '-30 days')").run();
+      console.log('Auto-snapshot created for', today);
+    }
+  } catch (e) {
+    console.error('Auto-snapshot failed:', e.message);
   }
 })();
 

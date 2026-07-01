@@ -101,6 +101,20 @@
       <button class="btn btn-primary save-list" data-key="statuses" data-i18n="common.save"></button>
     </div>
 
+    <!-- Backups (admin only) -->
+    <div class="card" id="sec-backup" style="display:none;">
+      <h3 data-i18n="admin.backup.title"></h3>
+      <p class="text-muted" style="font-size:13px;" data-i18n="admin.backup.autoNote"></p>
+      <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; margin-bottom:16px;">
+        <div>
+          <input type="text" id="backup-label" style="padding:8px 12px; font-size:13px; border:1px solid #ddd; border-radius:6px; width:240px;" data-i18n-placeholder="admin.backup.labelPlaceholder">
+        </div>
+        <button class="btn btn-primary" id="btn-create-snapshot" data-i18n="admin.backup.createSnapshot"></button>
+        <a id="btn-download-backup" class="btn btn-secondary" href="/api/admin/backup/download" download data-i18n="admin.backup.download"></a>
+      </div>
+      <div id="snapshots-container"></div>
+    </div>
+
     <!-- Settings Change History -->
     <div class="card" id="sec-settings-history">
       <h3><span data-i18n="admin.settings.changeHistory"></span> <span class="text-muted" style="font-size:12px;" data-i18n="admin.settings.last3Months"></span></h3>
@@ -179,6 +193,89 @@
         });
       } catch (e) {
         document.getElementById('sec-login-history').style.display = 'none';
+      }
+
+      // Backup section (admin only)
+      const user = App.getUser();
+      if (user && user.role === 'admin') {
+        document.getElementById('sec-backup').style.display = '';
+
+        async function loadSnapshots() {
+          const res = await App.api('/admin/backup/snapshots');
+          const container = document.getElementById('snapshots-container');
+          if (!res.snapshots.length) {
+            container.innerHTML = `<span class="text-muted">${I18N.t('admin.backup.noSnapshots')}</span>`;
+            return;
+          }
+          container.innerHTML = `
+            <div class="table-wrap" style="max-height:400px; overflow-y:auto;">
+              <table class="users-table" id="snapshots-table">
+                <thead><tr>
+                  <th data-i18n="admin.backup.colLabel"></th>
+                  <th data-i18n="admin.backup.colDate"></th>
+                  <th data-i18n="admin.backup.colProjects"></th>
+                  <th></th>
+                </tr></thead>
+                <tbody>${res.snapshots.map(s => {
+                  const isAuto = s.label.startsWith('auto:');
+                  const labelDisplay = isAuto ? '🕐 ' + s.label.replace('auto:', '') : '📌 ' + s.label.replace('manual:', '');
+                  return `<tr>
+                    <td>${labelDisplay}</td>
+                    <td>${App.fmtDateTime(s.created_at)}</td>
+                    <td style="text-align:center;">${s.projects_count || '—'}</td>
+                    <td style="white-space:nowrap;">
+                      <button class="btn btn-secondary btn-restore" data-id="${s.id}" style="font-size:12px; padding:4px 10px; margin-right:4px;">${I18N.t('admin.backup.restore')}</button>
+                      <button class="btn btn-danger btn-snap-delete" data-id="${s.id}" style="font-size:12px; padding:4px 10px;">${I18N.t('admin.backup.delete')}</button>
+                    </td>
+                  </tr>`;
+                }).join('')}</tbody>
+              </table>
+            </div>
+          `;
+          I18N.applyTranslations(container);
+          container.querySelectorAll('.btn-restore').forEach(btn => {
+            btn.addEventListener('click', async () => {
+              if (!confirm(I18N.t('admin.backup.restoreConfirm'))) return;
+              btn.textContent = I18N.t('admin.backup.restoring');
+              btn.disabled = true;
+              try {
+                await App.api(`/admin/backup/restore/${btn.dataset.id}`, { method: 'POST' });
+                alert(I18N.t('admin.backup.restored'));
+              } catch (e) {
+                alert(e.message || 'Error');
+                btn.textContent = I18N.t('admin.backup.restore');
+                btn.disabled = false;
+              }
+            });
+          });
+          container.querySelectorAll('.btn-snap-delete').forEach(btn => {
+            btn.addEventListener('click', async () => {
+              if (!confirm(I18N.t('admin.backup.deleteConfirm'))) return;
+              await App.api(`/admin/backup/snapshot/${btn.dataset.id}`, { method: 'DELETE' });
+              loadSnapshots();
+            });
+          });
+        }
+
+        document.getElementById('btn-create-snapshot').addEventListener('click', async () => {
+          const btn = document.getElementById('btn-create-snapshot');
+          const label = document.getElementById('backup-label').value.trim();
+          btn.textContent = I18N.t('admin.backup.creating');
+          btn.disabled = true;
+          try {
+            await App.api('/admin/backup/snapshot', { method: 'POST', body: { label } });
+            document.getElementById('backup-label').value = '';
+            await loadSnapshots();
+            btn.textContent = I18N.t('admin.backup.created');
+            setTimeout(() => { btn.textContent = I18N.t('admin.backup.createSnapshot'); btn.disabled = false; }, 2000);
+          } catch (e) {
+            alert(e.message || 'Error');
+            btn.textContent = I18N.t('admin.backup.createSnapshot');
+            btn.disabled = false;
+          }
+        });
+
+        await loadSnapshots();
       }
 
       // Load settings change history
