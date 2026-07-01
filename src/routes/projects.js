@@ -457,6 +457,31 @@ router.get('/:id/history', (req, res) => {
   res.json({ history: rows });
 });
 
+// POST /api/projects/:id/history/:historyId/restore — restore old_value of a field (admin only)
+router.post('/:id/history/:historyId/restore', (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin only' });
+  const project = db.prepare('SELECT * FROM projects WHERE id = ?').get(req.params.id);
+  if (!project) return res.status(404).json({ error: 'Project not found' });
+  const entry = db.prepare('SELECT * FROM project_history WHERE id = ? AND project_id = ?').get(req.params.historyId, project.id);
+  if (!entry) return res.status(404).json({ error: 'History entry not found' });
+
+  const ALLOWED_FIELDS = [
+    'project_name','country','sheet','company','investor','general_contractor','installation_company',
+    'building_type','status','phase','products_and_quantity','competition','estimated_decision_date',
+    'estimated_delivery_date','actual_order_date','project_value_eur','minib_price_eur','currency',
+    'project_value_local','exchange_rate','win_prob_manual_min','win_prob_manual_max','current_status_note',
+  ];
+  if (!ALLOWED_FIELDS.includes(entry.field_name)) return res.status(400).json({ error: 'Field cannot be restored' });
+
+  const currentValue = project[entry.field_name];
+  db.prepare(`UPDATE projects SET ${entry.field_name} = ?, updated_at = datetime('now') WHERE id = ?`)
+    .run(entry.old_value ?? null, project.id);
+  db.prepare(`INSERT INTO project_history (project_id, user_id, field_name, old_value, new_value) VALUES (?,?,?,?,?)`)
+    .run(project.id, req.user.id, entry.field_name, String(currentValue ?? ''), String(entry.old_value ?? ''));
+
+  res.json({ ok: true, field: entry.field_name, restored: entry.old_value });
+});
+
 // --- Product lines ---
 
 router.get('/:id/products', (req, res) => {

@@ -170,6 +170,8 @@
   "history.newValue": "Nová hodnota",
   "history.changedBy": "Změnil",
   "history.changedAt": "Datum změny",
+  "history.restore": "Obnovit",
+  "history.restoreConfirm": "Obnovit tuto hodnotu pole?",
 
   "newProject.title": "Nový projekt",
   "newProject.create": "Vytvořit projekt",

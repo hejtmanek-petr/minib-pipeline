@@ -170,6 +170,8 @@
   "history.newValue": "New Value",
   "history.changedBy": "Changed By",
   "history.changedAt": "Changed At",
+  "history.restore": "Restore",
+  "history.restoreConfirm": "Restore this field value?",
 
   "newProject.title": "New Project",
   "newProject.create": "Create Project",

@@ -761,11 +761,15 @@
     const res = await App.api(`/projects/${projectId}/history`);
     const tbody = document.getElementById('history-tbody');
     if (!res.history.length) {
-      tbody.innerHTML = `<tr><td colspan="5" class="text-muted" style="text-align:center;">${I18N.t('common.noData')}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" class="text-muted" style="text-align:center;">${I18N.t('common.noData')}</td></tr>`;
       return;
     }
     const moneyFields = new Set(['project_value_eur','ai_value_eur','minib_price_eur','project_value_local']);
     const pctFields = new Set(['win_prob_manual_min','win_prob_manual_max','win_prob_ai','win_prob_ai_min','win_prob_ai_max']);
+    const RESTORABLE = new Set(['project_name','country','sheet','company','investor','general_contractor','installation_company',
+      'building_type','status','phase','products_and_quantity','competition','estimated_decision_date',
+      'estimated_delivery_date','actual_order_date','project_value_eur','minib_price_eur','currency',
+      'project_value_local','exchange_rate','win_prob_manual_min','win_prob_manual_max','current_status_note']);
     function fmtHistVal(field, val) {
       if (val === null || val === undefined || val === '') return '-';
       if (moneyFields.has(field)) {
@@ -778,15 +782,38 @@
       }
       return val;
     }
-    tbody.innerHTML = res.history.map((h) => `
+    const isAdmin = user && user.role === 'admin';
+    const entries = res.history.slice(0, 50);
+    tbody.innerHTML = entries.map((h) => `
       <tr>
         <td>${fieldLabel(h.field_name)}</td>
-        <td>${fmtHistVal(h.field_name, h.old_value)}</td>
+        <td style="color:#888;">${fmtHistVal(h.field_name, h.old_value)}</td>
         <td>${fmtHistVal(h.field_name, h.new_value)}</td>
         <td>${h.user_name}</td>
         <td>${App.fmtDateTime(h.changed_at)}</td>
+        <td>${isAdmin && RESTORABLE.has(h.field_name) && (h.old_value !== null && h.old_value !== '') ? `<button class="btn-restore-field btn btn-secondary" data-id="${h.id}" data-field="${h.field_name}" data-val="${(h.old_value || '').replace(/"/g,'&quot;')}" style="font-size:11px;padding:2px 8px;">${I18N.t('history.restore')}</button>` : ''}</td>
       </tr>
     `).join('');
+
+    if (isAdmin) {
+      tbody.querySelectorAll('.btn-restore-field').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const field = btn.dataset.field;
+          const val = btn.dataset.val;
+          const fieldName = fieldLabel(field);
+          if (!confirm(`${I18N.t('history.restoreConfirm')}\n\n${fieldName}: "${val}"`)) return;
+          btn.disabled = true;
+          try {
+            await App.api(`/projects/${projectId}/history/${btn.dataset.id}/restore`, { method: 'POST' });
+            await loadHistory();
+            window.location.reload();
+          } catch (e) {
+            alert(e.message || 'Error');
+            btn.disabled = false;
+          }
+        });
+      });
+    }
   }
 
   // --- Init ---
