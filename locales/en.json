@@ -304,6 +304,7 @@
   "admin.backup.delete": "Delete",
   "admin.backup.noSnapshots": "No backups yet",
   "admin.backup.autoNote": "A backup is created automatically every day. Last 30 days are kept.",
+  "admin.backup.exportCsv": "Download Excel (CSV)",
 
   "profile.title": "Profile Settings",
   "profile.changePassword": "Change Password",

@@ -304,6 +304,7 @@
   "admin.backup.delete": "Smazat",
   "admin.backup.noSnapshots": "Zatím žádné zálohy",
   "admin.backup.autoNote": "Záloha se vytváří automaticky každý den. Uchovává se posledních 30 dní.",
+  "admin.backup.exportCsv": "Stáhnout Excel (CSV)",
 
   "profile.title": "Nastavení profilu",
   "profile.changePassword": "Změna hesla",

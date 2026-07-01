@@ -226,6 +226,58 @@ router.get('/backup/download', requireAdmin, (req, res) => {
   res.json({ _exportedAt: new Date().toISOString(), projects, comments, settings });
 });
 
+// GET /api/admin/backup/export-csv — export projects as CSV for Excel
+router.get('/backup/export-csv', requireAdmin, (req, res) => {
+  const projects = db.prepare('SELECT * FROM projects ORDER BY project_code').all();
+  const now = new Date().toISOString().slice(0, 10);
+
+  const COLS = [
+    { key: 'project_code', label: 'Project Code' },
+    { key: 'project_name', label: 'Project Name' },
+    { key: 'country', label: 'Country' },
+    { key: 'sheet', label: 'Region' },
+    { key: 'company', label: 'Client' },
+    { key: 'investor', label: 'Investor' },
+    { key: 'general_contractor', label: 'General Contractor' },
+    { key: 'installation_company', label: 'Installation Company' },
+    { key: 'building_type', label: 'Building Type' },
+    { key: 'status', label: 'Status' },
+    { key: 'phase', label: 'Phase' },
+    { key: 'products_and_quantity', label: 'Articles & Quantities' },
+    { key: 'competition', label: 'Competition' },
+    { key: 'estimated_decision_date', label: 'Decision Date' },
+    { key: 'estimated_delivery_date', label: 'Delivery Date' },
+    { key: 'actual_order_date', label: 'Order Date' },
+    { key: 'project_value_eur', label: 'Project Value EUR' },
+    { key: 'minib_price_eur', label: 'MINIB Price EUR' },
+    { key: 'currency', label: 'Currency' },
+    { key: 'project_value_local', label: 'Value Local Currency' },
+    { key: 'exchange_rate', label: 'Exchange Rate' },
+    { key: 'win_prob_manual_min', label: 'Win Prob Min %' },
+    { key: 'win_prob_manual_max', label: 'Win Prob Max %' },
+    { key: 'current_status_note', label: 'Status Note' },
+    { key: 'created_at', label: 'Created At' },
+    { key: 'updated_at', label: 'Updated At' },
+  ];
+
+  function csvCell(val) {
+    if (val === null || val === undefined) return '';
+    const str = String(val).replace(/\r?\n/g, ' ');
+    if (str.includes('"') || str.includes(';') || str.includes(',')) {
+      return '"' + str.replace(/"/g, '""') + '"';
+    }
+    return str;
+  }
+
+  const header = COLS.map(c => csvCell(c.label)).join(';');
+  const rows = projects.map(p => COLS.map(c => csvCell(p[c.key])).join(';'));
+  const csv = '﻿' + [header, ...rows].join('\r\n'); // BOM for Excel UTF-8
+
+  res.setHeader('Content-Disposition', `attachment; filename="minib-projects-${now}.csv"`);
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.send(csv);
+});
+
 // GET /api/admin/backup/snapshots — list snapshots
 router.get('/backup/snapshots', requireAdmin, (req, res) => {
   const rows = db.prepare(
