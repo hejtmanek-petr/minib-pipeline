@@ -8,7 +8,9 @@
       try {
         const res = await fetch('/api/auth/me', { credentials: 'include' });
         if (res.ok) {
-          window.location.replace('/dashboard.html');
+          const data = await res.json();
+          const role = data.user && data.user.role;
+          window.location.replace(role === 'mea_sales' ? '/dashboard.html' : '/reports.html');
         } else {
           window.location.replace('/login.html');
         }
