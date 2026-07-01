@@ -159,7 +159,7 @@ for (const sql of migrations) {
       const comments = db.prepare('SELECT * FROM comments').all();
       db.prepare("INSERT INTO project_snapshots (label, projects_json, comments_json) VALUES (?, ?, ?)")
         .run('auto:' + today, JSON.stringify(projects), JSON.stringify(comments));
-      db.prepare("DELETE FROM project_snapshots WHERE created_at < datetime('now', '-30 days')").run();
+      db.prepare("DELETE FROM project_snapshots WHERE created_at < datetime('now', '-90 days')").run();
       console.log('Auto-snapshot created for', today);
     }
   } catch (e) {

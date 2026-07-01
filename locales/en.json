@@ -303,7 +303,7 @@
   "admin.backup.restore": "Restore",
   "admin.backup.delete": "Delete",
   "admin.backup.noSnapshots": "No backups yet",
-  "admin.backup.autoNote": "A backup is created automatically every day. Last 30 days are kept.",
+  "admin.backup.autoNote": "A backup is created automatically every day. Last 90 days are kept.",
   "admin.backup.exportCsv": "Download Excel (CSV)",
 
   "profile.title": "Profile Settings",
