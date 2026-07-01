@@ -814,8 +814,12 @@
       } else {
         deleteBtn.addEventListener('click', async () => {
           if (!confirm(`Delete project "${project.project_name || project.project_code}"? This action cannot be undone.`)) return;
-          await App.api(`/projects/${projectId}`, { method: 'DELETE' });
-          window.location.href = '/dashboard.html';
+          try {
+            await App.api(`/projects/${projectId}`, { method: 'DELETE' });
+            window.location.href = '/dashboard.html';
+          } catch (err) {
+            alert((err && err.message) || 'Delete failed');
+          }
         });
       }
     }
