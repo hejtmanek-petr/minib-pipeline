@@ -3,14 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <title>MINIB Project Pipeline</title>
+  <script src="/js/app.js"></script>
   <script>
     (async () => {
       try {
         const res = await fetch('/api/auth/me', { credentials: 'include' });
         if (res.ok) {
           const data = await res.json();
-          const role = data.user && data.user.role;
-          window.location.replace(role === 'mea_sales' ? '/dashboard.html' : '/reports.html');
+          const user = data.user;
+          const target = (user && App.getLastPage(user.id)) || App.defaultLandingPage(user && user.role);
+          window.location.replace(target);
         } else {
           window.location.replace('/login.html');
         }

@@ -146,27 +146,42 @@ const App = (() => {
     return role === 'mea_sales' ? '/dashboard.html' : '/reports.html';
   }
 
-  // Pages that act as a "home" page depending on role. If a user lands here
-  // via a direct/bookmarked visit (not a click from inside the app) and it's
-  // not their own default landing page, send them to their default instead —
-  // same behavior as right after login.
-  const LANDING_PAGES = { dashboard: '/dashboard.html', reports: '/reports.html', 'new-project': '/project-new.html' };
+  function lastPageKey(userId) {
+    return `minib_last_page_${userId}`;
+  }
 
-  function redirectToLandingIfNeeded(user, activePage) {
-    const ownPage = LANDING_PAGES[activePage];
-    if (!ownPage) return false;
-    const cameFromInApp = document.referrer && document.referrer.startsWith(window.location.origin);
-    if (cameFromInApp) return false;
-    const target = defaultLandingPage(user.role);
-    if (target === ownPage) return false;
-    window.location.replace(target);
-    return true;
+  function getLastPage(userId) {
+    return localStorage.getItem(lastPageKey(userId));
+  }
+
+  function setLastPage(userId, path) {
+    localStorage.setItem(lastPageKey(userId), path);
+  }
+
+  // Generic "home"-style pages with no identifying query string. Deep links
+  // (e.g. project-detail.html?id=42) are never auto-redirected away from —
+  // only these generic entry points are, so a shared link always works.
+  const GENERIC_PAGES = ['/dashboard.html', '/reports.html', '/project-new.html', '/profile.html', '/admin-settings.html', '/'];
+
+  function isGenericEntryPage() {
+    return GENERIC_PAGES.includes(window.location.pathname) && !window.location.search;
   }
 
   async function init(activePage, opts = {}) {
     const user = await requireAuth();
     if (!user) return null;
-    if (redirectToLandingIfNeeded(user, activePage)) return null;
+
+    const currentPath = window.location.pathname + window.location.search;
+    const cameFromInApp = document.referrer && document.referrer.startsWith(window.location.origin);
+    if (!cameFromInApp && isGenericEntryPage()) {
+      const last = getLastPage(user.id);
+      if (last && last !== currentPath) {
+        window.location.replace(last);
+        return null;
+      }
+    }
+    setLastPage(user.id, currentPath);
+
     await I18N.load(I18N.getLang() || user.preferred_language || 'cs');
     await renderHeader(activePage);
     I18N.applyTranslations(document);
@@ -185,5 +200,6 @@ const App = (() => {
   return {
     api, loadUser, getUser, requireAuth, requireHQ, renderHeader, init,
     statusBadgeClass, winBadgeClass, gaugeClass, fmtMoney, fmtDateTime, initials, restoreScroll,
+    defaultLandingPage, getLastPage, setLastPage,
   };
 })();
