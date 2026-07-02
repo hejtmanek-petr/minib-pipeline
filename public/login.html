@@ -201,8 +201,11 @@
         const data = await res.json();
         if (!res.ok) { errEl.textContent = T[lang].error; return; }
         const params = new URLSearchParams(window.location.search);
-        const defaultPage = data.user.role === 'mea_sales' ? '/dashboard.html' : '/reports.html';
-        window.location.href = params.get('next') || defaultPage;
+        const role = data.user.role;
+        const defaultPage = role === 'mea_sales' ? '/dashboard.html' : '/reports.html';
+        const next = params.get('next');
+        // admin and mea_management always land on their default page, ignore ?next
+        window.location.href = (role === 'mea_sales' && next) ? next : defaultPage;
       } catch (e) {
         errEl.textContent = T[lang].connErr;
       }
