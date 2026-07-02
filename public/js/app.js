@@ -142,9 +142,31 @@ const App = (() => {
     });
   }
 
+  function defaultLandingPage(role) {
+    return role === 'mea_sales' ? '/dashboard.html' : '/reports.html';
+  }
+
+  // Pages that act as a "home" page depending on role. If a user lands here
+  // via a direct/bookmarked visit (not a click from inside the app) and it's
+  // not their own default landing page, send them to their default instead —
+  // same behavior as right after login.
+  const LANDING_PAGES = { dashboard: '/dashboard.html', reports: '/reports.html', 'new-project': '/project-new.html' };
+
+  function redirectToLandingIfNeeded(user, activePage) {
+    const ownPage = LANDING_PAGES[activePage];
+    if (!ownPage) return false;
+    const cameFromInApp = document.referrer && document.referrer.startsWith(window.location.origin);
+    if (cameFromInApp) return false;
+    const target = defaultLandingPage(user.role);
+    if (target === ownPage) return false;
+    window.location.replace(target);
+    return true;
+  }
+
   async function init(activePage, opts = {}) {
     const user = await requireAuth();
     if (!user) return null;
+    if (redirectToLandingIfNeeded(user, activePage)) return null;
     await I18N.load(I18N.getLang() || user.preferred_language || 'cs');
     await renderHeader(activePage);
     I18N.applyTranslations(document);
