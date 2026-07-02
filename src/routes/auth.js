@@ -6,7 +6,7 @@ const db = require('../db');
 const router = express.Router();
 
 const COOKIE_NAME = 'minib_access';
-const COOKIE_MAX_AGE = 30 * 24 * 60 * 60 * 1000; // 30 days
+const COOKIE_MAX_AGE = 6 * 60 * 60 * 1000; // 6 hours — auto-logout
 
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
