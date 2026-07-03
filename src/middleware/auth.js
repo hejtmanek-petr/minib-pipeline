@@ -1,4 +1,5 @@
 const COOKIE_NAME = 'minib_access';
+const SESSION_MAX_AGE_MS = 6 * 60 * 60 * 1000; // 6 hours — enforced server-side, independent of browser cookie expiry
 const db = require('../db');
 
 function requireAuth(req, res, next) {
@@ -7,6 +8,11 @@ function requireAuth(req, res, next) {
 
   try {
     const parsed = JSON.parse(cookie);
+    // Cookies issued before this session-timeout feature have no iat and are treated as expired.
+    if (!parsed.iat || Date.now() - parsed.iat > SESSION_MAX_AGE_MS) {
+      res.clearCookie(COOKIE_NAME);
+      return res.status(401).json({ error: 'Session expired' });
+    }
     const user = db.prepare('SELECT * FROM users WHERE id = ? AND is_active = 1').get(parsed.id);
     if (!user) return res.status(401).json({ error: 'Not authenticated' });
 

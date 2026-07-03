@@ -45,7 +45,7 @@ router.post('/login', loginLimiter, (req, res) => {
 
   const roleKey = user.access_role || 'mea_sales';
 
-  const cookieValue = JSON.stringify({ id: user.id, role: roleKey });
+  const cookieValue = JSON.stringify({ id: user.id, role: roleKey, iat: Date.now() });
   res.cookie(COOKIE_NAME, cookieValue, {
     httpOnly: true,
     sameSite: 'lax',

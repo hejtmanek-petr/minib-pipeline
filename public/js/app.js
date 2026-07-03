@@ -137,6 +137,7 @@ const App = (() => {
     });
 
     document.getElementById('logout-btn').addEventListener('click', async () => {
+      if (user) clearLastPage(user.id);
       await api('/auth/logout', { method: 'POST' });
       window.location.href = '/login.html';
     });
@@ -156,6 +157,10 @@ const App = (() => {
 
   function setLastPage(userId, path) {
     localStorage.setItem(lastPageKey(userId), path);
+  }
+
+  function clearLastPage(userId) {
+    localStorage.removeItem(lastPageKey(userId));
   }
 
   // Generic "home"-style pages with no identifying query string. Deep links
@@ -200,6 +205,6 @@ const App = (() => {
   return {
     api, loadUser, getUser, requireAuth, requireHQ, renderHeader, init,
     statusBadgeClass, winBadgeClass, gaugeClass, fmtMoney, fmtDateTime, initials, restoreScroll,
-    defaultLandingPage, getLastPage, setLastPage,
+    defaultLandingPage, getLastPage, setLastPage, clearLastPage,
   };
 })();
