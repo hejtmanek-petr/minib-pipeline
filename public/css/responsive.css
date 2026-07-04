@@ -13,6 +13,7 @@
     padding: 0 12px;
   }
   .app-header .logo img { height: 28px !important; }
+  #dashboard-table-wrap { max-height: calc(100vh - 340px); }
 
   .app-nav {
     display: none;

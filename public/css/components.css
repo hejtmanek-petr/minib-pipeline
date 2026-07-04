@@ -69,6 +69,11 @@
   overflow-x: auto;
 }
 
+#dashboard-table-wrap {
+  max-height: calc(100vh - 400px);
+  overflow-y: auto;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -96,6 +101,7 @@ th {
   user-select: none;
   position: sticky;
   top: 0;
+  z-index: 5;
 }
 
 th.sorted-asc::after { content: ' \25B2'; }
