@@ -71,7 +71,7 @@ router.get('/meta', (req, res) => {
   for (const s of settings) {
     try { meta[s.key] = JSON.parse(s.value); } catch (e) { meta[s.key] = s.value; }
   }
-  const fixedOwners = ['Cem', 'Hakan', 'Monika', 'Ogün', 'Okan', 'Pavla', 'Petr', 'Sefa', 'other'];
+  const fixedOwners = ['Cem', 'Hakan', 'Monika', 'Ogün', 'Okan', 'Pavla', 'Petr', 'Sefa'];
   const excludedOwners = new Set(['Roman']);
   const dbOwners = db.prepare("SELECT DISTINCT owner FROM projects WHERE owner IS NOT NULL").all().map(r => r.owner);
   const owners = [...new Set([...fixedOwners, ...dbOwners])].filter(o => !excludedOwners.has(o)).sort();
