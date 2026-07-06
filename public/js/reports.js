@@ -98,6 +98,7 @@
       </div>
       <div class="report-grid">
         <div class="stat-card"><div class="stat-label">${t('reports.stat.avgWinProb')}</div><div class="stat-value">${pct(winloss.avg_win_probability)}</div></div>
+        <div class="stat-card"><div class="stat-label">${t('reports.stat.avgAiProb')}</div><div class="stat-value">🤖 ${pct(winloss.avg_ai_probability)}</div></div>
         <div class="stat-card"><div class="stat-label">${t('reports.stat.winRate')}</div><div class="stat-value green">${(winloss.counts.won + winloss.counts.lost) > 0 ? Math.round(winloss.counts.won / (winloss.counts.won + winloss.counts.lost) * 100) + '%' : '-'}</div></div>
         <div class="stat-card"><div class="stat-label">${t('reports.stat.active')}</div><div class="stat-value">${winloss.counts.active}</div></div>
         <div class="stat-card"><div class="stat-label">${t('reports.stat.wonLost')}</div><div class="stat-value">${winloss.counts.won} / ${winloss.counts.lost}</div></div>
@@ -153,7 +154,7 @@
         <h4>${t('reports.chart.allCountries')}</h4>
         <div class="table-wrap">
           <table class="report-table">
-            <thead><tr><th>${t('reports.table.country')}</th><th class="num">${t('reports.table.projects')}</th>${hidePrices ? '' : `<th class="money">${t('reports.table.valueEur')}</th>`}<th class="num">${t('reports.table.won')}</th><th class="num">${t('reports.table.lost')}</th><th class="num">${t('reports.table.winRate')}</th><th class="num">${t('reports.table.avgWin')}</th></tr></thead>
+            <thead><tr><th>${t('reports.table.country')}</th><th class="num">${t('reports.table.projects')}</th>${hidePrices ? '' : `<th class="money">${t('reports.table.valueEur')}</th>`}<th class="num">${t('reports.table.won')}</th><th class="num">${t('reports.table.lost')}</th><th class="num">${t('reports.table.winRate')}</th><th class="num">${t('reports.table.avgWin')}</th><th class="num">${t('reports.table.avgAi')}</th></tr></thead>
             <tbody>${res.countries.map(c => `
               <tr>
                 <td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${cColor(c.code)};margin-right:6px;vertical-align:middle;"></span><strong>${c.name}</strong></td>
@@ -163,6 +164,7 @@
                 <td class="num">${c.lost}</td>
                 <td class="num">${c.win_rate != null ? c.win_rate + '%' : '-'}</td>
                 <td class="num">${pct(c.avg_prob)}</td>
+                <td class="num">${pct(c.avg_ai_prob)}</td>
               </tr>
             `).join('')}</tbody>
           </table>
@@ -201,7 +203,7 @@
         <h4>${t('reports.chart.ownerPerformance')}</h4>
         <div class="table-wrap">
           <table class="report-table">
-            <thead><tr><th>${t('reports.table.owner')}</th><th class="num">${t('reports.table.active')}</th><th class="num">${t('reports.table.won')}</th><th class="num">${t('reports.table.lost')}</th>${hidePrices ? '' : `<th class="money">${t('reports.table.valueEur')}</th>`}<th class="num">${t('reports.table.winRate')}</th><th class="num">${t('reports.table.avgWin')}</th></tr></thead>
+            <thead><tr><th>${t('reports.table.owner')}</th><th class="num">${t('reports.table.active')}</th><th class="num">${t('reports.table.won')}</th><th class="num">${t('reports.table.lost')}</th>${hidePrices ? '' : `<th class="money">${t('reports.table.valueEur')}</th>`}<th class="num">${t('reports.table.winRate')}</th><th class="num">${t('reports.table.avgWin')}</th><th class="num">${t('reports.table.avgAi')}</th></tr></thead>
             <tbody>${res.owners.map(o => `
               <tr>
                 <td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${oColor(o.owner)};margin-right:6px;vertical-align:middle;"></span><strong>${o.owner}</strong></td>
@@ -211,6 +213,7 @@
                 ${hidePrices ? '' : `<td class="money">€ ${fmt(o.value)}</td>`}
                 <td class="num">${o.win_rate != null ? o.win_rate + '%' : '-'}</td>
                 <td class="num">${pct(o.avg_prob)}</td>
+                <td class="num">${pct(o.avg_ai_prob)}</td>
               </tr>
             `).join('')}</tbody>
           </table>

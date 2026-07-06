@@ -44,10 +44,12 @@ router.get('/winloss', (req, res) => {
   for (const p of projects) counts[p.status] = (counts[p.status] || 0) + 1;
   const withProb = projects.filter(p => p.win_prob_manual_min != null);
   const avgProb = withProb.length ? withProb.reduce((s, p) => s + p.win_prob_manual_min, 0) / withProb.length : null;
+  const withAiProb = projects.filter(p => p.win_prob_ai != null);
+  const avgAiProb = withAiProb.length ? withAiProb.reduce((s, p) => s + p.win_prob_ai, 0) / withAiProb.length : null;
   const wonValue = projects.filter(p => p.status === 'won').reduce((s, p) => s + (p.project_value_eur || 0), 0);
   const lostValue = projects.filter(p => p.status === 'lost').reduce((s, p) => s + (p.project_value_eur || 0), 0);
   const activeValue = projects.filter(p => p.status === 'active').reduce((s, p) => s + (p.project_value_eur || 0), 0);
-  res.json({ counts, avg_win_probability: avgProb, total: projects.length, wonValue, lostValue, activeValue });
+  res.json({ counts, avg_win_probability: avgProb, avg_ai_probability: avgAiProb, total: projects.length, wonValue, lostValue, activeValue });
 });
 
 // Geography
@@ -56,15 +58,17 @@ router.get('/geography', (req, res) => {
   const byCountry = {};
   for (const p of projects) {
     const c = p.country || 'Unknown';
-    if (!byCountry[c]) byCountry[c] = { code: c, name: COUNTRY_NAMES[c] || c, count: 0, value: 0, won: 0, lost: 0, probs: [] };
+    if (!byCountry[c]) byCountry[c] = { code: c, name: COUNTRY_NAMES[c] || c, count: 0, value: 0, won: 0, lost: 0, probs: [], aiProbs: [] };
     byCountry[c].count++;
     byCountry[c].value += p.project_value_eur || 0;
     if (p.status === 'won') byCountry[c].won++;
     if (p.status === 'lost') byCountry[c].lost++;
     if (p.win_prob_manual_min != null) byCountry[c].probs.push(p.win_prob_manual_min);
+    if (p.win_prob_ai != null) byCountry[c].aiProbs.push(p.win_prob_ai);
   }
   const result = Object.values(byCountry).map(c => ({
     ...c, avg_prob: c.probs.length ? Math.round(c.probs.reduce((a, b) => a + b, 0) / c.probs.length) : null,
+    avg_ai_prob: c.aiProbs.length ? Math.round(c.aiProbs.reduce((a, b) => a + b, 0) / c.aiProbs.length) : null,
     win_rate: (c.won + c.lost) > 0 ? Math.round(c.won / (c.won + c.lost) * 100) : null,
   })).sort((a, b) => b.value - a.value);
   res.json({ countries: result });
@@ -76,16 +80,18 @@ router.get('/owners', (req, res) => {
   const byOwner = {};
   for (const p of projects) {
     const o = p.owner || 'Unassigned';
-    if (!byOwner[o]) byOwner[o] = { owner: o, count: 0, value: 0, won: 0, lost: 0, active: 0, probs: [] };
+    if (!byOwner[o]) byOwner[o] = { owner: o, count: 0, value: 0, won: 0, lost: 0, active: 0, probs: [], aiProbs: [] };
     byOwner[o].count++;
     byOwner[o].value += p.project_value_eur || 0;
     if (p.status === 'won') byOwner[o].won++;
     if (p.status === 'lost') byOwner[o].lost++;
     if (p.status === 'active') byOwner[o].active++;
     if (p.win_prob_manual_min != null) byOwner[o].probs.push(p.win_prob_manual_min);
+    if (p.win_prob_ai != null) byOwner[o].aiProbs.push(p.win_prob_ai);
   }
   const result = Object.values(byOwner).map(o => ({
     ...o, avg_prob: o.probs.length ? Math.round(o.probs.reduce((a, b) => a + b, 0) / o.probs.length) : null,
+    avg_ai_prob: o.aiProbs.length ? Math.round(o.aiProbs.reduce((a, b) => a + b, 0) / o.aiProbs.length) : null,
     win_rate: (o.won + o.lost) > 0 ? Math.round(o.won / (o.won + o.lost) * 100) : null,
   })).sort((a, b) => b.value - a.value);
   res.json({ owners: result });

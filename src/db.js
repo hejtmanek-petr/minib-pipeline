@@ -177,6 +177,7 @@ const CSV_COLS = [
   { key: 'exchange_rate', label: 'Exchange Rate' },
   { key: 'win_prob_manual_min', label: 'Win Prob Min %' },
   { key: 'win_prob_manual_max', label: 'Win Prob Max %' },
+  { key: 'win_prob_ai', label: 'AI%' },
   { key: 'current_status_note', label: 'Status Note' },
   { key: 'created_at', label: 'Created At' },
   { key: 'updated_at', label: 'Updated At' },
