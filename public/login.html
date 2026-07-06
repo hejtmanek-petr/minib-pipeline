@@ -201,15 +201,12 @@
         });
         const data = await res.json();
         if (!res.ok) { errEl.textContent = T[lang].error; return; }
-        // A fresh login always starts a new session at the role default page
-        // (the "return to last page" feature only applies within an already-
-        // logged-in session — see App.init in app.js). ?next is honored only
-        // for the case where a session expired mid-page and the app itself
-        // redirected here.
-        const params = new URLSearchParams(window.location.search);
-        const next = params.get('next');
+        // A fresh login always starts a new session at the role default page,
+        // regardless of ?next or where the user was before logging in. The
+        // "return to last page" feature only applies within an already-
+        // logged-in session — see App.init in app.js.
         App.clearLastPage(data.user.id);
-        window.location.href = next || App.defaultLandingPage(data.user.role);
+        window.location.href = App.defaultLandingPage(data.user.role);
       } catch (e) {
         errEl.textContent = T[lang].connErr;
       }
