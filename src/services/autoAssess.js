@@ -3,7 +3,7 @@ const ai = require('./ai');
 
 // Debounce so several quick edits to the same project (e.g. auto-saving
 // multiple fields in a row) trigger one AI call instead of many.
-const DEBOUNCE_MS = 8000;
+const DEBOUNCE_MS = 2 * 60 * 1000;
 const timers = new Map();
 
 async function runAssessment(projectId) {
