@@ -5,6 +5,7 @@ const db = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { dealerCanAccessProject } = require('../middleware/permissions');
 const ai = require('../services/ai');
+const autoAssess = require('../services/autoAssess');
 
 const AUDIO_DIR = path.join(__dirname, '..', '..', 'data', 'audio');
 if (!fs.existsSync(AUDIO_DIR)) fs.mkdirSync(AUDIO_DIR, { recursive: true });
@@ -59,6 +60,7 @@ router.post('/:id/comments', (req, res) => {
 
   res.status(201).json({ comment });
   translateAndSave(comment.id, comment.content, original_language);
+  autoAssess.scheduleAutoAssess(project.id);
 });
 
 // PUT /api/projects/:id/comments/:commentId
@@ -84,6 +86,7 @@ router.put('/:id/comments/:commentId', (req, res) => {
 
   res.json({ comment: updated });
   translateAndSave(updated.id, updated.content, updated.original_language);
+  autoAssess.scheduleAutoAssess(project.id);
 });
 
 // DELETE /api/projects/:id/comments/:commentId
@@ -99,6 +102,7 @@ router.delete('/:id/comments/:commentId', (req, res) => {
   }
 
   db.prepare('DELETE FROM comments WHERE id = ?').run(comment.id);
+  autoAssess.scheduleAutoAssess(project.id);
   res.json({ success: true });
 });
 

@@ -4,6 +4,7 @@ const db = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { dealerCanAccessProject } = require('../middleware/permissions');
 const ai = require('../services/ai');
+const autoAssess = require('../services/autoAssess');
 
 const router = express.Router();
 
@@ -427,7 +428,6 @@ router.put('/:id', (req, res) => {
       db.prepare('UPDATE projects SET ai_value_eur = NULL WHERE id = ?').run(project.id);
     } else if (updated.products_and_quantity) {
       // EUR cleared → estimate AI value in background
-      const ai = require('../services/ai');
       const comments = db.prepare('SELECT content FROM comments WHERE project_id = ? ORDER BY created_at DESC LIMIT 10').all(project.id);
       ai.estimateProjectValue(updated.products_and_quantity, comments).then(result => {
         if (result.estimated_value_eur != null) {
@@ -435,6 +435,10 @@ router.put('/:id', (req, res) => {
         }
       }).catch(() => {});
     }
+  }
+
+  if (Object.keys(updates).length > 0) {
+    autoAssess.scheduleAutoAssess(project.id);
   }
 
   const updated = db.prepare('SELECT * FROM projects WHERE id = ?').get(project.id);
@@ -508,6 +512,7 @@ router.post('/:id/products', (req, res) => {
   `).run(project.id, model || null, quantity ?? null, unit_price_eur ?? null, total_price_eur, maxPos + 1);
 
   const row = db.prepare('SELECT * FROM product_lines WHERE id = ?').get(info.lastInsertRowid);
+  autoAssess.scheduleAutoAssess(project.id);
   res.status(201).json({ product: row });
 });
 
@@ -530,6 +535,7 @@ router.put('/:id/products/:productId', (req, res) => {
   `).run(newModel, newQty, newPrice, total_price_eur, existing.id);
 
   const row = db.prepare('SELECT * FROM product_lines WHERE id = ?').get(existing.id);
+  autoAssess.scheduleAutoAssess(project.id);
   res.json({ product: row });
 });
 
@@ -539,6 +545,7 @@ router.delete('/:id/products/:productId', (req, res) => {
   if (!dealerCanAccessProject(req.user, project)) return res.status(403).json({ error: 'Access denied' });
 
   db.prepare('DELETE FROM product_lines WHERE id = ? AND project_id = ?').run(req.params.productId, project.id);
+  autoAssess.scheduleAutoAssess(project.id);
   res.json({ ok: true });
 });
 
@@ -549,40 +556,8 @@ router.post('/:id/ai-assess', async (req, res) => {
   if (!project) return res.status(404).json({ error: 'Project not found' });
   if (!dealerCanAccessProject(req.user, project)) return res.status(403).json({ error: 'Access denied' });
 
-  const lang = (req.body && req.body.lang) || req.user.preferred_language || 'en';
-
-  const comments = db.prepare(`
-    SELECT c.*, u.name AS author_name
-    FROM comments c
-    JOIN users u ON u.id = c.user_id
-    WHERE c.project_id = ?
-    ORDER BY c.created_at DESC
-    LIMIT 10
-  `).all(project.id);
-
   try {
-    const result = await ai.assessWinProbability(project, comments, lang);
-
-    const reasoningMain = result.reasoning_en ?? result.reasoning ?? null;
-    db.prepare(`
-      UPDATE projects SET
-        win_prob_ai = ?, win_prob_ai_min = ?, win_prob_ai_max = ?,
-        win_prob_ai_reasoning = ?,
-        win_prob_ai_reasoning_cs = ?, win_prob_ai_reasoning_en = ?, win_prob_ai_reasoning_tr = ?,
-        win_prob_ai_updated_at = datetime('now'),
-        updated_at = datetime('now')
-      WHERE id = ?
-    `).run(
-      result.probability ?? null,
-      result.probability_min ?? null,
-      result.probability_max ?? null,
-      reasoningMain,
-      result.reasoning_cs ?? null,
-      result.reasoning_en ?? null,
-      result.reasoning_tr ?? null,
-      project.id
-    );
-
+    await autoAssess.runAssessment(project.id);
     const updated = db.prepare('SELECT * FROM projects WHERE id = ?').get(project.id);
     res.json({ project: updated });
   } catch (err) {

@@ -6,6 +6,7 @@ const { generateCsv } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { requireHQ } = require('../middleware/permissions');
 const ai = require('../services/ai');
+const autoAssess = require('../services/autoAssess');
 
 const router = express.Router();
 
@@ -207,6 +208,23 @@ router.post('/translate-comments', async (req, res) => {
     }
   }
   console.log('Bulk translation complete.');
+});
+
+// POST /api/admin/ai-assess-all — run AI win-probability assessment for every project missing it
+router.post('/ai-assess-all', async (req, res) => {
+  const missing = db.prepare(`SELECT id FROM projects WHERE win_prob_ai IS NULL`).all();
+
+  res.json({ started: true, total: missing.length });
+
+  for (const p of missing) {
+    try {
+      await autoAssess.runAssessment(p.id);
+      console.log(`AI-assessed project ${p.id}`);
+    } catch (e) {
+      console.error(`AI assessment failed for project ${p.id}:`, e.message);
+    }
+  }
+  console.log('Bulk AI assessment complete.');
 });
 
 // --- Backup / Snapshots (admin only) ---
