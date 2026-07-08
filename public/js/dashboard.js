@@ -85,6 +85,46 @@
     });
   }
 
+  function fmtDate(v) {
+    if (!v) return '-';
+    const d = new Date(v);
+    return `${d.getDate()}.${d.getMonth() + 1}.${d.getFullYear()}`;
+  }
+
+  function renderCards(projects) {
+    const wrap = document.getElementById('db-cards');
+    if (!projects.length) {
+      wrap.innerHTML = `<div class="text-muted" style="text-align:center; padding:24px;">${I18N.t('common.noData')}</div>`;
+      return;
+    }
+    wrap.innerHTML = projects.map((p) => `
+      <div class="db-card status-${statusOf(p)}" data-id="${p.id}">
+        <div class="db-card-top">
+          <span class="db-card-name">${p.project_name || p.company || '-'}</span>
+          ${winCell(p)}
+        </div>
+        <div class="db-card-sub">${p.company || ''}${p.company && p.country ? ' · ' : ''}${countryName(p.country)}</div>
+        <div class="db-card-row">
+          <span><span class="${App.statusBadgeClass(p.status)}">${I18N.t('status.' + (p.status || 'active'))}</span> <span class="text-muted">${p.phase ? I18N.t('phase.' + p.phase) : ''}</span></span>
+          ${hidePrices ? '' : `<span class="db-card-value">${p.project_value_eur != null ? Number(p.project_value_eur).toLocaleString('de-DE', {maximumFractionDigits:0}) + ' €' : '-'}</span>`}
+        </div>
+        <div class="db-card-meta">
+          <span>${p.owner || ''}${p.order_number ? ' · #' + p.order_number : ''}</span>
+          <span>${p.estimated_decision_date ? String(p.estimated_decision_date).slice(0,7) : fmtDate(p.created_at)}</span>
+        </div>
+      </div>
+    `).join('');
+
+    wrap.querySelectorAll('.db-card[data-id]').forEach((card) => {
+      card.addEventListener('click', () => {
+        const state = { region: activeRegion };
+        FILTER_IDS.forEach((id) => { state[id] = document.getElementById(id).value; });
+        sessionStorage.setItem('dashboardFilters', JSON.stringify(state));
+        window.location.href = `/project-detail.html?id=${card.dataset.id}`;
+      });
+    });
+  }
+
   function renderKpis(projects) {
     document.getElementById('kpi-active').textContent = projects.length;
 
@@ -142,6 +182,7 @@
     lastFiltered = filtered;
     renderKpis(filtered);
     renderTable(filtered);
+    renderCards(filtered);
   }
 
   function exportExcel() {

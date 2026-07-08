@@ -60,6 +60,18 @@ const migrations = [
     created_at TEXT DEFAULT (datetime('now'))
   )`,
   "ALTER TABLE project_snapshots ADD COLUMN csv_data TEXT",
+  `CREATE TABLE IF NOT EXISTS country_reports (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    country TEXT NOT NULL,
+    user_id INTEGER NOT NULL,
+    trend TEXT,
+    contacts_level TEXT,
+    political_situation TEXT,
+    economic_situation TEXT,
+    note TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+  )`,
+  "ALTER TABLE country_reports ADD COLUMN responsible_owners TEXT",
 ];
 for (const sql of migrations) {
   try { db.exec(sql); } catch (e) { /* column already exists */ }

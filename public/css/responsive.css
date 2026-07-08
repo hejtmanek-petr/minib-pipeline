@@ -89,6 +89,10 @@
   table { font-size: 12px; min-width: 600px; }
   th, td { padding: 8px 6px; white-space: nowrap; }
 
+  /* --- Dashboard: cards instead of the wide table --- */
+  #dashboard-table-wrap { display: none; }
+  .db-cards { display: block; }
+
   /* --- Field grid --- */
   .field-grid { grid-template-columns: 1fr; }
 

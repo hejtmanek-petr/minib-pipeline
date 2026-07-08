@@ -11,6 +11,7 @@ const commentsRoutes = require('./src/routes/comments');
 const reportsRoutes = require('./src/routes/reports');
 const adminRoutes = require('./src/routes/admin');
 const aiRoutes = require('./src/routes/ai');
+const countryReportsRoutes = require('./src/routes/countryReports');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -55,6 +56,7 @@ app.use('/api', commentsRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/country-reports', countryReportsRoutes);
 
 // Static frontend
 app.use(express.static(path.join(__dirname, 'public')));

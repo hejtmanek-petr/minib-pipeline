@@ -93,6 +93,7 @@ const App = (() => {
       { href: '/project-new.html', key: 'nav.newProject', id: 'new-project' },
     ];
     if (user && user.role !== 'mea_sales') {
+      navItems.push({ href: '/country-reports.html', key: 'nav.countryReports', id: 'country-reports' });
       navItems.push({ href: '/reports.html', key: 'nav.reports', id: 'reports' });
     }
     if (user && user.role === 'admin') {
@@ -166,7 +167,7 @@ const App = (() => {
   // Generic "home"-style pages with no identifying query string. Deep links
   // (e.g. project-detail.html?id=42) are never auto-redirected away from —
   // only these generic entry points are, so a shared link always works.
-  const GENERIC_PAGES = ['/dashboard.html', '/reports.html', '/project-new.html', '/profile.html', '/admin-settings.html', '/'];
+  const GENERIC_PAGES = ['/dashboard.html', '/reports.html', '/project-new.html', '/profile.html', '/admin-settings.html', '/country-reports.html', '/'];
 
   function isGenericEntryPage() {
     return GENERIC_PAGES.includes(window.location.pathname) && !window.location.search;

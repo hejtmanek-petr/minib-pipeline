@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MINIB Project Pipeline - Country Reports</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+  <style>
+    .cr-chart-card { background:#fff; border-radius:10px; padding:20px; box-shadow:0 1px 6px rgba(0,0,0,0.06); margin-bottom:24px; }
+    .cr-chart-card h4 { margin:0 0 4px; font-size:14px; color:#888; text-transform:uppercase; letter-spacing:0.5px; }
+    .cr-chart-sub { font-size:12px; color:#aaa; margin-bottom:16px; }
+
+    .cr-rank-row { display:flex; align-items:center; gap:14px; padding:12px 0; border-bottom:1px solid #f5f5f5; }
+    .cr-rank-row:last-child { border-bottom:none; }
+    .cr-rank-num { font-size:13px; font-weight:800; color:#ccc; width:22px; text-align:right; flex-shrink:0; }
+    .cr-rank-flag { font-size:30px; line-height:1; flex-shrink:0; }
+    .cr-rank-name { font-weight:700; font-size:14px; color:#2A2A2A; width:110px; flex-shrink:0; }
+    .cr-rank-bar-track { flex:1 1 90px; min-width:60px; background:#f2f2f2; border-radius:6px; height:12px; overflow:hidden; }
+    .cr-rank-bar-fill { height:100%; border-radius:6px; }
+    .cr-rank-stats { display:flex; gap:10px; align-items:center; font-size:12px; color:#888; flex-wrap:wrap; justify-content:flex-end; width:280px; flex-shrink:0; }
+    .cr-rank-stats b { color:#2A2A2A; }
+    @media(max-width:900px) {
+      .cr-rank-row { flex-wrap:wrap; }
+      .cr-rank-bar-track { order:5; flex-basis:100%; }
+      .cr-rank-stats { width:auto; justify-content:flex-start; }
+    }
+
+    .cr-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(230px, 1fr)); gap:14px; margin-bottom:24px; }
+    .cr-card { background:#fff; border-radius:12px; padding:16px; box-shadow:0 1px 6px rgba(0,0,0,0.06); cursor:pointer; transition:transform 0.15s, box-shadow 0.15s; border-top:4px solid #E0E0E0; }
+    .cr-card:hover { transform:translateY(-3px); box-shadow:0 6px 18px rgba(0,0,0,0.12); }
+    .cr-card.selected { outline:2px solid #FFC600; }
+    .cr-card.trend-growing { border-top-color:#2E7D32; }
+    .cr-card.trend-stable { border-top-color:#D4A800; }
+    .cr-card.trend-declining { border-top-color:#C0272D; }
+    .cr-card-flag { font-size:32px; line-height:1; margin-bottom:8px; }
+    .cr-card-name { font-weight:700; font-size:15px; color:#2A2A2A; margin-bottom:10px; }
+    .cr-card-stats { display:flex; gap:10px; font-size:12px; color:#888; margin-bottom:10px; flex-wrap:wrap; }
+    .cr-card-stats b { color:#2A2A2A; }
+    .cr-card-badges { display:flex; gap:6px; flex-wrap:wrap; }
+
+    .trend-badge { padding:3px 10px; border-radius:12px; font-size:11px; font-weight:700; display:inline-block; }
+    .trend-growing { background:#E8F5E9; color:#2E7D32; }
+    .trend-stable { background:#FFF8E1; color:#B8860B; }
+    .trend-declining { background:#FFEBEE; color:#C0272D; }
+    .contacts-badge { padding:3px 10px; border-radius:12px; font-size:11px; font-weight:700; }
+    .contacts-low { background:#FFEBEE; color:#C0272D; }
+    .contacts-medium { background:#FFF8E1; color:#B8860B; }
+    .contacts-high { background:#E8F5E9; color:#2E7D32; }
+
+    .cr-detail { margin-top:8px; display:none; }
+    .cr-detail.open { display:block; }
+    .cr-detail-header { display:flex; align-items:center; gap:16px; margin-bottom:20px; }
+    .cr-detail-flag { font-size:56px; line-height:1; }
+    .cr-detail-title { font-size:26px; font-weight:900; color:#2A2A2A; margin:0; }
+    .cr-detail-stats { display:flex; gap:16px; font-size:13px; color:#888; margin-top:4px; flex-wrap:wrap; }
+    .cr-detail-stats b { color:#2A2A2A; }
+
+    .cr-opinions-title { font-size:14px; color:#888; text-transform:uppercase; letter-spacing:0.5px; margin:24px 0 12px; }
+    .cr-opinion-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:16px; margin-bottom:8px; }
+    .cr-opinion-card { background:#fff; border-radius:12px; padding:18px; box-shadow:0 1px 6px rgba(0,0,0,0.06); border-left:5px solid #E0E0E0; }
+    .cr-opinion-card.trend-growing { border-left-color:#2E7D32; }
+    .cr-opinion-card.trend-stable { border-left-color:#D4A800; }
+    .cr-opinion-card.trend-declining { border-left-color:#C0272D; }
+    .cr-opinion-head { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+    .cr-opinion-avatar { width:36px; height:36px; border-radius:50%; background:#FFC600; color:#2A2A2A; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:14px; flex-shrink:0; }
+    .cr-opinion-owner { font-weight:800; font-size:15px; color:#2A2A2A; }
+    .cr-opinion-date { font-size:11px; color:#aaa; }
+    .cr-opinion-badges { margin-bottom:10px; display:flex; gap:6px; }
+    .cr-opinion-text { font-size:14px; line-height:1.5; color:#444; margin-bottom:8px; }
+    .cr-opinion-text b { color:#888; font-size:11px; text-transform:uppercase; letter-spacing:0.3px; display:block; margin-bottom:2px; }
+    .cr-opinion-more { font-size:12px; color:#1565C0; cursor:pointer; background:none; border:none; padding:0; text-decoration:underline; }
+    .cr-opinion-older { margin-top:10px; padding-top:10px; border-top:1px dashed #eee; display:none; }
+    .cr-opinion-older.open { display:block; }
+    .cr-opinion-older-item { font-size:12px; color:#888; margin-bottom:6px; }
+    .cr-del-btn { font-size:11px; color:#C0272D; background:none; border:none; cursor:pointer; padding:0; text-decoration:underline; margin-left:auto; }
+    .cr-no-opinions { color:#aaa; font-size:13px; padding:16px 0; text-align:center; grid-column:1/-1; }
+
+    .cr-add-card { background:#FFFDF5; border:1px dashed #FFC600; border-radius:12px; padding:20px; margin-top:8px; }
+    .cr-add-grid { display:grid; grid-template-columns:1fr 1fr; gap:0 20px; }
+    .cr-owner-checks { display:flex; flex-wrap:wrap; gap:8px; }
+    .cr-owner-check { display:flex; align-items:center; gap:5px; background:#fff; border:1px solid #ddd; border-radius:16px; padding:5px 12px 5px 8px; font-size:13px; cursor:pointer; user-select:none; }
+    .cr-owner-check input { margin:0; cursor:pointer; }
+    .cr-owner-check.checked { background:#FFF3C4; border-color:#FFC600; font-weight:600; }
+    .cr-opinion-owners { font-size:12px; color:#888; margin-bottom:8px; }
+    .cr-opinion-owners b { color:#666; }
+    @media(max-width:768px) {
+      .cr-add-grid { grid-template-columns:1fr; }
+      .cr-detail-flag { font-size:40px; }
+      .cr-detail-title { font-size:20px; }
+      .cr-add-card { padding:14px; }
+      .cr-opinion-card { padding:14px; }
+      .card.cr-detail { padding:12px; }
+      .cr-grid { grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:10px; }
+      .cr-opinion-grid { grid-template-columns:1fr; gap:12px; }
+    }
+  </style>
+</head>
+<body>
+  <header id="app-header" class="app-header"></header>
+
+  <main class="app-main">
+    <div class="page-title">
+      <h1 data-i18n="countryReports.title"></h1>
+    </div>
+    <p class="text-muted" style="margin:-8px 0 20px; font-size:13px;" data-i18n="countryReports.intro"></p>
+
+    <div class="cr-chart-card">
+      <h4 data-i18n="countryReports.chart.title"></h4>
+      <div class="cr-chart-sub" data-i18n="countryReports.chart.subtitle"></div>
+      <div id="cr-ranking"></div>
+    </div>
+
+    <div class="cr-grid" id="cr-grid"></div>
+
+    <div class="card cr-detail" id="cr-detail">
+      <div class="cr-detail-header">
+        <div class="cr-detail-flag" id="cr-detail-flag"></div>
+        <div>
+          <h2 class="cr-detail-title" id="cr-detail-title"></h2>
+          <div class="cr-detail-stats" id="cr-detail-stats"></div>
+        </div>
+      </div>
+
+      <div class="cr-opinions-title" data-i18n="countryReports.opinions"></div>
+      <div class="cr-opinion-grid" id="cr-opinions"></div>
+
+      <div class="cr-add-card">
+        <div class="cr-opinions-title" style="margin-top:0;" data-i18n="countryReports.addReport"></div>
+        <div class="cr-add-grid">
+          <div class="form-group">
+            <label data-i18n="countryReports.field.trend"></label>
+            <select id="cr-form-trend">
+              <option value="" data-i18n="common.all"></option>
+              <option value="growing" data-i18n="countryReports.trend.growing"></option>
+              <option value="stable" data-i18n="countryReports.trend.stable"></option>
+              <option value="declining" data-i18n="countryReports.trend.declining"></option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label data-i18n="countryReports.field.contactsLevel"></label>
+            <select id="cr-form-contacts">
+              <option value="" data-i18n="common.all"></option>
+              <option value="low" data-i18n="countryReports.contacts.low"></option>
+              <option value="medium" data-i18n="countryReports.contacts.medium"></option>
+              <option value="high" data-i18n="countryReports.contacts.high"></option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label data-i18n="countryReports.field.responsibleOwners"></label>
+          <div class="cr-owner-checks" id="cr-form-owners"></div>
+        </div>
+        <div class="form-group">
+          <label data-i18n="countryReports.field.politicalSituation"></label>
+          <textarea id="cr-form-political" rows="2"></textarea>
+        </div>
+        <div class="form-group">
+          <label data-i18n="countryReports.field.economicSituation"></label>
+          <textarea id="cr-form-economic" rows="2"></textarea>
+        </div>
+        <div class="form-group">
+          <label data-i18n="countryReports.field.note"></label>
+          <textarea id="cr-form-note" rows="2"></textarea>
+        </div>
+        <button class="btn btn-primary" id="cr-form-submit" data-i18n="countryReports.submit"></button>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/i18n.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/country-reports.js"></script>
+</body>
+</html>

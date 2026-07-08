@@ -74,6 +74,29 @@
   overflow-y: auto;
 }
 
+/* --- Dashboard mobile cards (shown instead of the wide table below 768px) --- */
+
+.db-cards { display: none; }
+
+.db-card {
+  background: var(--color-card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  border-left: 4px solid #E0E0E0;
+}
+.db-card.status-active { border-left-color: #1565C0; }
+.db-card.status-won { border-left-color: #2E7D32; }
+.db-card.status-lost { border-left-color: #C0272D; }
+.db-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 4px; }
+.db-card-name { font-weight: 700; font-size: 15px; color: #2A2A2A; }
+.db-card-sub { font-size: 13px; color: #888; margin-bottom: 8px; }
+.db-card-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+.db-card-value { font-weight: 700; font-size: 14px; color: #2A2A2A; }
+.db-card-meta { font-size: 12px; color: #aaa; display: flex; justify-content: space-between; gap: 8px; }
+
 table {
   width: 100%;
   border-collapse: collapse;
