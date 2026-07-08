@@ -261,8 +261,9 @@
     }
   });
 
+  const EXCLUDED_OWNERS = new Set(['Monika', 'Petr', 'Pavla']);
   const meta = await App.api('/projects/meta');
-  ownersList = meta.owners || [];
+  ownersList = (meta.owners || []).filter((name) => !EXCLUDED_OWNERS.has(name));
   renderOwnerChecks();
 
   await loadOverview();
