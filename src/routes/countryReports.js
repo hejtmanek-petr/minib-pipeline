@@ -1,9 +1,11 @@
 const express = require('express');
 const db = require('../db');
 const { requireAuth } = require('../middleware/auth');
+const { requireNonSales } = require('../middleware/permissions');
 
 const router = express.Router();
 router.use(requireAuth);
+router.use(requireNonSales);
 
 const ALLOWED_TRENDS = ['growing', 'stable', 'declining'];
 const ALLOWED_CONTACTS = ['low', 'medium', 'high'];
