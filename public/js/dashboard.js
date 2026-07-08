@@ -11,6 +11,9 @@
       'LY': 'Libye', 'TN': 'Tunisko', 'TZ': 'Tanzanie', 'UG': 'Uganda',
       'KW': 'Kuvajt', 'AE': 'SAE', 'OM': 'Omán', 'JO': 'Jordánsko',
       'NC': 'Severní Kypr', 'BY': 'Bělorusko', 'RU': 'Rusko', 'CA': 'Kanada',
+      'KG': 'Kyrgyzstán', 'TJ': 'Tádžikistán', 'QA': 'Katar', 'SA': 'Saúdská Arábie',
+      'GR': 'Řecko', 'BG': 'Bulharsko', 'AL': 'Albánie', 'MK': 'Severní Makedonie',
+      'RS': 'Srbsko', 'UA': 'Ukrajina',
     },
     en: {
       'TR': 'Türkiye', 'AZ': 'Azerbaijan', 'UZ': 'Uzbekistan', 'KZ': 'Kazakhstan',
@@ -19,6 +22,9 @@
       'LY': 'Libya', 'TN': 'Tunisia', 'TZ': 'Tanzania', 'UG': 'Uganda',
       'KW': 'Kuwait', 'AE': 'United Arab Emirates', 'OM': 'Oman', 'JO': 'Jordan',
       'NC': 'Northern Cyprus', 'BY': 'Belarus', 'RU': 'Russia', 'CA': 'Canada',
+      'KG': 'Kyrgyzstan', 'TJ': 'Tajikistan', 'QA': 'Qatar', 'SA': 'Saudi Arabia',
+      'GR': 'Greece', 'BG': 'Bulgaria', 'AL': 'Albania', 'MK': 'North Macedonia',
+      'RS': 'Serbia', 'UA': 'Ukraine',
     },
   };
   function countryName(c) {

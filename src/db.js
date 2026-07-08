@@ -95,8 +95,27 @@ for (const sql of migrations) {
   try {
     db.prepare("UPDATE app_settings SET value = ? WHERE key = 'statuses'").run(JSON.stringify(['active','won','lost']));
     db.prepare("UPDATE app_settings SET value = ? WHERE key = 'countries'").run(
-      JSON.stringify(['TR','AZ','UZ','KZ','GE','SY','IQ','TM','MN','EG','MA','DZ','LY','TN','TZ','UG','KW','AE','OM','JO','NC','BY','RU'])
+      JSON.stringify(['AL','DZ','AZ','BY','BG','EG','GE','GR','IQ','JO','KZ','KW','KG','LY','MN','MA','MK','NC','OM','QA','RU','SA','RS','SY','TJ','TZ','TN','TM','TR','UG','UA','AE','UZ'])
     );
+
+    // Exclusivity: 'exclusive' = MEA is the sole authorized partner there;
+    // 'non_exclusive' = MEA can sell but without exclusivity; 'conditional' =
+    // non-exclusive for now, moves to exclusive once peace/sanctions allow.
+    const exclusivity = {
+      TR:'exclusive', AZ:'exclusive', UZ:'exclusive', KZ:'exclusive', GE:'exclusive', SY:'exclusive',
+      IQ:'exclusive', TM:'exclusive', MN:'exclusive', EG:'exclusive', MA:'exclusive', DZ:'exclusive',
+      LY:'exclusive', TN:'exclusive', TZ:'exclusive', UG:'exclusive', KW:'exclusive', AE:'exclusive',
+      OM:'exclusive', JO:'exclusive', NC:'exclusive',
+      KG:'non_exclusive', TJ:'non_exclusive', QA:'non_exclusive', SA:'non_exclusive', GR:'non_exclusive',
+      BG:'non_exclusive', AL:'non_exclusive', MK:'non_exclusive', RS:'non_exclusive',
+      BY:'conditional', RU:'conditional', UA:'conditional',
+    };
+    const existingExclusivity = db.prepare("SELECT value FROM app_settings WHERE key = 'country_exclusivity'").get();
+    if (existingExclusivity) {
+      db.prepare("UPDATE app_settings SET value = ? WHERE key = 'country_exclusivity'").run(JSON.stringify(exclusivity));
+    } else {
+      db.prepare("INSERT INTO app_settings (key, value) VALUES ('country_exclusivity', ?)").run(JSON.stringify(exclusivity));
+    }
   } catch(e) {}
 
   // Create missing users

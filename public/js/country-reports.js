@@ -7,8 +7,8 @@
   const t = (key) => I18N.t(key);
 
   const COUNTRY_NAMES = {
-    en: { TR:'Türkiye',AZ:'Azerbaijan',UZ:'Uzbekistan',KZ:'Kazakhstan',GE:'Georgia',SY:'Syria',IQ:'Iraq',TM:'Turkmenistan',MN:'Mongolia',EG:'Egypt',MA:'Morocco',DZ:'Algeria',LY:'Libya',TN:'Tunisia',TZ:'Tanzania',UG:'Uganda',KW:'Kuwait',AE:'UAE',OM:'Oman',JO:'Jordan',NC:'Northern Cyprus',BY:'Belarus',RU:'Russia' },
-    cs: { TR:'Türkiye',AZ:'Ázerbájdžán',UZ:'Uzbekistán',KZ:'Kazachstán',GE:'Gruzie',SY:'Sýrie',IQ:'Irák',TM:'Turkmenistán',MN:'Mongolsko',EG:'Egypt',MA:'Maroko',DZ:'Alžírsko',LY:'Libye',TN:'Tunisko',TZ:'Tanzanie',UG:'Uganda',KW:'Kuvajt',AE:'SAE',OM:'Omán',JO:'Jordánsko',NC:'Severní Kypr',BY:'Bělorusko',RU:'Rusko' },
+    en: { TR:'Türkiye',AZ:'Azerbaijan',UZ:'Uzbekistan',KZ:'Kazakhstan',GE:'Georgia',SY:'Syria',IQ:'Iraq',TM:'Turkmenistan',MN:'Mongolia',EG:'Egypt',MA:'Morocco',DZ:'Algeria',LY:'Libya',TN:'Tunisia',TZ:'Tanzania',UG:'Uganda',KW:'Kuwait',AE:'UAE',OM:'Oman',JO:'Jordan',NC:'Northern Cyprus',BY:'Belarus',RU:'Russia',KG:'Kyrgyzstan',TJ:'Tajikistan',QA:'Qatar',SA:'Saudi Arabia',GR:'Greece',BG:'Bulgaria',AL:'Albania',MK:'North Macedonia',RS:'Serbia',UA:'Ukraine' },
+    cs: { TR:'Türkiye',AZ:'Ázerbájdžán',UZ:'Uzbekistán',KZ:'Kazachstán',GE:'Gruzie',SY:'Sýrie',IQ:'Irák',TM:'Turkmenistán',MN:'Mongolsko',EG:'Egypt',MA:'Maroko',DZ:'Alžírsko',LY:'Libye',TN:'Tunisko',TZ:'Tanzanie',UG:'Uganda',KW:'Kuvajt',AE:'SAE',OM:'Omán',JO:'Jordánsko',NC:'Severní Kypr',BY:'Bělorusko',RU:'Rusko',KG:'Kyrgyzstán',TJ:'Tádžikistán',QA:'Katar',SA:'Saúdská Arábie',GR:'Řecko',BG:'Bulharsko',AL:'Albánie',MK:'Severní Makedonie',RS:'Srbsko',UA:'Ukrajina' },
   };
   function countryName(code) {
     const map = COUNTRY_NAMES[I18N.getLang()] || COUNTRY_NAMES.en;
@@ -36,6 +36,12 @@
     return `<span class="contacts-badge contacts-${level}">${t('countryReports.contacts.' + level)}</span>`;
   }
 
+  function exclusivityBadge(code) {
+    const level = exclusivityMap[code];
+    if (!level) return '';
+    return `<span class="exclusivity-badge exclusivity-${level}">${t('countryReports.exclusivity.' + level)}</span>`;
+  }
+
   function initials(name) {
     return (name || '?').split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase();
   }
@@ -43,6 +49,7 @@
   let overview = [];
   let selectedCountry = null;
   let ownersList = [];
+  let exclusivityMap = {};
 
   function renderOwnerChecks() {
     const wrap = document.getElementById('cr-form-owners');
@@ -105,6 +112,7 @@
             <span>${t('countryReports.table.projects')}: <b>${c.active_count}</b></span>
             ${hidePrices ? '' : `<span><b>€ ${fmt(c.pipeline_value_eur)}</b></span>`}
             <span>${t('countryReports.table.avgWin')}: <b>${pct(c.avg_win_prob)}</b></span>
+            ${exclusivityBadge(c.code)}
             ${c.latest ? trendBadge(c.latest.trend) : ''}
             ${c.latest ? contactsBadge(c.latest.contacts_level) : ''}
           </div>
@@ -131,6 +139,7 @@
             ${hidePrices ? '' : `<span><b>€ ${fmt(c.pipeline_value_eur)}</b></span>`}
           </div>
           <div class="cr-card-badges">
+            ${exclusivityBadge(c.code)}
             ${c.latest ? trendBadge(c.latest.trend) : ''}
             ${c.latest ? contactsBadge(c.latest.contacts_level) : ''}
           </div>
@@ -153,6 +162,7 @@
     document.getElementById('cr-detail-flag').textContent = flagEmoji(code);
     document.getElementById('cr-detail-title').textContent = countryName(code);
     document.getElementById('cr-detail-stats').innerHTML = `
+      ${exclusivityBadge(code)}
       <span>${t('countryReports.table.projects')}: <b>${c.active_count}</b></span>
       ${hidePrices ? '' : `<span>${t('countryReports.table.pipelineValue')}: <b>€ ${fmt(c.pipeline_value_eur)}</b></span>`}
       <span>${t('countryReports.table.avgWin')}: <b>${pct(c.avg_win_prob)}</b></span>
@@ -264,6 +274,7 @@
   const EXCLUDED_OWNERS = new Set(['Monika', 'Petr', 'Pavla']);
   const meta = await App.api('/projects/meta');
   ownersList = (meta.owners || []).filter((name) => !EXCLUDED_OWNERS.has(name));
+  exclusivityMap = meta.country_exclusivity || {};
   renderOwnerChecks();
 
   await loadOverview();
