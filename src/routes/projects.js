@@ -322,15 +322,27 @@ function codePrefix() {
   return 'MEA';
 }
 
+// Next sequence number for a code prefix, based on the highest number in use
+// (not a row count) — a row count breaks as soon as any project with that
+// prefix gets deleted, since the count then falls behind numbers still in use.
+function nextSequence(yearPrefix) {
+  const rows = db.prepare("SELECT project_code FROM projects WHERE project_code LIKE ?").all(`${yearPrefix}%`);
+  const maxSeq = rows.reduce((max, r) => {
+    const m = r.project_code.match(/-(\d+)$/);
+    return m ? Math.max(max, parseInt(m[1], 10)) : max;
+  }, 0);
+  return maxSeq + 1;
+}
+
 // POST /api/projects - create new
 router.post('/', (req, res) => {
   const body = req.body || {};
   const sheet = body.sheet || 'TR';
   const year = new Date().getFullYear();
   const prefix = codePrefix(body.country || '');
-  const countRow = db.prepare("SELECT COUNT(*) AS c FROM projects WHERE project_code LIKE ?").get(`${prefix}-%`);
-  const seq = countRow.c + 1;
-  const project_code = body.project_code || `${prefix}-${year}-${String(seq).padStart(3, '0')}`;
+  const yearPrefix = `${prefix}-${year}-`;
+  const seq = nextSequence(yearPrefix);
+  const project_code = body.project_code || `${yearPrefix}${String(seq).padStart(3, '0')}`;
 
   const fields = {
     project_code,
@@ -615,9 +627,9 @@ router.post('/import/commit', (req, res) => {
     for (const row of rows) {
       const country = row['Country'] || null;
       const prefix = codePrefix(country || '');
-      const seqRow = db.prepare("SELECT COUNT(*) AS c FROM projects WHERE project_code LIKE ?").get(`${prefix}-%`);
-      const seq = seqRow.c + inserted.filter(r => codePrefix(r.country || '') === prefix).length + 1;
-      const project_code = `${prefix}-${year}-${String(seq).padStart(3, '0')}`;
+      const yearPrefix = `${prefix}-${year}-`;
+      const seq = nextSequence(yearPrefix);
+      const project_code = `${yearPrefix}${String(seq).padStart(3, '0')}`;
       const probability = row['Probability of winning'];
       let prob = null;
       if (typeof probability === 'number') {
