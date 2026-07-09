@@ -337,7 +337,7 @@
   "countryReports.contacts.high": "Vysoké",
   "countryReports.exclusivity.exclusive": "Exkluzivní",
   "countryReports.exclusivity.non_exclusive": "Neexkluzivní",
-  "countryReports.exclusivity.conditional": "Podmíněně exkluzivní",
+  "countryReports.exclusivity.conditional": "Neexkluzivní",
   "countryReports.addReport": "Přidat report",
   "countryReports.field.trend": "Trend potenciálu",
   "countryReports.field.responsibleOwners": "Odpovědní obchodníci",

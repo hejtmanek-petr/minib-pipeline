@@ -337,7 +337,7 @@
   "countryReports.contacts.high": "High",
   "countryReports.exclusivity.exclusive": "Exclusive",
   "countryReports.exclusivity.non_exclusive": "Non-exclusive",
-  "countryReports.exclusivity.conditional": "Conditionally exclusive",
+  "countryReports.exclusivity.conditional": "Non-exclusive",
   "countryReports.addReport": "Add Report",
   "countryReports.field.trend": "Potential Trend",
   "countryReports.field.responsibleOwners": "Responsible Salespeople",
