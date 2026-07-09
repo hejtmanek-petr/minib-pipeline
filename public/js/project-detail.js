@@ -422,6 +422,7 @@
 
   function updateAiEstimateVisibility() {
     if (!aiEstimateSection) return;
+    const deleteBtn = document.getElementById('btn-delete-ai-value');
     if (canSeeEstimate && (project.project_value_eur == null || project.project_value_eur === '')) {
       aiEstimateSection.style.display = '';
       const display = document.getElementById('ai-value-display');
@@ -429,6 +430,7 @@
         display.textContent = Number(project.ai_value_eur).toLocaleString('de-DE', { maximumFractionDigits: 0 }) + ' €';
         display.style.color = 'var(--primary)';
       }
+      if (deleteBtn) deleteBtn.style.display = project.ai_value_eur != null ? '' : 'none';
     } else {
       aiEstimateSection.style.display = 'none';
     }
@@ -459,6 +461,27 @@
       } finally {
         btn.disabled = false;
         btn.textContent = '🤖 ' + I18N.t('project.estimateAiValue');
+      }
+    });
+  }
+
+  if (document.getElementById('btn-delete-ai-value')) {
+    document.getElementById('btn-delete-ai-value').addEventListener('click', async (e) => {
+      const btn = e.currentTarget;
+      btn.disabled = true;
+      try {
+        const res = await App.api(`/projects/${projectId}/ai-value`, { method: 'DELETE' });
+        project.ai_value_eur = res.project.ai_value_eur;
+        const display = document.getElementById('ai-value-display');
+        display.textContent = '—';
+        display.style.color = '';
+        const breakdown = document.getElementById('ai-value-breakdown');
+        if (breakdown) breakdown.textContent = '';
+        updateAiEstimateVisibility();
+      } catch (err) {
+        alert(err.message || 'Error');
+      } finally {
+        btn.disabled = false;
       }
     });
   }

@@ -88,6 +88,7 @@
   "project.deleteProject": "Smazat projekt",
   "project.aiValueLabel": "AI hodnota (odhad z artiklů)",
   "project.estimateAiValue": "Odhadnout AI hodnotu",
+  "project.deleteAiValue": "Smazat AI hodnotu",
   "project.cannotEstimate": "Nelze odhadnout",
   "project.estimating": "Odhaduji...",
   "project.section.basic": "Základní informace",

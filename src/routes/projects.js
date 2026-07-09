@@ -3,7 +3,6 @@ const XLSX = require('xlsx');
 const db = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { dealerCanAccessProject } = require('../middleware/permissions');
-const ai = require('../services/ai');
 const autoAssess = require('../services/autoAssess');
 
 const router = express.Router();
@@ -432,24 +431,19 @@ router.put('/:id', (req, res) => {
   });
   tx();
 
-  // Auto-manage AI value based on EUR
-  if ('project_value_eur' in updates) {
-    const updated = db.prepare('SELECT * FROM projects WHERE id = ?').get(project.id);
-    if (updated.project_value_eur != null) {
-      // EUR filled → clear AI value
-      db.prepare('UPDATE projects SET ai_value_eur = NULL WHERE id = ?').run(project.id);
-    } else if (updated.products_and_quantity) {
-      // EUR cleared → estimate AI value in background
-      const comments = db.prepare('SELECT content FROM comments WHERE project_id = ? ORDER BY created_at DESC LIMIT 10').all(project.id);
-      ai.estimateProjectValue(updated.products_and_quantity, comments).then(result => {
-        if (result.estimated_value_eur != null) {
-          db.prepare('UPDATE projects SET ai_value_eur = ? WHERE id = ?').run(result.estimated_value_eur, project.id);
-        }
-      }).catch(() => {});
-    }
-  }
-
+  // Auto-manage AI value: a manual EUR value always wins and immediately
+  // clears any AI value; otherwise, whenever anything changes, (re)compute
+  // the AI estimate in the background — not just when EUR was the field
+  // that changed, so projects that never had a manual value still get one.
   if (Object.keys(updates).length > 0) {
+    const updatedProject = db.prepare('SELECT * FROM projects WHERE id = ?').get(project.id);
+    if (updatedProject.project_value_eur != null) {
+      if (updatedProject.ai_value_eur != null) {
+        db.prepare('UPDATE projects SET ai_value_eur = NULL WHERE id = ?').run(project.id);
+      }
+    } else if (updatedProject.products_and_quantity) {
+      autoAssess.scheduleAiValueEstimate(project.id);
+    }
     autoAssess.scheduleAutoAssess(project.id);
   }
 
@@ -559,6 +553,17 @@ router.delete('/:id/products/:productId', (req, res) => {
   db.prepare('DELETE FROM product_lines WHERE id = ? AND project_id = ?').run(req.params.productId, project.id);
   autoAssess.scheduleAutoAssess(project.id);
   res.json({ ok: true });
+});
+
+// DELETE /api/projects/:id/ai-value — manually clear the AI value estimate
+router.delete('/:id/ai-value', (req, res) => {
+  const project = db.prepare('SELECT * FROM projects WHERE id = ?').get(req.params.id);
+  if (!project) return res.status(404).json({ error: 'Project not found' });
+  if (!dealerCanAccessProject(req.user, project)) return res.status(403).json({ error: 'Access denied' });
+
+  db.prepare('UPDATE projects SET ai_value_eur = NULL WHERE id = ?').run(project.id);
+  const updated = db.prepare('SELECT * FROM projects WHERE id = ?').get(project.id);
+  res.json({ project: updated });
 });
 
 // --- AI win-probability assessment ---

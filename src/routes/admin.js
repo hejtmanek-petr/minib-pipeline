@@ -227,6 +227,28 @@ router.post('/ai-assess-all', async (req, res) => {
   console.log('Bulk AI assessment complete.');
 });
 
+// POST /api/admin/ai-value-estimate-all — estimate AI value for every project
+// missing it (no manual EUR value, has products, but no AI value yet)
+router.post('/ai-value-estimate-all', async (req, res) => {
+  const missing = db.prepare(`
+    SELECT id FROM projects
+    WHERE project_value_eur IS NULL AND ai_value_eur IS NULL
+      AND products_and_quantity IS NOT NULL AND products_and_quantity != ''
+  `).all();
+
+  res.json({ started: true, total: missing.length });
+
+  for (const p of missing) {
+    try {
+      await autoAssess.runValueEstimate(p.id);
+      console.log(`AI-value-estimated project ${p.id}`);
+    } catch (e) {
+      console.error(`AI value estimate failed for project ${p.id}:`, e.message);
+    }
+  }
+  console.log('Bulk AI value estimate complete.');
+});
+
 // --- Backup / Snapshots (admin only) ---
 
 function requireAdmin(req, res, next) {

@@ -88,6 +88,7 @@
   "project.deleteProject": "Delete project",
   "project.aiValueLabel": "AI value (estimate from products)",
   "project.estimateAiValue": "Estimate AI value",
+  "project.deleteAiValue": "Delete AI value",
   "project.cannotEstimate": "Cannot estimate",
   "project.estimating": "Estimating...",
   "project.section.basic": "Basic Information",
