@@ -203,6 +203,7 @@
   "reports.filters.status": "Status",
   "reports.filters.country": "Country",
   "reports.filters.year": "Year",
+  "reports.filters.reset": "Reset filters",
   "reports.stat.totalProjects": "Total Projects",
   "reports.stat.active": "Active",
   "reports.stat.won": "Won",

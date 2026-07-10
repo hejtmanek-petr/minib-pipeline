@@ -77,6 +77,14 @@
     });
   });
 
+  document.getElementById('btn-reset-filters').addEventListener('click', () => {
+    REPORT_FILTER_IDS.forEach((id) => { document.getElementById(id).value = ''; });
+    updateFilterHighlights();
+    App.clearFilters('reports');
+    const tab = document.querySelector('.report-tab.active').dataset.tab;
+    loadTab(tab);
+  });
+
   function loadTab(tab) {
     const qs = buildQuery();
     if (tab === 'overview') loadOverview(qs);

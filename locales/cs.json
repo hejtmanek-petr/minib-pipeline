@@ -203,6 +203,7 @@
   "reports.filters.status": "Status",
   "reports.filters.country": "Země",
   "reports.filters.year": "Rok",
+  "reports.filters.reset": "Zrušit filtry",
   "reports.stat.totalProjects": "Celkem projektů",
   "reports.stat.active": "Aktivní",
   "reports.stat.won": "Vyhráno",
