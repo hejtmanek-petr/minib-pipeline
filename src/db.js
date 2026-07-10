@@ -139,11 +139,16 @@ for (const sql of migrations) {
     try { db.prepare("UPDATE users SET access_role = ? WHERE name = ?").run(role, name); } catch(e) {}
   }
 
-  // Clear passwords for users without assigned password (allow login without password)
-  // Set passwords (always overwrite to ensure correct passwords)
+  // Seed initial passwords — but only for a user that has never had one set.
+  // This used to run unconditionally on every startup, which meant every
+  // deploy silently reset anyone's password back to these defaults, wiping
+  // out any password they'd since changed.
   const passwords = { Petr:'Pashtika', Monika:'Trinity', Pavla:'Kleopatra', Cem:'MEA8547#C', Hakan:'MEA3921#H', Ogün:'MEA6284#O', Okan:'MEA7135#K', Sefa:'MEA4693#S' };
   for (const [name, pw] of Object.entries(passwords)) {
-    db.prepare("UPDATE users SET password_hash = ?, password_plain = ? WHERE name = ?").run(bcrypt.hashSync(pw, 10), pw, name);
+    const existing = db.prepare("SELECT password_plain FROM users WHERE name = ?").get(name);
+    if (existing && !existing.password_plain) {
+      db.prepare("UPDATE users SET password_hash = ?, password_plain = ? WHERE name = ?").run(bcrypt.hashSync(pw, 10), pw, name);
+    }
   }
 })();
 
