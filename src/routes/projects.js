@@ -316,7 +316,6 @@ router.get('/:id', (req, res) => {
   res.json({ project });
 });
 
-const MEA_CODES = new Set(['TR','AZ','UZ','KZ','GE','SY','IQ','TM','MN','EG','MA','DZ','LY','TN','TZ','UG','KW','AE','OM','JO','NC','BY','RU']);
 function codePrefix() {
   return 'MEA';
 }
