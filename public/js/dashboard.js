@@ -34,7 +34,7 @@
 
   let allProjects = [];
   let lastFiltered = [];
-  let sortCol = 'id';
+  let sortCol = 'updated_at';
   let sortDir = 'desc';
 
   function statusOf(p) {
@@ -226,6 +226,7 @@
       applyFiltersAndRender();
     });
   });
+  document.querySelector(`th[data-sort="${sortCol}"]`)?.classList.add(sortDir === 'asc' ? 'sorted-asc' : 'sorted-desc');
 
   const FILTER_IDS = ['filter-search', 'filter-country', 'filter-win', 'filter-owner', 'filter-status', 'filter-year'];
 
