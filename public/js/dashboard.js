@@ -36,7 +36,6 @@
   let lastFiltered = [];
   let sortCol = 'id';
   let sortDir = 'desc';
-  let activeRegion = '';
 
   function statusOf(p) {
     return p.status || 'active';
@@ -83,9 +82,6 @@
 
     tbody.querySelectorAll('tr[data-id]').forEach((tr) => {
       tr.addEventListener('click', () => {
-        const state = { region: activeRegion };
-        FILTER_IDS.forEach((id) => { state[id] = document.getElementById(id).value; });
-        sessionStorage.setItem('dashboardFilters', JSON.stringify(state));
         window.location.href = `/project-detail.html?id=${tr.dataset.id}`;
       });
     });
@@ -123,9 +119,6 @@
 
     wrap.querySelectorAll('.db-card[data-id]').forEach((card) => {
       card.addEventListener('click', () => {
-        const state = { region: activeRegion };
-        FILTER_IDS.forEach((id) => { state[id] = document.getElementById(id).value; });
-        sessionStorage.setItem('dashboardFilters', JSON.stringify(state));
         window.location.href = `/project-detail.html?id=${card.dataset.id}`;
       });
     });
@@ -247,13 +240,14 @@
 
   FILTER_IDS.forEach((id) => {
     const el = document.getElementById(id);
-    el.addEventListener('input', () => { updateFilterHighlights(); applyFiltersAndRender(); });
-    el.addEventListener('change', () => { updateFilterHighlights(); applyFiltersAndRender(); });
+    el.addEventListener('input', () => { updateFilterHighlights(); App.saveFilters('dashboard', FILTER_IDS); applyFiltersAndRender(); });
+    el.addEventListener('change', () => { updateFilterHighlights(); App.saveFilters('dashboard', FILTER_IDS); applyFiltersAndRender(); });
   });
 
   document.getElementById('btn-reset-filters').addEventListener('click', () => {
     FILTER_IDS.forEach((id) => { document.getElementById(id).value = ''; });
     updateFilterHighlights();
+    App.clearFilters('dashboard');
     applyFiltersAndRender();
   });
 
@@ -283,11 +277,7 @@
       ownerSelect.appendChild(opt);
     });
 
-    const saved = sessionStorage.getItem('dashboardFilters');
-    if (saved) {
-      const state = JSON.parse(saved);
-      sessionStorage.removeItem('dashboardFilters');
-      FILTER_IDS.forEach((id) => { if (state[id]) document.getElementById(id).value = state[id]; });
+    if (App.restoreFilters('dashboard', FILTER_IDS)) {
       updateFilterHighlights();
     }
 

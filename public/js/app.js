@@ -203,9 +203,41 @@ const App = (() => {
     if (y) window.scrollTo(0, parseInt(y, 10));
   }
 
+  // Persistent page filters — survive navigating away and back, switching
+  // tabs/windows, even closing the browser (localStorage, not sessionStorage,
+  // so it's shared across tabs/windows rather than scoped to one).
+  function saveFilters(pageKey, ids) {
+    const state = {};
+    ids.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) state[id] = el.value;
+    });
+    localStorage.setItem('filters_' + pageKey, JSON.stringify(state));
+  }
+
+  function restoreFilters(pageKey, ids) {
+    const raw = localStorage.getItem('filters_' + pageKey);
+    if (!raw) return false;
+    try {
+      const state = JSON.parse(raw);
+      ids.forEach((id) => {
+        const el = document.getElementById(id);
+        if (el && state[id] !== undefined) el.value = state[id];
+      });
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function clearFilters(pageKey) {
+    localStorage.removeItem('filters_' + pageKey);
+  }
+
   return {
     api, loadUser, getUser, requireAuth, requireHQ, renderHeader, init,
     statusBadgeClass, winBadgeClass, gaugeClass, fmtMoney, fmtDateTime, initials, restoreScroll,
     defaultLandingPage, getLastPage, setLastPage, clearLastPage,
+    saveFilters, restoreFilters, clearFilters,
   };
 })();

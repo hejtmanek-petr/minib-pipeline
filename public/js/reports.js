@@ -57,8 +57,10 @@
   });
 
   // Filters
-  ['f-owner','f-status','f-country','f-year'].forEach(id => {
+  const REPORT_FILTER_IDS = ['f-owner','f-status','f-country','f-year'];
+  REPORT_FILTER_IDS.forEach(id => {
     document.getElementById(id).addEventListener('change', () => {
+      App.saveFilters('reports', REPORT_FILTER_IDS);
       const tab = document.querySelector('.report-tab.active').dataset.tab;
       loadTab(tab);
     });
@@ -378,6 +380,8 @@
   meta.owners.forEach(o => { const opt = document.createElement('option'); opt.value = o; opt.textContent = o; ownerSelect.appendChild(opt); });
   const countrySelect = document.getElementById('f-country');
   meta.countries.sort((a, b) => cName(a).localeCompare(cName(b))).forEach(c => { const opt = document.createElement('option'); opt.value = c; opt.textContent = cName(c); countrySelect.appendChild(opt); });
+
+  App.restoreFilters('reports', REPORT_FILTER_IDS);
 
   loadOverview(buildQuery());
 })();
