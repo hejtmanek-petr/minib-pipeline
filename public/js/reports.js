@@ -58,8 +58,19 @@
 
   // Filters
   const REPORT_FILTER_IDS = ['f-owner','f-status','f-country','f-year'];
+
+  function updateFilterHighlights() {
+    REPORT_FILTER_IDS.forEach((id) => {
+      const el = document.getElementById(id);
+      const active = el.value !== '';
+      el.classList.toggle('filter-active', active);
+      el.closest('.form-group').classList.toggle('filter-active', active);
+    });
+  }
+
   REPORT_FILTER_IDS.forEach(id => {
     document.getElementById(id).addEventListener('change', () => {
+      updateFilterHighlights();
       App.saveFilters('reports', REPORT_FILTER_IDS);
       const tab = document.querySelector('.report-tab.active').dataset.tab;
       loadTab(tab);
@@ -382,6 +393,7 @@
   meta.countries.sort((a, b) => cName(a).localeCompare(cName(b))).forEach(c => { const opt = document.createElement('option'); opt.value = c; opt.textContent = cName(c); countrySelect.appendChild(opt); });
 
   App.restoreFilters('reports', REPORT_FILTER_IDS);
+  updateFilterHighlights();
 
   loadOverview(buildQuery());
 })();
