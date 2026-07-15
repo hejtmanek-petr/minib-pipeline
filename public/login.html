@@ -121,6 +121,38 @@
       min-height: 18px;
       text-align: center;
     }
+    .forgot-pw-link {
+      display: block;
+      text-align: center;
+      margin-top: 16px;
+      font-size: 13px;
+      color: #888;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .forgot-pw-link:hover {
+      color: #333;
+      text-decoration: underline;
+    }
+    .forgot-pw-msg {
+      display: none;
+      margin-top: 12px;
+      padding: 12px 14px;
+      background: #FFF8E1;
+      border: 1px solid #FFC600;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #444;
+      text-align: center;
+      line-height: 1.5;
+    }
+    .forgot-pw-msg a {
+      color: #B8860B;
+      font-weight: 700;
+      text-decoration: none;
+    }
+    .forgot-pw-msg a:hover { text-decoration: underline; }
+    .forgot-pw-msg.open { display: block; }
   </style>
 </head>
 <body>
@@ -140,13 +172,25 @@
       <input type="password" id="password-input" autocomplete="current-password" minlength="4">
       <button class="login-btn" id="login-btn"></button>
       <div class="error-msg" id="error-msg"></div>
+      <a class="forgot-pw-link" id="forgot-pw-link"></a>
+      <div class="forgot-pw-msg" id="forgot-pw-msg"></div>
     </div>
   </div>
   <script src="/js/app.js"></script>
   <script>
     const T = {
-      cs: { user: 'Uživatel', password: 'Heslo', selectUser: '— Vyberte uživatele —', btn: 'Vstoupit', error: 'Nesprávné přihlášení', connErr: 'Chyba spojení se serverem' },
-      en: { user: 'User', password: 'Password', selectUser: '— Select user —', btn: 'Enter', error: 'Incorrect login', connErr: 'Connection error' },
+      cs: {
+        user: 'Uživatel', password: 'Heslo', selectUser: '— Vyberte uživatele —', btn: 'Vstoupit',
+        error: 'Nesprávné přihlášení', connErr: 'Chyba spojení se serverem',
+        forgotPw: 'Zapomenuté heslo?',
+        forgotPwMsg: 'Pro reset hesla kontaktujte administrátora (Petr) na <a href="mailto:petr.hejtmanek@minib.cz">petr.hejtmanek@minib.cz</a>.',
+      },
+      en: {
+        user: 'User', password: 'Password', selectUser: '— Select user —', btn: 'Enter',
+        error: 'Incorrect login', connErr: 'Connection error',
+        forgotPw: 'Forgot password?',
+        forgotPwMsg: 'To reset your password, contact the administrator (Petr) at <a href="mailto:petr.hejtmanek@minib.cz">petr.hejtmanek@minib.cz</a>.',
+      },
     };
 
     let lang = localStorage.getItem('minib_lang') || 'en';
@@ -163,6 +207,8 @@
       document.getElementById('error-msg').textContent = '';
       const firstOpt = document.querySelector('#user-select option[value=""]');
       if (firstOpt) firstOpt.textContent = T[l].selectUser;
+      document.getElementById('forgot-pw-link').textContent = T[l].forgotPw;
+      document.getElementById('forgot-pw-msg').innerHTML = T[l].forgotPwMsg;
     }
 
     async function loadUsers() {
@@ -215,6 +261,9 @@
     document.getElementById('login-btn').addEventListener('click', doLogin);
     document.getElementById('password-input').addEventListener('keydown', (e) => {
       if (e.key === 'Enter') doLogin();
+    });
+    document.getElementById('forgot-pw-link').addEventListener('click', () => {
+      document.getElementById('forgot-pw-msg').classList.toggle('open');
     });
 
     setLang(lang);
