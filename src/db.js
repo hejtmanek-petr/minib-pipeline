@@ -134,7 +134,7 @@ for (const sql of migrations) {
   }
 
   // Set access_role for all users
-  const roleMap = { Cem:'mea_management', Ogün:'mea_management', Hakan:'mea_sales', Sefa:'mea_sales', Okan:'mea_sales', Monika:'mea_management', Pavla:'mea_management', Petr:'admin' };
+  const roleMap = { Cem:'mea_management', Ogün:'mea_management', Hakan:'mea_sales', Sefa:'mea_sales', Okan:'mea_sales', Monika:'admin', Pavla:'mea_management', Petr:'admin' };
   for (const [name, role] of Object.entries(roleMap)) {
     try { db.prepare("UPDATE users SET access_role = ? WHERE name = ?").run(role, name); } catch(e) {}
   }
