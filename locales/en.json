@@ -102,6 +102,7 @@
   "project.field.project_code": "Project Code",
   "project.field.sheet": "Sheet",
   "project.field.country": "Country",
+  "project.field.country_other_name": "Country Name (Other)",
   "project.field.region": "Region",
   "project.field.project_name": "Project Name",
   "project.field.company": "Client",

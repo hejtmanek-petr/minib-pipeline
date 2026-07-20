@@ -8,7 +8,7 @@ const autoAssess = require('../services/autoAssess');
 const router = express.Router();
 
 const EDITABLE_FIELDS = [
-  'project_name', 'company', 'client_name', 'investor', 'building_type', 'country', 'sheet', 'region',
+  'project_name', 'company', 'client_name', 'investor', 'building_type', 'country', 'country_other_name', 'sheet', 'region',
   'general_contractor', 'installation_company',
   'owner', 'status', 'phase', 'products_and_quantity', 'competition',
   'estimated_decision_date', 'estimated_delivery_date', 'actual_order_date',
@@ -137,7 +137,7 @@ router.get('/export', async (req, res) => {
   const REGION_LABELS = { '':'All', mea:'MEA' };
   const WIN_LABELS    = { '':'All', high:'≥ 70%', mid:'30–69%', low:'< 30%', none:'No value' };
 
-  const COUNTRY_NAMES = { TR:'Türkiye',AZ:'Azerbaijan',UZ:'Uzbekistan',KZ:'Kazakhstan',GE:'Georgia',SY:'Syria',IQ:'Iraq',TM:'Turkmenistan',MN:'Mongolia',EG:'Egypt',MA:'Morocco',DZ:'Algeria',LY:'Libya',TN:'Tunisia',TZ:'Tanzania',UG:'Uganda',KW:'Kuwait',AE:'United Arab Emirates',OM:'Oman',JO:'Jordan',NC:'Northern Cyprus',BY:'Belarus',RU:'Russia',KG:'Kyrgyzstan',TJ:'Tajikistan',QA:'Qatar',SA:'Saudi Arabia',GR:'Greece',BG:'Bulgaria',AL:'Albania',MK:'North Macedonia',RS:'Serbia',UA:'Ukraine',CA:'Canada' };
+  const COUNTRY_NAMES = { TR:'Türkiye',AZ:'Azerbaijan',UZ:'Uzbekistan',KZ:'Kazakhstan',GE:'Georgia',SY:'Syria',IQ:'Iraq',TM:'Turkmenistan',MN:'Mongolia',EG:'Egypt',MA:'Morocco',DZ:'Algeria',LY:'Libya',TN:'Tunisia',TZ:'Tanzania',UG:'Uganda',KW:'Kuwait',AE:'United Arab Emirates',OM:'Oman',JO:'Jordan',NC:'Northern Cyprus',BY:'Belarus',RU:'Russia',KG:'Kyrgyzstan',TJ:'Tajikistan',QA:'Qatar',SA:'Saudi Arabia',GR:'Greece',BG:'Bulgaria',AL:'Albania',MK:'North Macedonia',RS:'Serbia',UA:'Ukraine',CA:'Canada',OT:'Other' };
   const countryName = c => COUNTRY_NAMES[c] || c || '';
 
   const HEADERS = ['Project Name','Client','Country','EUR Value','Win%','Products & Qty','Status / Phase','AI Value','AI%','Decision Date','Created','Modified','Owner'];
@@ -227,8 +227,9 @@ router.get('/export', async (req, res) => {
     const createdAt = p.created_at ? p.created_at.slice(0,10).split('-').reverse().join('.') : '';
     const updatedAt = p.updated_at ? p.updated_at.slice(0,10).split('-').reverse().join('.') : '';
 
+    const countryCell = p.country === 'OT' && p.country_other_name ? p.country_other_name : countryName(p.country);
     const rowData = [
-      p.project_name||'', p.company||'', countryName(p.country),
+      p.project_name||'', p.company||'', countryCell,
       eur,
       manual != null ? manual + '%' : '',
       p.products_and_quantity||'',
@@ -346,6 +347,7 @@ router.post('/', (req, res) => {
     project_code,
     sheet,
     country: body.country || null,
+    country_other_name: body.country_other_name || null,
     region: body.region || (sheet === 'TR' ? 'Turkey' : 'CIS'),
     project_name: body.project_name || null,
     company: body.company || null,

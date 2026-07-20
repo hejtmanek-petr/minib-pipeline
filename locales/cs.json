@@ -102,6 +102,7 @@
   "project.field.project_code": "Kód projektu",
   "project.field.sheet": "List",
   "project.field.country": "Země",
+  "project.field.country_other_name": "Název země (Ostatní)",
   "project.field.region": "Region",
   "project.field.project_name": "Název projektu",
   "project.field.company": "Klient",

@@ -33,7 +33,12 @@
     { field: 'updated_at', type: 'text', readonly: true, displayFn: fmtDate },
     { field: 'project_code', type: 'text', readonly: true },
     { field: 'order_number', type: 'text' },
-    { field: 'country', type: 'select', options: () => [...(meta.countries || [])].sort((a, b) => countryLabel(a).localeCompare(countryLabel(b))), labelFn: countryLabel },
+    { field: 'country', type: 'select', options: () => {
+      const codes = (meta.countries || []).filter((c) => c !== 'OT').sort((a, b) => countryLabel(a).localeCompare(countryLabel(b)));
+      if ((meta.countries || []).includes('OT')) codes.push('OT');
+      return codes;
+    }, labelFn: countryLabel },
+    { field: 'country_other_name', type: 'text', visibleIf: () => project.country === 'OT' },
     { field: 'project_name', type: 'text' },
     { field: 'company', type: 'text' },
     { field: 'building_type', type: 'select', options: () => meta.building_types || [] },
@@ -250,9 +255,23 @@
     container.innerHTML = '';
     basicFieldHandles = BASIC_FIELDS.map((cfg) => {
       const handle = buildField(cfg);
+      if (cfg.visibleIf) handle.wrap.style.display = cfg.visibleIf() ? '' : 'none';
       container.appendChild(handle.wrap);
       return handle;
     });
+
+    // Live-toggle the "Other country" name field the moment the country
+    // select changes, without waiting for the auto-save round-trip.
+    const countryHandle = basicFieldHandles.find((h) => h.field === 'country');
+    const otherHandle = basicFieldHandles.find((h) => h.field === 'country_other_name');
+    if (countryHandle && otherHandle) {
+      const select = countryHandle.wrap.querySelector('select');
+      if (select) {
+        select.addEventListener('change', () => {
+          otherHandle.wrap.style.display = select.value === 'OT' ? '' : 'none';
+        });
+      }
+    }
   }
 
   function renderCommercialFields() {

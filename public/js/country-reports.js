@@ -7,8 +7,8 @@
   const t = (key) => I18N.t(key);
 
   const COUNTRY_NAMES = {
-    en: { TR:'Türkiye',AZ:'Azerbaijan',UZ:'Uzbekistan',KZ:'Kazakhstan',GE:'Georgia',SY:'Syria',IQ:'Iraq',TM:'Turkmenistan',MN:'Mongolia',EG:'Egypt',MA:'Morocco',DZ:'Algeria',LY:'Libya',TN:'Tunisia',TZ:'Tanzania',UG:'Uganda',KW:'Kuwait',AE:'UAE',OM:'Oman',JO:'Jordan',NC:'Northern Cyprus',BY:'Belarus',RU:'Russia',KG:'Kyrgyzstan',TJ:'Tajikistan',QA:'Qatar',SA:'Saudi Arabia',GR:'Greece',BG:'Bulgaria',AL:'Albania',MK:'North Macedonia',RS:'Serbia',UA:'Ukraine' },
-    cs: { TR:'Türkiye',AZ:'Ázerbájdžán',UZ:'Uzbekistán',KZ:'Kazachstán',GE:'Gruzie',SY:'Sýrie',IQ:'Irák',TM:'Turkmenistán',MN:'Mongolsko',EG:'Egypt',MA:'Maroko',DZ:'Alžírsko',LY:'Libye',TN:'Tunisko',TZ:'Tanzanie',UG:'Uganda',KW:'Kuvajt',AE:'SAE',OM:'Omán',JO:'Jordánsko',NC:'Severní Kypr',BY:'Bělorusko',RU:'Rusko',KG:'Kyrgyzstán',TJ:'Tádžikistán',QA:'Katar',SA:'Saúdská Arábie',GR:'Řecko',BG:'Bulharsko',AL:'Albánie',MK:'Severní Makedonie',RS:'Srbsko',UA:'Ukrajina' },
+    en: { TR:'Türkiye',AZ:'Azerbaijan',UZ:'Uzbekistan',KZ:'Kazakhstan',GE:'Georgia',SY:'Syria',IQ:'Iraq',TM:'Turkmenistan',MN:'Mongolia',EG:'Egypt',MA:'Morocco',DZ:'Algeria',LY:'Libya',TN:'Tunisia',TZ:'Tanzania',UG:'Uganda',KW:'Kuwait',AE:'UAE',OM:'Oman',JO:'Jordan',NC:'Northern Cyprus',BY:'Belarus',RU:'Russia',KG:'Kyrgyzstan',TJ:'Tajikistan',QA:'Qatar',SA:'Saudi Arabia',GR:'Greece',BG:'Bulgaria',AL:'Albania',MK:'North Macedonia',RS:'Serbia',UA:'Ukraine',OT:'Other' },
+    cs: { TR:'Türkiye',AZ:'Ázerbájdžán',UZ:'Uzbekistán',KZ:'Kazachstán',GE:'Gruzie',SY:'Sýrie',IQ:'Irák',TM:'Turkmenistán',MN:'Mongolsko',EG:'Egypt',MA:'Maroko',DZ:'Alžírsko',LY:'Libye',TN:'Tunisko',TZ:'Tanzanie',UG:'Uganda',KW:'Kuvajt',AE:'SAE',OM:'Omán',JO:'Jordánsko',NC:'Severní Kypr',BY:'Bělorusko',RU:'Rusko',KG:'Kyrgyzstán',TJ:'Tádžikistán',QA:'Katar',SA:'Saúdská Arábie',GR:'Řecko',BG:'Bulharsko',AL:'Albánie',MK:'Severní Makedonie',RS:'Srbsko',UA:'Ukrajina',OT:'Ostatní' },
   };
   function countryName(code) {
     const map = COUNTRY_NAMES[I18N.getLang()] || COUNTRY_NAMES.en;
@@ -21,7 +21,7 @@
   // NC (Northern Cyprus) has no official ISO code/flag, so it gets a plain
   // gray placeholder instead of risking another unsupported glyph.
   function flagImg(code) {
-    if (code === 'NC') return `<span class="flag-fallback">${code}</span>`;
+    if (code === 'NC' || code === 'OT') return `<span class="flag-fallback">${code}</span>`;
     return `<img class="flag-img" src="https://flagcdn.com/${code.toLowerCase()}.svg" alt="${code}" onerror="this.outerHTML='<span class=&quot;flag-fallback&quot;>${code}</span>'">`;
   }
 

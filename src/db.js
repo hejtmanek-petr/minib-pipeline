@@ -31,6 +31,7 @@ const migrations = [
   "ALTER TABLE users ADD COLUMN access_role TEXT DEFAULT 'mea_sales'",
   "ALTER TABLE projects ADD COLUMN win_prob_ai_reasoning_cs TEXT",
   "ALTER TABLE projects ADD COLUMN order_number TEXT",
+  "ALTER TABLE projects ADD COLUMN country_other_name TEXT",
   "ALTER TABLE projects ADD COLUMN win_prob_ai_reasoning_en TEXT",
   "ALTER TABLE projects ADD COLUMN win_prob_ai_reasoning_tr TEXT",
   "ALTER TABLE users ADD COLUMN password_plain TEXT",
@@ -95,7 +96,7 @@ for (const sql of migrations) {
   try {
     db.prepare("UPDATE app_settings SET value = ? WHERE key = 'statuses'").run(JSON.stringify(['active','won','lost']));
     db.prepare("UPDATE app_settings SET value = ? WHERE key = 'countries'").run(
-      JSON.stringify(['AL','DZ','AZ','BY','BG','EG','GE','GR','IQ','JO','KZ','KW','KG','LY','MN','MA','MK','NC','OM','QA','RU','SA','RS','SY','TJ','TZ','TN','TM','TR','UG','UA','AE','UZ'])
+      JSON.stringify(['AL','DZ','AZ','BY','BG','EG','GE','GR','IQ','JO','KZ','KW','KG','LY','MN','MA','MK','NC','OM','QA','RU','SA','RS','SY','TJ','TZ','TN','TM','TR','UG','UA','AE','UZ','OT'])
     );
 
     // Exclusivity: 'exclusive' = MEA is the sole authorized partner there;
@@ -109,6 +110,7 @@ for (const sql of migrations) {
       KG:'non_exclusive', TJ:'non_exclusive', QA:'non_exclusive', SA:'non_exclusive', GR:'non_exclusive',
       BG:'non_exclusive', AL:'non_exclusive', MK:'non_exclusive', RS:'non_exclusive',
       BY:'conditional', RU:'conditional', UA:'conditional',
+      OT:'non_exclusive',
     };
     const existingExclusivity = db.prepare("SELECT value FROM app_settings WHERE key = 'country_exclusivity'").get();
     if (existingExclusivity) {
@@ -193,6 +195,7 @@ const CSV_COLS = [
   { key: 'project_code', label: 'Project Code' },
   { key: 'project_name', label: 'Project Name' },
   { key: 'country', label: 'Country' },
+  { key: 'country_other_name', label: 'Country (Other)' },
   { key: 'sheet', label: 'Region' },
   { key: 'company', label: 'Client' },
   { key: 'investor', label: 'Investor' },

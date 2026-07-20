@@ -27,7 +27,13 @@
     });
   }
 
-  fillSelect('f-country', (meta.countries || []).sort((a, b) => countryLabel(a).localeCompare(countryLabel(b))), countryLabel);
+  const countryCodes = (meta.countries || []).filter((c) => c !== 'OT').sort((a, b) => countryLabel(a).localeCompare(countryLabel(b)));
+  if ((meta.countries || []).includes('OT')) countryCodes.push('OT');
+  fillSelect('f-country', countryCodes, countryLabel);
+
+  document.getElementById('f-country').addEventListener('change', (e) => {
+    document.getElementById('f-country-other-wrap').style.display = e.target.value === 'OT' ? '' : 'none';
+  });
   fillSelect('f-building_type', meta.building_types || []);
   fillSelect('f-owner', meta.owners || []);
   fillSelect('f-status', meta.statuses || [], (v) => I18N.t('status.' + v));
@@ -71,8 +77,10 @@
   }
 
   document.getElementById('btn-create').addEventListener('click', async () => {
+    const country = document.getElementById('f-country').value || null;
     const body = {
-      country: document.getElementById('f-country').value || null,
+      country,
+      country_other_name: country === 'OT' ? (document.getElementById('f-country_other_name').value || null) : null,
       project_name: document.getElementById('f-project_name').value || null,
       company: document.getElementById('f-company').value || null,
       building_type: document.getElementById('f-building_type').value || null,

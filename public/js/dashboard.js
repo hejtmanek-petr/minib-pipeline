@@ -13,7 +13,7 @@
       'NC': 'Severní Kypr', 'BY': 'Bělorusko', 'RU': 'Rusko', 'CA': 'Kanada',
       'KG': 'Kyrgyzstán', 'TJ': 'Tádžikistán', 'QA': 'Katar', 'SA': 'Saúdská Arábie',
       'GR': 'Řecko', 'BG': 'Bulharsko', 'AL': 'Albánie', 'MK': 'Severní Makedonie',
-      'RS': 'Srbsko', 'UA': 'Ukrajina',
+      'RS': 'Srbsko', 'UA': 'Ukrajina', 'OT': 'Ostatní',
     },
     en: {
       'TR': 'Türkiye', 'AZ': 'Azerbaijan', 'UZ': 'Uzbekistan', 'KZ': 'Kazakhstan',
@@ -24,12 +24,18 @@
       'NC': 'Northern Cyprus', 'BY': 'Belarus', 'RU': 'Russia', 'CA': 'Canada',
       'KG': 'Kyrgyzstan', 'TJ': 'Tajikistan', 'QA': 'Qatar', 'SA': 'Saudi Arabia',
       'GR': 'Greece', 'BG': 'Bulgaria', 'AL': 'Albania', 'MK': 'North Macedonia',
-      'RS': 'Serbia', 'UA': 'Ukraine',
+      'RS': 'Serbia', 'UA': 'Ukraine', 'OT': 'Other',
     },
   };
   function countryName(c) {
     const map = COUNTRY_NAMES[I18N.getLang()] || COUNTRY_NAMES.cs;
     return map[c] || c || '';
+  }
+  // For "Other" (OT) projects, show the salesperson's own country name
+  // instead of the generic "Other" label.
+  function countryDisplay(p) {
+    if (p.country === 'OT' && p.country_other_name) return p.country_other_name;
+    return countryName(p.country);
   }
 
   let allProjects = [];
@@ -65,7 +71,7 @@
         <td class="status-bar-cell"><span class="status-bar status-${statusOf(p)}"></span></td>
         <td>${p.project_name || ''}</td>
         <td>${p.company || ''}</td>
-        <td>${countryName(p.country)}</td>
+        <td>${countryDisplay(p)}</td>
         ${hidePrices ? '' : `<td>${p.project_value_eur != null ? Number(p.project_value_eur).toLocaleString('de-DE', {maximumFractionDigits:0}) + ' €' : '-'}</td>`}
         <td>${p.win_prob_manual_min != null ? `<span class="${App.winBadgeClass(p.win_prob_manual_min)}">${p.win_prob_manual_min}%</span>` : '<span class="text-muted">-</span>'}</td>
         <td>${p.products_and_quantity || ''}</td>
@@ -105,7 +111,7 @@
           <span class="db-card-name">${p.project_name || p.company || '-'}</span>
           ${winCell(p)}
         </div>
-        <div class="db-card-sub">${p.company || ''}${p.company && p.country ? ' · ' : ''}${countryName(p.country)}</div>
+        <div class="db-card-sub">${p.company || ''}${p.company && p.country ? ' · ' : ''}${countryDisplay(p)}</div>
         <div class="db-card-row">
           <span><span class="${App.statusBadgeClass(p.status)}">${I18N.t('status.' + (p.status || 'active'))}</span> <span class="text-muted">${p.phase ? I18N.t('phase.' + p.phase) : ''}</span></span>
           ${hidePrices ? '' : `<span class="db-card-value">${p.project_value_eur != null ? Number(p.project_value_eur).toLocaleString('de-DE', {maximumFractionDigits:0}) + ' €' : '-'}</span>`}
