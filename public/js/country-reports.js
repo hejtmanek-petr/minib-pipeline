@@ -15,11 +15,14 @@
     return map[code] || code;
   }
 
-  // Flag emoji via Unicode regional indicators. NC (Northern Cyprus) has no
-  // official ISO/Unicode flag, so it gets a neutral marker instead.
-  function flagEmoji(code) {
-    if (code === 'NC') return '🏳️';
-    return code.toUpperCase().replace(/./g, (c) => String.fromCodePoint(0x1F1E6 + c.charCodeAt(0) - 65));
+  // Real flag images (flagcdn.com) instead of Unicode flag emoji — Windows
+  // (and so Edge/Chrome on Windows) has no built-in flag emoji glyphs for
+  // most countries and renders blank, even though macOS/Safari does.
+  // NC (Northern Cyprus) has no official ISO code/flag, so it gets a plain
+  // gray placeholder instead of risking another unsupported glyph.
+  function flagImg(code) {
+    if (code === 'NC') return `<span class="flag-fallback">${code}</span>`;
+    return `<img class="flag-img" src="https://flagcdn.com/${code.toLowerCase()}.svg" alt="${code}" onerror="this.outerHTML='<span class=&quot;flag-fallback&quot;>${code}</span>'">`;
   }
 
   function fmt(v) { return App.fmtMoney(v); }
@@ -105,7 +108,7 @@
       return `
         <div class="cr-rank-row">
           <div class="cr-rank-num">#${i + 1}</div>
-          <div class="cr-rank-flag">${flagEmoji(c.code)}</div>
+          <div class="cr-rank-flag">${flagImg(c.code)}</div>
           <div class="cr-rank-name">${countryName(c.code)}</div>
           <div class="cr-rank-bar-track"><div class="cr-rank-bar-fill" style="width:${barPct}%; background:${scoreColor(c.score)};"></div></div>
           <div class="cr-rank-stats">
@@ -132,7 +135,7 @@
       const trendClass = c.latest && c.latest.trend ? `trend-${c.latest.trend}` : '';
       return `
         <div class="cr-card ${trendClass}${c.code === selectedCountry ? ' selected' : ''}" data-code="${c.code}">
-          <div class="cr-card-flag">${flagEmoji(c.code)}</div>
+          <div class="cr-card-flag">${flagImg(c.code)}</div>
           <div class="cr-card-name">${countryName(c.code)}</div>
           <div class="cr-card-stats">
             <span>${t('countryReports.table.projects')}: <b>${c.active_count}</b></span>
@@ -159,7 +162,7 @@
     const c = overview.find((x) => x.code === code);
     const detail = document.getElementById('cr-detail');
     detail.classList.add('open');
-    document.getElementById('cr-detail-flag').textContent = flagEmoji(code);
+    document.getElementById('cr-detail-flag').innerHTML = flagImg(code);
     document.getElementById('cr-detail-title').textContent = countryName(code);
     document.getElementById('cr-detail-stats').innerHTML = `
       ${exclusivityBadge(code)}

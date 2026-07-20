@@ -15,7 +15,9 @@
     .cr-rank-row { display:flex; align-items:center; gap:14px; padding:12px 0; border-bottom:1px solid #f5f5f5; }
     .cr-rank-row:last-child { border-bottom:none; }
     .cr-rank-num { font-size:13px; font-weight:800; color:#ccc; width:22px; text-align:right; flex-shrink:0; }
-    .cr-rank-flag { font-size:30px; line-height:1; flex-shrink:0; }
+    .cr-rank-flag { flex-shrink:0; width:34px; display:flex; align-items:center; }
+    .flag-img { width:28px; height:21px; object-fit:cover; border-radius:3px; box-shadow:0 0 0 1px rgba(0,0,0,0.08); display:block; }
+    .flag-fallback { width:28px; height:21px; border-radius:3px; background:#e8e8e8; box-shadow:0 0 0 1px rgba(0,0,0,0.08); display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:700; color:#999; }
     .cr-rank-name { font-weight:700; font-size:14px; color:#2A2A2A; width:110px; flex-shrink:0; }
     .cr-rank-bar-track { flex:1 1 90px; min-width:60px; background:#f2f2f2; border-radius:6px; height:12px; overflow:hidden; }
     .cr-rank-bar-fill { height:100%; border-radius:6px; }
@@ -34,7 +36,8 @@
     .cr-card.trend-growing { border-top-color:#2E7D32; }
     .cr-card.trend-stable { border-top-color:#D4A800; }
     .cr-card.trend-declining { border-top-color:#C0272D; }
-    .cr-card-flag { font-size:32px; line-height:1; margin-bottom:8px; }
+    .cr-card-flag { margin-bottom:8px; }
+    .cr-card-flag .flag-img, .cr-card-flag .flag-fallback { width:34px; height:25px; }
     .cr-card-name { font-weight:700; font-size:15px; color:#2A2A2A; margin-bottom:10px; }
     .cr-card-stats { display:flex; gap:10px; font-size:12px; color:#888; margin-bottom:10px; flex-wrap:wrap; }
     .cr-card-stats b { color:#2A2A2A; }
@@ -56,7 +59,7 @@
     .cr-detail { margin-top:8px; display:none; }
     .cr-detail.open { display:block; }
     .cr-detail-header { display:flex; align-items:center; gap:16px; margin-bottom:20px; }
-    .cr-detail-flag { font-size:56px; line-height:1; }
+    .cr-detail-flag .flag-img, .cr-detail-flag .flag-fallback { width:64px; height:48px; }
     .cr-detail-title { font-size:26px; font-weight:900; color:#2A2A2A; margin:0; }
     .cr-detail-stats { display:flex; gap:16px; font-size:13px; color:#888; margin-top:4px; flex-wrap:wrap; }
     .cr-detail-stats b { color:#2A2A2A; }
@@ -91,7 +94,7 @@
     .cr-opinion-owners b { color:#666; }
     @media(max-width:768px) {
       .cr-add-grid { grid-template-columns:1fr; }
-      .cr-detail-flag { font-size:40px; }
+      .cr-detail-flag .flag-img, .cr-detail-flag .flag-fallback { width:48px; height:36px; }
       .cr-detail-title { font-size:20px; }
       .cr-add-card { padding:14px; }
       .cr-opinion-card { padding:14px; }
