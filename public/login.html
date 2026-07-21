@@ -227,6 +227,11 @@
           opt.textContent = u.name;
           sel.appendChild(opt);
         });
+        const lastUserId = localStorage.getItem('minib_last_user');
+        if (lastUserId && sel.querySelector(`option[value="${lastUserId}"]`)) {
+          sel.value = lastUserId;
+          document.getElementById('password-input').focus();
+        }
       } catch (e) {
         console.error('Failed to load users', e);
       }
@@ -247,6 +252,7 @@
         });
         const data = await res.json();
         if (!res.ok) { errEl.textContent = T[lang].error; return; }
+        localStorage.setItem('minib_last_user', userId);
         // A fresh login always starts a new session at the role default page,
         // regardless of ?next or where the user was before logging in. The
         // "return to last page" feature only applies within an already-
