@@ -154,6 +154,17 @@ for (const sql of migrations) {
   }
 })();
 
+// One-time: Petr forgot his changed password and requested a reset
+// (2026-08-06). Guarded by app_settings flag so it only ever fires once.
+(function resetPetrPassword20260806() {
+  const flag = db.prepare("SELECT value FROM app_settings WHERE key = 'petr_pw_reset_20260806'").get();
+  if (flag) return;
+  const bcrypt = require('bcrypt');
+  const tempPw = '8AT1dIGD!1';
+  db.prepare("UPDATE users SET password_hash = ?, password_plain = ? WHERE name = 'Petr'").run(bcrypt.hashSync(tempPw, 10), tempPw);
+  db.prepare("INSERT INTO app_settings (key, value) VALUES ('petr_pw_reset_20260806', '1')").run();
+})();
+
 // One-time data sync from local export
 (function syncData() {
   const syncPath = path.join(__dirname, '..', 'scripts', 'sync-data.json');
