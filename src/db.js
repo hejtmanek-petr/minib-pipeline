@@ -89,6 +89,9 @@ for (const sql of migrations) {
   try { db.prepare("UPDATE projects SET country='MN' WHERE country='Mong'").run(); } catch(e) {}
   try { db.prepare("UPDATE projects SET country='AZ' WHERE country='Az'").run(); } catch(e) {}
 
+  // Backfill missing project names with a placeholder
+  try { db.prepare("UPDATE projects SET project_name='?' WHERE project_name IS NULL OR project_name=''").run(); } catch(e) {}
+
   // Migrate statuses
   try { db.prepare("UPDATE projects SET status='active' WHERE status IN ('lead','on_hold')").run(); } catch(e) {}
 

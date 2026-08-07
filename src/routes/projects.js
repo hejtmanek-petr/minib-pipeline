@@ -349,7 +349,7 @@ router.post('/', (req, res) => {
     country: body.country || null,
     country_other_name: body.country_other_name || null,
     region: body.region || (sheet === 'TR' ? 'Turkey' : 'CIS'),
-    project_name: body.project_name || null,
+    project_name: body.project_name || '?',
     company: body.company || null,
     client_name: body.client_name || null,
     investor: body.investor || null,
@@ -406,6 +406,9 @@ router.put('/:id', (req, res) => {
   if (!dealerCanAccessProject(req.user, project)) return res.status(403).json({ error: 'Access denied' });
 
   const body = req.body || {};
+  if (Object.prototype.hasOwnProperty.call(body, 'project_name') && !body.project_name) {
+    body.project_name = '?';
+  }
   const updates = {};
   const historyInsert = db.prepare(`
     INSERT INTO project_history (project_id, user_id, field_name, old_value, new_value)
@@ -646,7 +649,7 @@ router.post('/import/commit', (req, res) => {
         sheet: sheetName,
         country: row['Country'] || null,
         region: sheetName === 'TR' ? 'Turkey' : 'CIS',
-        project_name: row['Name of project'] || null,
+        project_name: row['Name of project'] || '?',
         company: row['Company'] || null,
         products_and_quantity: row['Products and quantity'] || null,
         competition: row['Brands in project / competition'] || null,
