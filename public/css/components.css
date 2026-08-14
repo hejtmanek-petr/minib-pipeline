@@ -69,8 +69,18 @@
   overflow-x: auto;
 }
 
+.dashboard-main {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 59px);
+}
+.dashboard-main > *:not(#dashboard-table-wrap) {
+  flex-shrink: 0;
+}
+
 #dashboard-table-wrap {
-  max-height: calc(100vh - 400px);
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
 }
 
