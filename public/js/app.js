@@ -145,7 +145,7 @@ const App = (() => {
   }
 
   function defaultLandingPage(role) {
-    return role === 'mea_sales' ? '/dashboard.html' : '/reports.html';
+    return '/dashboard.html';
   }
 
   function lastPageKey(userId) {
