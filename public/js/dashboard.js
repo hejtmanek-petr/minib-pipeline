@@ -76,9 +76,9 @@
         <td>${p.win_prob_manual_min != null ? `<span class="${App.winBadgeClass(p.win_prob_manual_min)}">${p.win_prob_manual_min}%</span>` : '<span class="text-muted">-</span>'}</td>
         <td>${p.products_and_quantity || ''}</td>
         <td><span class="${App.statusBadgeClass(p.status)}">${I18N.t('status.' + (p.status || 'active'))}</span> <span class="text-muted">${p.phase ? I18N.t('phase.' + p.phase) : ''}</span></td>
+        <td class="text-muted">${p.updated_at ? (() => { const d = new Date(p.updated_at); return `${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()}`; })() : '-'}</td>
         ${hidePrices ? '' : `<td>${p.ai_value_eur != null ? '🤖 ' + Number(p.ai_value_eur).toLocaleString('de-DE', {maximumFractionDigits:0}) + ' €' : '<span class="text-muted">-</span>'}</td>`}
         <td>${p.win_prob_ai != null ? `<span class="${App.winBadgeClass(p.win_prob_ai)}">${Math.round(p.win_prob_ai)}%</span>` : '<span class="text-muted">-</span>'}</td>
-        <td class="text-muted">${p.updated_at ? (() => { const d = new Date(p.updated_at); return `${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()}`; })() : '-'}</td>
         <td>${p.estimated_decision_date ? String(p.estimated_decision_date).slice(0,7) : '-'}</td>
         <td class="text-muted">${p.created_at ? (() => { const d = new Date(p.created_at); return `${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()}`; })() : '-'}</td>
         <td>${p.owner || ''}</td>
