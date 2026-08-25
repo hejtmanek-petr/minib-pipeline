@@ -137,8 +137,8 @@
     charts.status = new Chart(document.getElementById('ch-status'), {
       type: 'doughnut',
       data: {
-        labels: [t('status.active'), t('status.won'), t('status.lost')],
-        datasets: [{ data: [winloss.counts.active, winloss.counts.won, winloss.counts.lost], backgroundColor: ['#FFE082', '#A5D6A7', '#EF9A9A'], borderWidth: 0 }],
+        labels: [t('status.active'), t('status.on_hold'), t('status.won'), t('status.lost')],
+        datasets: [{ data: [winloss.counts.active, winloss.counts.on_hold || 0, winloss.counts.won, winloss.counts.lost], backgroundColor: ['#FFE082', '#FBF1DC', '#A5D6A7', '#EF9A9A'], borderWidth: 0 }],
       },
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } },
     });

@@ -93,11 +93,11 @@ for (const sql of migrations) {
   try { db.prepare("UPDATE projects SET project_name='?' WHERE project_name IS NULL OR project_name=''").run(); } catch(e) {}
 
   // Migrate statuses
-  try { db.prepare("UPDATE projects SET status='active' WHERE status IN ('lead','on_hold')").run(); } catch(e) {}
+  try { db.prepare("UPDATE projects SET status='active' WHERE status = 'lead'").run(); } catch(e) {}
 
   // Update app_settings
   try {
-    db.prepare("UPDATE app_settings SET value = ? WHERE key = 'statuses'").run(JSON.stringify(['active','won','lost']));
+    db.prepare("UPDATE app_settings SET value = ? WHERE key = 'statuses'").run(JSON.stringify(['active','on_hold','won','lost']));
     db.prepare("UPDATE app_settings SET value = ? WHERE key = 'countries'").run(
       JSON.stringify(['AL','DZ','AZ','BY','BG','EG','GE','GR','IQ','JO','KZ','KW','KG','LY','MN','MA','MK','NC','OM','QA','RU','SA','RS','SY','TJ','TZ','TN','TM','TR','UG','UA','AE','UZ','OT'])
     );
