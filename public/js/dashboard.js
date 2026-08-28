@@ -130,15 +130,34 @@
     });
   }
 
+  const KPI_STATUSES = ['active', 'on_hold', 'won', 'lost'];
+
   function renderKpis(projects) {
     document.getElementById('kpi-active').textContent = projects.length;
 
     const totalEur = projects.reduce((s, p) => s + (p.project_value_eur ?? p.ai_value_eur ?? 0), 0);
     document.getElementById('kpi-pipeline').textContent = '€ ' + App.fmtMoney(totalEur);
 
-    const withProb = projects.filter((p) => p.win_prob_manual_min !== null && p.win_prob_manual_min !== undefined);
-    const avgProb = withProb.length ? withProb.reduce((s, p) => s + p.win_prob_manual_min, 0) / withProb.length : null;
-    document.getElementById('kpi-winprob').textContent = avgProb !== null ? Math.round(avgProb) + '%' : '-';
+    const countBreakdown = document.getElementById('kpi-active-breakdown');
+    const valueBreakdown = document.getElementById('kpi-pipeline-breakdown');
+    countBreakdown.innerHTML = '';
+    valueBreakdown.innerHTML = '';
+
+    KPI_STATUSES.forEach((status) => {
+      const statusProjects = projects.filter((p) => (p.status || 'active') === status);
+      const label = I18N.t('status.' + status);
+
+      const countItem = document.createElement('span');
+      countItem.className = 'kpi-breakdown-item';
+      countItem.innerHTML = `${label}: <b>${statusProjects.length}</b>`;
+      countBreakdown.appendChild(countItem);
+
+      const statusEur = statusProjects.reduce((s, p) => s + (p.project_value_eur ?? p.ai_value_eur ?? 0), 0);
+      const valueItem = document.createElement('span');
+      valueItem.className = 'kpi-breakdown-item';
+      valueItem.innerHTML = `${label}: <b>€ ${App.fmtMoney(statusEur)}</b>`;
+      valueBreakdown.appendChild(valueItem);
+    });
   }
 
   function applyFiltersAndRender() {
@@ -293,6 +312,8 @@
       document.querySelector('th[data-sort="ai_value_eur"]')?.remove();
       const pipelineCard = document.getElementById('kpi-pipeline')?.closest('.kpi-card');
       if (pipelineCard) pipelineCard.style.display = 'none';
+      const activeCard = document.getElementById('kpi-active')?.closest('.kpi-card');
+      if (activeCard) activeCard.style.gridColumn = '1 / -1';
     }
 
     applyFiltersAndRender();

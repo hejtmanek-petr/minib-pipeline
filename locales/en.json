@@ -40,7 +40,6 @@
   "dashboard.title": "Dashboard",
   "dashboard.kpi.activeProjects": "Projects",
   "dashboard.kpi.pipelineValue": "Pipeline Value (EUR)",
-  "dashboard.kpi.avgWinProb": "Avg. Win Probability",
   "dashboard.kpi.regionSplit": "TR vs CIS",
   "dashboard.kpi.noPriceNote": "{count} projects without price",
   "dashboard.filters.sheet": "Region",
