@@ -7,6 +7,10 @@ const autoAssess = require('../services/autoAssess');
 
 const router = express.Router();
 
+// Active projects can't claim more than this win probability — once a deal
+// is actually won, higher confidence belongs to the Won status, not Active.
+const WIN_PROB_ACTIVE_CAP = 90;
+
 const EDITABLE_FIELDS = [
   'project_name', 'company', 'client_name', 'investor', 'building_type', 'country', 'country_other_name', 'sheet', 'region',
   'general_contractor', 'installation_company',
@@ -342,6 +346,8 @@ router.post('/', (req, res) => {
   const yearPrefix = `${prefix}-${year}-`;
   const seq = nextSequence(yearPrefix);
   const project_code = body.project_code || `${yearPrefix}${String(seq).padStart(3, '0')}`;
+  const status = body.status || 'active';
+  const capWinProb = (v) => (status === 'active' && v != null && v > WIN_PROB_ACTIVE_CAP ? WIN_PROB_ACTIVE_CAP : v);
 
   const fields = {
     project_code,
@@ -366,13 +372,13 @@ router.post('/', (req, res) => {
     estimated_decision_date: body.estimated_decision_date || null,
     estimated_delivery_date: body.estimated_delivery_date || null,
     actual_order_date: body.actual_order_date || null,
-    status: body.status || 'active',
+    status,
     phase: body.phase || 'project_stage',
     current_status_note: body.current_status_note || null,
     owner: body.owner || null,
     dealer_user_id: body.dealer_user_id || null,
-    win_prob_manual_min: body.win_prob_manual_min ?? null,
-    win_prob_manual_max: body.win_prob_manual_max ?? null,
+    win_prob_manual_min: capWinProb(body.win_prob_manual_min ?? null),
+    win_prob_manual_max: capWinProb(body.win_prob_manual_max ?? null),
     created_by_user_id: req.user.id,
   };
 
@@ -409,6 +415,21 @@ router.put('/:id', (req, res) => {
   if (Object.prototype.hasOwnProperty.call(body, 'project_name') && !body.project_name) {
     body.project_name = '?';
   }
+
+  // Active projects can't claim a win probability above the cap — either
+  // because the edit itself sets one too high, or because status just
+  // switched to active while an old (e.g. Won) value is still above it.
+  const effectiveStatus = Object.prototype.hasOwnProperty.call(body, 'status') ? body.status : project.status;
+  if (effectiveStatus === 'active') {
+    for (const field of ['win_prob_manual_min', 'win_prob_manual_max']) {
+      if (Object.prototype.hasOwnProperty.call(body, field)) {
+        if (body[field] != null && body[field] > WIN_PROB_ACTIVE_CAP) body[field] = WIN_PROB_ACTIVE_CAP;
+      } else if (project[field] != null && project[field] > WIN_PROB_ACTIVE_CAP) {
+        body[field] = WIN_PROB_ACTIVE_CAP;
+      }
+    }
+  }
+
   const updates = {};
   const historyInsert = db.prepare(`
     INSERT INTO project_history (project_id, user_id, field_name, old_value, new_value)

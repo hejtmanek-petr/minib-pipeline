@@ -292,6 +292,7 @@
       await saveFields(fields);
       document.querySelectorAll('.save-basic-trigger').forEach(b => showSaved(b));
       renderBasicFields();
+      renderGauges();
       await loadHistory();
     });
   });
@@ -308,10 +309,18 @@
     await loadHistory();
   });
 
+  const WIN_PROB_ACTIVE_CAP = 90;
+
   function renderGauges() {
     const manualMin = project.win_prob_manual_min;
     const manualMax = project.win_prob_manual_max;
     const manualVal = manualMin !== null && manualMin !== undefined ? manualMin : null;
+
+    const sliderCapEl = document.getElementById('manual-prob');
+    if (sliderCapEl) {
+      sliderCapEl.max = project.status === 'active' ? WIN_PROB_ACTIVE_CAP : 100;
+      if (Number(sliderCapEl.value) > Number(sliderCapEl.max)) sliderCapEl.value = sliderCapEl.max;
+    }
 
     const manualFill = document.getElementById('manual-gauge-fill');
     const manualValueEl = document.getElementById('manual-gauge-value');

@@ -1,6 +1,11 @@
 const db = require('../db');
 const ai = require('./ai');
 
+// Keep in sync with WIN_PROB_ACTIVE_CAP in routes/projects.js — Active
+// projects can't claim more than this win probability, AI estimate included.
+const WIN_PROB_ACTIVE_CAP = 90;
+const capWinProb = (v) => (v != null && v > WIN_PROB_ACTIVE_CAP ? WIN_PROB_ACTIVE_CAP : v);
+
 // Debounce so several quick edits to the same project (e.g. auto-saving
 // multiple fields in a row) trigger one AI call instead of many.
 const DEBOUNCE_MS = 2 * 60 * 1000;
@@ -21,6 +26,7 @@ async function runAssessment(projectId) {
 
   const result = await ai.assessWinProbability(project, comments, 'en');
   const reasoningMain = result.reasoning_en ?? result.reasoning ?? null;
+  const cap = project.status === 'active' ? capWinProb : (v) => v ?? null;
 
   db.prepare(`
     UPDATE projects SET
@@ -31,9 +37,9 @@ async function runAssessment(projectId) {
       updated_at = datetime('now')
     WHERE id = ?
   `).run(
-    result.probability ?? null,
-    result.probability_min ?? null,
-    result.probability_max ?? null,
+    cap(result.probability ?? null),
+    cap(result.probability_min ?? null),
+    cap(result.probability_max ?? null),
     reasoningMain,
     result.reasoning_cs ?? null,
     result.reasoning_en ?? null,
