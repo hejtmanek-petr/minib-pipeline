@@ -148,14 +148,14 @@
       const label = I18N.t('status.' + status);
 
       const countItem = document.createElement('span');
-      countItem.className = 'kpi-breakdown-item';
-      countItem.innerHTML = `${label}: <b>${statusProjects.length}</b>`;
+      countItem.className = `kpi-breakdown-item status-${status}`;
+      countItem.innerHTML = `<i class="kpi-breakdown-dot"></i>${label}: <b>${statusProjects.length}</b>`;
       countBreakdown.appendChild(countItem);
 
       const statusEur = statusProjects.reduce((s, p) => s + (p.project_value_eur ?? p.ai_value_eur ?? 0), 0);
       const valueItem = document.createElement('span');
-      valueItem.className = 'kpi-breakdown-item';
-      valueItem.innerHTML = `${label}: <b>€ ${App.fmtMoney(statusEur)}</b>`;
+      valueItem.className = `kpi-breakdown-item status-${status}`;
+      valueItem.innerHTML = `<i class="kpi-breakdown-dot"></i>${label}: <b>€ ${App.fmtMoney(statusEur)}</b>`;
       valueBreakdown.appendChild(valueItem);
     });
   }

@@ -46,6 +46,9 @@
 }
 
 .kpi-breakdown-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   font-size: 12.5px;
   color: var(--color-text-muted);
   white-space: nowrap;
@@ -55,6 +58,25 @@
   color: var(--color-text);
   font-weight: 700;
 }
+
+.kpi-breakdown-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.kpi-breakdown-item.status-active { color: var(--status-active); }
+.kpi-breakdown-item.status-on_hold { color: var(--status-on_hold); }
+.kpi-breakdown-item.status-won { color: var(--status-won); }
+.kpi-breakdown-item.status-lost { color: var(--status-lost); }
+
+.kpi-breakdown-item.status-active b { color: var(--status-active); }
+.kpi-breakdown-item.status-on_hold b { color: var(--status-on_hold); }
+.kpi-breakdown-item.status-won b { color: var(--status-won); }
+.kpi-breakdown-item.status-lost b { color: var(--status-lost); }
 
 /* --- Cards --- */
 
