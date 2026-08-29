@@ -71,6 +71,10 @@
     .cr-detail-stats b { color:#2A2A2A; }
 
     .cr-opinions-title { font-size:14px; color:#888; text-transform:uppercase; letter-spacing:0.5px; margin:24px 0 12px; }
+    .cr-projects-wrap { max-height:340px; overflow-y:auto; box-shadow:none; border:1px solid #EEE; }
+    .cr-projects-wrap tbody tr { cursor:pointer; }
+    .cr-projects-wrap tbody tr:hover { background:#FAFAFA; }
+    .cr-projects-empty { padding:20px; text-align:center; color:#999; font-size:13px; }
     .cr-opinion-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:16px; margin-bottom:8px; }
     .cr-opinion-card { background:#fff; border-radius:12px; padding:18px; box-shadow:0 1px 6px rgba(0,0,0,0.06); border-left:5px solid #E0E0E0; }
     .cr-opinion-card.trend-growing { border-left-color:#2E7D32; }
@@ -134,6 +138,23 @@
           <h2 class="cr-detail-title" id="cr-detail-title"></h2>
           <div class="cr-detail-stats" id="cr-detail-stats"></div>
         </div>
+      </div>
+
+      <div class="cr-opinions-title" data-i18n="countryReports.projectsTitle"></div>
+      <div class="table-wrap cr-projects-wrap" id="cr-projects-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th data-i18n="dashboard.table.name"></th>
+              <th data-i18n="dashboard.table.company"></th>
+              <th data-i18n="dashboard.table.phase"></th>
+              <th>Win%</th>
+              <th data-i18n="dashboard.table.amount"></th>
+              <th data-i18n="dashboard.table.owner"></th>
+            </tr>
+          </thead>
+          <tbody id="cr-projects-tbody"></tbody>
+        </table>
       </div>
 
       <div class="cr-opinions-title" data-i18n="countryReports.opinions"></div>

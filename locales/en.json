@@ -325,6 +325,7 @@
   "countryReports.intro": "Political and economic situation, business potential, and Turkish office contact strength across MEA countries.",
   "countryReports.chart.title": "Opportunity Ranking",
   "countryReports.chart.subtitle": "Blends the reported trend, contacts, pipeline value, and Win% — green = most promising, red = needs attention",
+  "countryReports.projectsTitle": "Projects in this Country",
   "countryReports.opinions": "Owner Opinions",
   "countryReports.olderReports": "+ {count} older reports",
   "countryReports.table.projects": "Active Projects",
@@ -348,6 +349,7 @@
   "countryReports.field.note": "Note",
   "countryReports.submit": "Save Report",
   "countryReports.noHistory": "No reports yet for this country",
+  "countryReports.noProjects": "No projects in this country yet",
   "countryReports.delete": "Delete",
   "countryReports.confirmDelete": "Really delete this report?"
 }

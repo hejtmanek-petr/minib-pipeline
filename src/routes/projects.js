@@ -29,7 +29,7 @@ function applyDealerFilter(req, where, params) {
 
 // GET /api/projects - list with filters
 router.get('/', (req, res) => {
-  const { q, sheet, owner, status, decisionYear, sort, dir } = req.query;
+  const { q, sheet, owner, status, country, decisionYear, sort, dir } = req.query;
   const where = [];
   const params = [];
 
@@ -43,6 +43,10 @@ router.get('/', (req, res) => {
   if (sheet) {
     where.push('sheet = ?');
     params.push(sheet);
+  }
+  if (country) {
+    where.push('country = ?');
+    params.push(country);
   }
   if (owner) {
     where.push('owner = ?');

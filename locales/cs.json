@@ -325,6 +325,7 @@
   "countryReports.intro": "Politická a ekonomická situace, obchodní potenciál a kontakty turecké kanceláře v jednotlivých zemích MEA.",
   "countryReports.chart.title": "Žebříček příležitostí",
   "countryReports.chart.subtitle": "Kombinuje nahlášený trend, kontakty, hodnotu pipeline a Win% — zelená = nejperspektivnější, červená = vyžaduje pozornost",
+  "countryReports.projectsTitle": "Projekty v této zemi",
   "countryReports.opinions": "Názory obchodníků",
   "countryReports.olderReports": "+ {count} starších reportů",
   "countryReports.table.projects": "Aktivní projekty",
@@ -348,6 +349,7 @@
   "countryReports.field.note": "Poznámka",
   "countryReports.submit": "Uložit report",
   "countryReports.noHistory": "Zatím žádné reporty pro tuto zemi",
+  "countryReports.noProjects": "V této zemi zatím nejsou žádné projekty",
   "countryReports.delete": "Smazat",
   "countryReports.confirmDelete": "Opravdu smazat tento report?"
 }

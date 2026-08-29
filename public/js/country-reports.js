@@ -174,8 +174,36 @@
     ['cr-form-political', 'cr-form-economic', 'cr-form-note'].forEach((id) => document.getElementById(id).value = '');
     resetOwnerChecks();
 
-    await loadOpinions(code);
+    await Promise.all([loadOpinions(code), loadCountryProjects(code)]);
     detail.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  async function loadCountryProjects(code) {
+    const tbody = document.getElementById('cr-projects-tbody');
+    const res = await App.api(`/projects?country=${encodeURIComponent(code)}`);
+    const projects = res.projects || [];
+    if (!projects.length) {
+      tbody.innerHTML = `<tr><td colspan="6" class="cr-projects-empty">${t('countryReports.noProjects')}</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = projects.map((p) => `
+      <tr data-id="${p.id}">
+        <td>${p.project_name || ''}</td>
+        <td>${p.company || ''}</td>
+        <td>
+          <span class="${App.statusBadgeClass(p.status)}">${t('status.' + (p.status || 'active'))}</span>
+          <span class="text-muted">${p.phase ? t('phase.' + p.phase) : ''}</span>
+        </td>
+        <td>${p.win_prob_manual_min != null ? `<span class="${App.winBadgeClass(p.win_prob_manual_min)}">${p.win_prob_manual_min}%</span>` : '<span class="text-muted">-</span>'}</td>
+        ${hidePrices ? '' : `<td>${p.project_value_eur != null ? Number(p.project_value_eur).toLocaleString('de-DE', {maximumFractionDigits:0}) + ' €' : '<span class="text-muted">-</span>'}</td>`}
+        <td>${p.owner || ''}</td>
+      </tr>
+    `).join('');
+    tbody.querySelectorAll('tr[data-id]').forEach((row) => {
+      row.addEventListener('click', () => {
+        window.location.href = `/project-detail.html?id=${row.dataset.id}`;
+      });
+    });
   }
 
   async function loadOpinions(code) {
