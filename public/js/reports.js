@@ -492,7 +492,7 @@
                 <td>${cName(p.country)}</td>
                 <td>${p.owner || ''}</td>
                 ${hidePrices ? '' : `<td class="money">${p.value != null ? '€ ' + fmt(p.value) : '-'}</td>`}
-                <td>${p.loss_reason ? reasonLabel(p.loss_reason) : `<span class="text-muted">${t('reports.table.notSpecified')}</span>`}</td>
+                <td>${p.loss_reason ? (p.loss_reason_source === 'ai' ? '🤖 ' : '') + reasonLabel(p.loss_reason) : `<span class="text-muted">${t('reports.table.notSpecified')}</span>`}</td>
                 <td>${p.competition || ''}</td>
                 <td>${p.lost_at ? App.fmtDateTime(p.lost_at) : '-'}</td>
               </tr>

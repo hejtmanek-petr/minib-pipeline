@@ -85,4 +85,40 @@ function scheduleAiValueEstimate(projectId) {
   valueTimers.set(projectId, handle);
 }
 
-module.exports = { scheduleAutoAssess, runAssessment, scheduleAiValueEstimate, runValueEstimate };
+// Loss reason inference: only ever fills the AI-suggested reason, never the
+// manual one — a manual pick always wins and this never overwrites it, and
+// it only ever runs once per project (won't re-run just because other
+// fields changed later).
+const lossReasonTimers = new Map();
+
+async function runLossReasonInference(projectId) {
+  const project = db.prepare('SELECT * FROM projects WHERE id = ?').get(projectId);
+  if (!project) return;
+  if (project.status !== 'lost') return;
+  if (project.loss_reason || project.loss_reason_ai) return;
+
+  const comments = db.prepare('SELECT content, created_at FROM comments WHERE project_id = ? ORDER BY created_at DESC LIMIT 10').all(projectId);
+  const settingsRow = db.prepare("SELECT value FROM app_settings WHERE key = 'loss_reasons'").get();
+  const reasonKeys = settingsRow ? JSON.parse(settingsRow.value) : ['price', 'competitor', 'budget_cancelled', 'timing', 'spec_change', 'no_decision', 'other'];
+
+  const result = await ai.inferLossReason(project, comments, reasonKeys);
+  if (result.reason) {
+    db.prepare('UPDATE projects SET loss_reason_ai = ?, loss_reason_ai_reasoning = ? WHERE id = ?')
+      .run(result.reason, result.reasoning || null, projectId);
+  }
+}
+
+function scheduleLossReasonInference(projectId) {
+  const existing = lossReasonTimers.get(projectId);
+  if (existing) clearTimeout(existing);
+  const handle = setTimeout(() => {
+    lossReasonTimers.delete(projectId);
+    runLossReasonInference(projectId).catch(err => console.error('Loss reason inference failed for project', projectId, err.message));
+  }, DEBOUNCE_MS);
+  lossReasonTimers.set(projectId, handle);
+}
+
+module.exports = {
+  scheduleAutoAssess, runAssessment, scheduleAiValueEstimate, runValueEstimate,
+  scheduleLossReasonInference, runLossReasonInference,
+};

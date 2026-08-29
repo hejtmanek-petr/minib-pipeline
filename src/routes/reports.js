@@ -121,7 +121,7 @@ router.get('/lost', (req, res) => {
     code: b.key, name: COUNTRY_NAMES[b.key] || b.key, count: b.count, value: b.value,
   }));
   const byOwner = bucketBy(p => p.owner || 'Unassigned').map(b => ({ owner: b.key, count: b.count, value: b.value }));
-  const byReason = bucketBy(p => p.loss_reason || 'not_specified').map(b => ({ reason: b.key, count: b.count, value: b.value }));
+  const byReason = bucketBy(p => p.loss_reason || p.loss_reason_ai || 'not_specified').map(b => ({ reason: b.key, count: b.count, value: b.value }));
   const byPhase = bucketBy(p => p.phase || 'project_stage').map(b => ({ phase: b.key, count: b.count, value: b.value }));
 
   // Competitor names come from the free-text "competition" field — split on
@@ -164,7 +164,9 @@ router.get('/lost', (req, res) => {
   const recent = lost
     .map(p => ({
       id: p.id, project_code: p.project_code, project_name: p.project_name, company: p.company,
-      country: p.country, owner: p.owner, value: p.project_value_eur, loss_reason: p.loss_reason,
+      country: p.country, owner: p.owner, value: p.project_value_eur,
+      loss_reason: p.loss_reason || p.loss_reason_ai || null,
+      loss_reason_source: p.loss_reason ? 'manual' : (p.loss_reason_ai ? 'ai' : null),
       competition: p.competition, lost_at: lostAtByProject[p.id] || p.updated_at,
     }))
     .sort((a, b) => (b.lost_at || '').localeCompare(a.lost_at || ''))

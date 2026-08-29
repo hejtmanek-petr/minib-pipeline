@@ -113,6 +113,8 @@
   "project.field.owner": "Obchodník",
   "project.field.status": "Status",
   "project.field.loss_reason": "Důvod prohry",
+  "project.field.lossReasonAiSuggestion": "AI navrhuje",
+  "project.field.lossReasonUseSuggestion": "Použít tento důvod",
   "project.field.phase": "Fáze",
   "project.field.products_and_quantity": "Artikly a počty ks",
   "project.field.competition": "Konkurence",

@@ -474,6 +474,12 @@ router.put('/:id', (req, res) => {
       autoAssess.scheduleAiValueEstimate(project.id);
     }
     autoAssess.scheduleAutoAssess(project.id);
+
+    // Just lost, and nobody picked a reason in this same request — try to
+    // infer one from the status note / competitor field / comments.
+    if (updates.status === 'lost' && project.status !== 'lost' && !updates.loss_reason) {
+      autoAssess.scheduleLossReasonInference(project.id);
+    }
   }
 
   const updated = db.prepare('SELECT * FROM projects WHERE id = ?').get(project.id);

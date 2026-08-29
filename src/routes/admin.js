@@ -249,6 +249,26 @@ router.post('/ai-value-estimate-all', async (req, res) => {
   console.log('Bulk AI value estimate complete.');
 });
 
+// POST /api/admin/loss-reason-infer-all — infer a loss reason for every
+// lost project that has neither a manual nor an already-inferred one
+router.post('/loss-reason-infer-all', async (req, res) => {
+  const missing = db.prepare(`
+    SELECT id FROM projects WHERE status = 'lost' AND loss_reason IS NULL AND loss_reason_ai IS NULL
+  `).all();
+
+  res.json({ started: true, total: missing.length });
+
+  for (const p of missing) {
+    try {
+      await autoAssess.runLossReasonInference(p.id);
+      console.log(`Inferred loss reason for project ${p.id}`);
+    } catch (e) {
+      console.error(`Loss reason inference failed for project ${p.id}:`, e.message);
+    }
+  }
+  console.log('Bulk loss reason inference complete.');
+});
+
 // --- Backup / Snapshots (admin only) ---
 
 function requireAdmin(req, res, next) {

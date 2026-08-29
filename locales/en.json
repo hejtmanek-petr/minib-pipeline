@@ -113,6 +113,8 @@
   "project.field.owner": "Owner",
   "project.field.status": "Status",
   "project.field.loss_reason": "Loss Reason",
+  "project.field.lossReasonAiSuggestion": "AI suggests",
+  "project.field.lossReasonUseSuggestion": "Use this reason",
   "project.field.phase": "Phase",
   "project.field.products_and_quantity": "Articles and Quantities",
   "project.field.competition": "Competition",

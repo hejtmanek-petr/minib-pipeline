@@ -292,6 +292,33 @@
         });
       }
     }
+
+    // No one picked a reason, but the AI found a signal in the status note /
+    // competitor field / comments — offer it as a one-click suggestion
+    // instead of silently leaving the report bucket as "Not specified".
+    if (lossReasonHandle && !project.loss_reason && project.loss_reason_ai) {
+      const select = lossReasonHandle.wrap.querySelector('select');
+      const hint = document.createElement('div');
+      hint.className = 'ai-suggestion';
+      hint.style.cssText = 'font-size:12px;color:var(--color-text-muted);margin-top:6px;';
+      const label = I18N.t('lossReason.' + project.loss_reason_ai);
+      hint.innerHTML = `🤖 ${I18N.t('project.field.lossReasonAiSuggestion')}: <b>${label === 'lossReason.' + project.loss_reason_ai ? project.loss_reason_ai : label}</b>`;
+      if (project.loss_reason_ai_reasoning) {
+        hint.innerHTML += ` <span style="font-style:italic;">— ${project.loss_reason_ai_reasoning}</span>`;
+      }
+      const useBtn = document.createElement('button');
+      useBtn.type = 'button';
+      useBtn.className = 'btn btn-secondary';
+      useBtn.style.cssText = 'display:block;margin-top:6px;padding:3px 10px;font-size:12px;';
+      useBtn.textContent = I18N.t('project.field.lossReasonUseSuggestion');
+      useBtn.addEventListener('click', async () => {
+        if (select) select.value = project.loss_reason_ai;
+        await autoSaveField('loss_reason', project.loss_reason_ai);
+        renderBasicFields();
+      });
+      hint.appendChild(useBtn);
+      lossReasonHandle.wrap.appendChild(hint);
+    }
   }
 
   function renderCommercialFields() {

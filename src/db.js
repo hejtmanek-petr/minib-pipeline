@@ -74,6 +74,8 @@ const migrations = [
   )`,
   "ALTER TABLE country_reports ADD COLUMN responsible_owners TEXT",
   "ALTER TABLE projects ADD COLUMN loss_reason TEXT",
+  "ALTER TABLE projects ADD COLUMN loss_reason_ai TEXT",
+  "ALTER TABLE projects ADD COLUMN loss_reason_ai_reasoning TEXT",
 ];
 for (const sql of migrations) {
   try { db.exec(sql); } catch (e) { /* column already exists */ }

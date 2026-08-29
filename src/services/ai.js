@@ -147,6 +147,55 @@ Respond ONLY with valid JSON, no markdown:
   return JSON.parse(jsonMatch[0]);
 }
 
+// Lost deals rarely get a manually-picked reason, but the "why" is almost
+// always buried somewhere: the status note, the competitor named in the
+// competition field, or a comment ("client went with Isoterm", "budget cut").
+// This reads all of that and classifies it into one of the app's fixed
+// loss-reason categories, so the Lost Analysis report isn't just "Not
+// specified" for everything.
+async function inferLossReason(project, comments, reasonKeys) {
+  const client = getClient();
+  if (!client) throw new Error('AI not configured');
+
+  const commentsText = comments
+    .map((c) => `- [${c.created_at}] ${c.content}`)
+    .join('\n') || '(no comments)';
+
+  const prompt = `You are a B2B sales analyst for MINIB a.s., a Czech manufacturer of heating and cooling convectors.
+
+This project was marked as LOST. Figure out why, using only the information given below — do not invent details.
+
+Project:
+- Status note: ${project.current_status_note || '(none)'}
+- Competition / competitor field: ${project.competition || '(none)'}
+- Phase when lost: ${project.phase || '(unknown)'}
+- Value: ${project.project_value_eur != null ? project.project_value_eur + ' EUR' : '(not set)'}
+
+Comments:
+${commentsText}
+
+Allowed reason categories (pick exactly one key): ${reasonKeys.join(', ')}
+
+Respond ONLY with valid JSON, no markdown:
+{
+  "reason": "<one of the allowed keys, or null if there is truly no signal at all in the text above>",
+  "reasoning": "<max 1 sentence, max 200 characters, in English, citing what specifically pointed to this — e.g. the competitor name or the note text>"
+}`;
+
+  const response = await client.messages.create({
+    model: MODEL,
+    max_tokens: 300,
+    messages: [{ role: 'user', content: prompt }],
+  });
+
+  const text = response.content[0].text.trim();
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) throw new Error('AI did not return valid JSON');
+  const result = JSON.parse(jsonMatch[0]);
+  if (result.reason && !reasonKeys.includes(result.reason)) result.reason = null;
+  return result;
+}
+
 async function translateComment(content, sourceLang) {
   const client = getClient();
   if (!client) throw new Error('AI not configured');
@@ -179,4 +228,4 @@ ${content}
   return JSON.parse(jsonMatch[0]);
 }
 
-module.exports = { correctTranscript, assessWinProbability, estimateProjectValue, translateComment, MODEL };
+module.exports = { correctTranscript, assessWinProbability, estimateProjectValue, translateComment, inferLossReason, MODEL };
