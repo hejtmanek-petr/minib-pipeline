@@ -7,7 +7,7 @@ const router = express.Router();
 router.use(requireAuth);
 router.use(requireNonSales);
 
-const COUNTRY_NAMES = { TR:'Türkiye',AZ:'Azerbaijan',UZ:'Uzbekistan',KZ:'Kazakhstan',GE:'Georgia',SY:'Syria',IQ:'Iraq',TM:'Turkmenistan',MN:'Mongolia',EG:'Egypt',MA:'Morocco',DZ:'Algeria',LY:'Libya',TN:'Tunisia',TZ:'Tanzania',UG:'Uganda',KW:'Kuwait',AE:'UAE',OM:'Oman',JO:'Jordan',NC:'Northern Cyprus',BY:'Belarus',RU:'Russia',KG:'Kyrgyzstan',TJ:'Tajikistan',QA:'Qatar',SA:'Saudi Arabia',GR:'Greece',BG:'Bulgaria',AL:'Albania',MK:'North Macedonia',RS:'Serbia',UA:'Ukraine',CA:'Canada' };
+const COUNTRY_NAMES = { TR:'Türkiye',AZ:'Azerbaijan',UZ:'Uzbekistan',KZ:'Kazakhstan',GE:'Georgia',SY:'Syria',IQ:'Iraq',TM:'Turkmenistan',MN:'Mongolia',EG:'Egypt',MA:'Morocco',DZ:'Algeria',LY:'Libya',TN:'Tunisia',TZ:'Tanzania',UG:'Uganda',KW:'Kuwait',AE:'UAE',OM:'Oman',JO:'Jordan',NC:'Northern Cyprus',BY:'Belarus',RU:'Russia',KG:'Kyrgyzstan',TJ:'Tajikistan',QA:'Qatar',SA:'Saudi Arabia',GR:'Greece',BG:'Bulgaria',AL:'Albania',MK:'North Macedonia',RS:'Serbia',UA:'Ukraine',CA:'Canada',OT:'Other' };
 
 function buildFilters(req) {
   const { owner, status, country, year, dateFrom, dateTo } = req.query;
@@ -97,6 +97,80 @@ router.get('/owners', (req, res) => {
     win_rate: (o.won + o.lost) > 0 ? Math.round(o.won / (o.won + o.lost) * 100) : null,
   })).sort((a, b) => b.value - a.value);
   res.json({ owners: result });
+});
+
+// Lost analysis — why we lose, where, to whom, and when
+router.get('/lost', (req, res) => {
+  const lost = getProjects(req).filter(p => p.status === 'lost');
+
+  const totalValue = lost.reduce((s, p) => s + (p.project_value_eur || 0), 0);
+  const avgValue = lost.length ? totalValue / lost.length : 0;
+
+  function bucketBy(keyFn) {
+    const map = {};
+    for (const p of lost) {
+      const key = keyFn(p);
+      if (!map[key]) map[key] = { key, count: 0, value: 0 };
+      map[key].count++;
+      map[key].value += p.project_value_eur || 0;
+    }
+    return Object.values(map).sort((a, b) => b.value - a.value || b.count - a.count);
+  }
+
+  const byCountry = bucketBy(p => p.country || 'Unknown').map(b => ({
+    code: b.key, name: COUNTRY_NAMES[b.key] || b.key, count: b.count, value: b.value,
+  }));
+  const byOwner = bucketBy(p => p.owner || 'Unassigned').map(b => ({ owner: b.key, count: b.count, value: b.value }));
+  const byReason = bucketBy(p => p.loss_reason || 'not_specified').map(b => ({ reason: b.key, count: b.count, value: b.value }));
+  const byPhase = bucketBy(p => p.phase || 'project_stage').map(b => ({ phase: b.key, count: b.count, value: b.value }));
+
+  // Competitor names come from the free-text "competition" field — split on
+  // common separators and count mentions. Keeps first-seen casing for display.
+  const competitorMap = {};
+  for (const p of lost) {
+    if (!p.competition) continue;
+    const parts = p.competition.split(/[,;/+\n]|\band\b|\bvs\.?\b/i).map(s => s.trim()).filter(Boolean);
+    for (const part of parts) {
+      const norm = part.toLowerCase();
+      if (!competitorMap[norm]) competitorMap[norm] = { name: part, count: 0 };
+      competitorMap[norm].count++;
+    }
+  }
+  const byCompetitor = Object.values(competitorMap).sort((a, b) => b.count - a.count).slice(0, 12);
+
+  // Timeline: month a project was actually marked Lost, from the status
+  // history log — falls back to updated_at for projects with no logged
+  // status change (e.g. imported directly as Lost).
+  const lostIds = lost.map(p => p.id);
+  const lostAtByProject = {};
+  if (lostIds.length) {
+    const rows = db.prepare(`
+      SELECT project_id, MAX(changed_at) AS lost_at FROM project_history
+      WHERE field_name = 'status' AND new_value = 'lost' AND project_id IN (${lostIds.join(',')})
+      GROUP BY project_id
+    `).all();
+    for (const r of rows) lostAtByProject[r.project_id] = r.lost_at;
+  }
+  const monthBuckets = {};
+  for (const p of lost) {
+    const lostAt = lostAtByProject[p.id] || p.updated_at;
+    const month = lostAt ? String(lostAt).slice(0, 7) : 'Unknown';
+    if (!monthBuckets[month]) monthBuckets[month] = { month, count: 0, value: 0 };
+    monthBuckets[month].count++;
+    monthBuckets[month].value += p.project_value_eur || 0;
+  }
+  const timeline = Object.values(monthBuckets).sort((a, b) => a.month.localeCompare(b.month));
+
+  const recent = lost
+    .map(p => ({
+      id: p.id, project_code: p.project_code, project_name: p.project_name, company: p.company,
+      country: p.country, owner: p.owner, value: p.project_value_eur, loss_reason: p.loss_reason,
+      competition: p.competition, lost_at: lostAtByProject[p.id] || p.updated_at,
+    }))
+    .sort((a, b) => (b.lost_at || '').localeCompare(a.lost_at || ''))
+    .slice(0, 30);
+
+  res.json({ total: lost.length, totalValue, avgValue, byCountry, byOwner, byReason, byPhase, byCompetitor, timeline, recent });
 });
 
 // Timeline

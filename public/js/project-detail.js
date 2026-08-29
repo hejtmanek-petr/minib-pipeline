@@ -44,6 +44,7 @@
     { field: 'building_type', type: 'select', options: () => meta.building_types || [] },
     { field: 'owner', type: 'select', options: () => meta.owners || [] },
     { field: 'status', type: 'select', options: () => meta.statuses || [], i18nPrefix: 'status' },
+    { field: 'loss_reason', type: 'select', options: () => meta.loss_reasons || [], i18nPrefix: 'lossReason', allowEmpty: true, visibleIf: () => project.status === 'lost' },
     { field: 'phase', type: 'select', options: () => meta.phases || [], i18nPrefix: 'phase' },
     { field: 'products_and_quantity', type: 'textarea' },
     { field: 'competition', type: 'text' },
@@ -156,6 +157,13 @@
 
     if (config.type === 'select') {
       input = document.createElement('select');
+      if (config.allowEmpty) {
+        const empty = document.createElement('option');
+        empty.value = '';
+        empty.textContent = '-';
+        if (!raw) empty.selected = true;
+        input.appendChild(empty);
+      }
       const options = config.options();
       options.forEach((opt) => {
         const o = document.createElement('option');
@@ -269,6 +277,18 @@
       if (select) {
         select.addEventListener('change', () => {
           otherHandle.wrap.style.display = select.value === 'OT' ? '' : 'none';
+        });
+      }
+    }
+
+    // Same live-toggle for the loss reason field, shown only when status = Lost.
+    const statusHandle = basicFieldHandles.find((h) => h.field === 'status');
+    const lossReasonHandle = basicFieldHandles.find((h) => h.field === 'loss_reason');
+    if (statusHandle && lossReasonHandle) {
+      const select = statusHandle.wrap.querySelector('select');
+      if (select) {
+        select.addEventListener('change', () => {
+          lossReasonHandle.wrap.style.display = select.value === 'lost' ? '' : 'none';
         });
       }
     }

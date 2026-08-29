@@ -73,6 +73,7 @@ const migrations = [
     created_at TEXT DEFAULT (datetime('now'))
   )`,
   "ALTER TABLE country_reports ADD COLUMN responsible_owners TEXT",
+  "ALTER TABLE projects ADD COLUMN loss_reason TEXT",
 ];
 for (const sql of migrations) {
   try { db.exec(sql); } catch (e) { /* column already exists */ }
@@ -120,6 +121,14 @@ for (const sql of migrations) {
       db.prepare("UPDATE app_settings SET value = ? WHERE key = 'country_exclusivity'").run(JSON.stringify(exclusivity));
     } else {
       db.prepare("INSERT INTO app_settings (key, value) VALUES ('country_exclusivity', ?)").run(JSON.stringify(exclusivity));
+    }
+
+    // Seed once only — never overwrite, so an admin can edit the list later
+    // (Settings > Loss Reasons) without a deploy silently reverting it.
+    const existingLossReasons = db.prepare("SELECT value FROM app_settings WHERE key = 'loss_reasons'").get();
+    if (!existingLossReasons) {
+      const lossReasons = ['price', 'competitor', 'budget_cancelled', 'timing', 'spec_change', 'no_decision', 'other'];
+      db.prepare("INSERT INTO app_settings (key, value) VALUES ('loss_reasons', ?)").run(JSON.stringify(lossReasons));
     }
   } catch(e) {}
 

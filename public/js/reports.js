@@ -93,6 +93,7 @@
     if (tab === 'forecast') loadForecast(qs);
     if (tab === 'timeline') loadTimeline(qs);
     if (tab === 'activity') loadActivity(qs);
+    if (tab === 'lost') loadLost(qs);
   }
 
   // ==================== OVERVIEW ====================
@@ -391,6 +392,153 @@
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: '#f0f0f0' }, beginAtZero: true }, x: { grid: { display: false } } } },
       });
     }
+  }
+
+  // ==================== LOST ANALYSIS ====================
+  function reasonLabel(key) {
+    if (key === 'not_specified') return t('reports.table.notSpecified');
+    const label = t('lossReason.' + key);
+    return label === 'lossReason.' + key ? key : label;
+  }
+
+  async function loadLost(qs) {
+    const res = await App.api('/reports/lost?' + qs);
+    const sec = document.getElementById('sec-lost');
+    res.byCountry.forEach(c => { c.name = cName(c.code); });
+    const topCountries = res.byCountry.slice(0, 12);
+
+    sec.innerHTML = (hidePrices ? `
+      <div class="report-grid">
+        <div class="stat-card"><div class="stat-label">${t('reports.stat.totalLost')}</div><div class="stat-value red">${res.total}</div></div>
+      </div>
+    ` : `
+      <div class="report-grid">
+        <div class="stat-card"><div class="stat-label">${t('reports.stat.totalLost')}</div><div class="stat-value red">${res.total}</div></div>
+        <div class="stat-card"><div class="stat-label">${t('reports.stat.totalLostValue')}</div><div class="stat-value red">€ ${fmt(res.totalValue)}</div></div>
+        <div class="stat-card"><div class="stat-label">${t('reports.stat.avgLostDeal')}</div><div class="stat-value">€ ${fmt(Math.round(res.avgValue))}</div></div>
+      </div>
+    `) + `
+      <div class="report-grid">
+        <div class="chart-card"><h4>${t('reports.chart.lostByReason')}</h4><div class="chart-wrap"><canvas id="ch-lost-reason"></canvas></div></div>
+        <div class="chart-card"><h4>${t('reports.chart.lostByCountry')}</h4><div class="chart-wrap" style="height:${Math.max(220, topCountries.length * 28)}px;"><canvas id="ch-lost-country"></canvas></div></div>
+      </div>
+      <div class="chart-card" style="margin-bottom:16px;"><h4>${t('reports.chart.lostOverTime')}</h4><div class="chart-wrap"><canvas id="ch-lost-time"></canvas></div></div>
+
+      <div class="report-grid-3">
+        <div class="chart-card">
+          <h4>${t('reports.chart.lostByOwner')}</h4>
+          <div class="table-wrap">
+            <table class="report-table">
+              <thead><tr><th>${t('reports.table.owner')}</th><th class="num">${t('reports.table.projects')}</th>${hidePrices ? '' : `<th class="money">${t('reports.table.valueEur')}</th>`}</tr></thead>
+              <tbody>${res.byOwner.map(o => `
+                <tr>
+                  <td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${oColor(o.owner)};margin-right:6px;vertical-align:middle;"></span><strong>${o.owner}</strong></td>
+                  <td class="num">${o.count}</td>
+                  ${hidePrices ? '' : `<td class="money">€ ${fmt(o.value)}</td>`}
+                </tr>
+              `).join('')}</tbody>
+            </table>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h4>${t('reports.table.phase')}</h4>
+          <div class="table-wrap">
+            <table class="report-table">
+              <thead><tr><th>${t('reports.table.phase')}</th><th class="num">${t('reports.table.projects')}</th>${hidePrices ? '' : `<th class="money">${t('reports.table.valueEur')}</th>`}</tr></thead>
+              <tbody>${res.byPhase.map(ph => `
+                <tr><td>${t('phase.' + ph.phase)}</td><td class="num">${ph.count}</td>${hidePrices ? '' : `<td class="money">€ ${fmt(ph.value)}</td>`}</tr>
+              `).join('')}</tbody>
+            </table>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h4>${t('reports.chart.topCompetitors')}</h4>
+          <div class="table-wrap">
+            <table class="report-table">
+              <thead><tr><th>${t('reports.table.competitor')}</th><th class="num">${t('reports.table.mentions')}</th></tr></thead>
+              <tbody>${res.byCompetitor.length ? res.byCompetitor.map(c => `
+                <tr><td>${c.name}</td><td class="num">${c.count}</td></tr>
+              `).join('') : `<tr><td colspan="2" class="text-muted" style="text-align:center;padding:16px;">-</td></tr>`}</tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-card" style="margin-bottom:16px;">
+        <h4>${t('reports.chart.lostByCountry')} — ${t('reports.chart.allCountries')}</h4>
+        <div class="table-wrap">
+          <table class="report-table">
+            <thead><tr><th>${t('reports.table.country')}</th><th class="num">${t('reports.table.projects')}</th>${hidePrices ? '' : `<th class="money">${t('reports.table.valueEur')}</th>`}</tr></thead>
+            <tbody>${res.byCountry.map(c => `
+              <tr>
+                <td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${cColor(c.code)};margin-right:6px;vertical-align:middle;"></span><strong>${c.name}</strong></td>
+                <td class="num">${c.count}</td>
+                ${hidePrices ? '' : `<td class="money">€ ${fmt(c.value)}</td>`}
+              </tr>
+            `).join('')}</tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <h4>${t('reports.chart.recentLosses')}</h4>
+        <div class="table-wrap">
+          <table class="report-table">
+            <thead><tr><th>${t('reports.table.code')}</th><th>${t('reports.table.project')}</th><th>${t('reports.table.country')}</th><th>${t('reports.table.owner')}</th>${hidePrices ? '' : `<th class="money">${t('reports.table.valueEur')}</th>`}<th>${t('reports.table.reason')}</th><th>${t('reports.table.competitor')}</th><th>${t('reports.table.lostDate')}</th></tr></thead>
+            <tbody>${res.recent.map(p => `
+              <tr style="cursor:pointer" onclick="window.location='/project-detail.html?id=${p.id}'">
+                <td>${p.project_code}</td>
+                <td>${p.project_name || ''}</td>
+                <td>${cName(p.country)}</td>
+                <td>${p.owner || ''}</td>
+                ${hidePrices ? '' : `<td class="money">${p.value != null ? '€ ' + fmt(p.value) : '-'}</td>`}
+                <td>${p.loss_reason ? reasonLabel(p.loss_reason) : `<span class="text-muted">${t('reports.table.notSpecified')}</span>`}</td>
+                <td>${p.competition || ''}</td>
+                <td>${p.lost_at ? App.fmtDateTime(p.lost_at) : '-'}</td>
+              </tr>
+            `).join('')}</tbody>
+          </table>
+        </div>
+      </div>
+    `;
+
+    kill('lost-reason');
+    charts['lost-reason'] = new Chart(document.getElementById('ch-lost-reason'), {
+      type: 'doughnut',
+      data: {
+        labels: res.byReason.map(r => reasonLabel(r.reason)),
+        datasets: [{ data: res.byReason.map(r => r.count), backgroundColor: res.byReason.map((r,i) => PASTEL_SEQ[i % PASTEL_SEQ.length]), borderWidth: 0 }],
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } },
+    });
+
+    kill('lost-country');
+    charts['lost-country'] = new Chart(document.getElementById('ch-lost-country'), {
+      type: 'bar',
+      data: {
+        labels: topCountries.map(c => c.name),
+        datasets: hidePrices
+          ? [{ label: t('reports.legend.projects'), data: topCountries.map(c => c.count), backgroundColor: topCountries.map(c => cColor(c.code)), borderRadius: 4 }]
+          : [{ label: t('reports.legend.value'), data: topCountries.map(c => c.value), backgroundColor: topCountries.map(c => cColor(c.code)), borderRadius: 4 }],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+        plugins: { legend: { display: false } },
+        scales: { x: { grid: { color: '#f0f0f0' } }, y: { grid: { display: false } } },
+      },
+    });
+
+    kill('lost-time');
+    charts['lost-time'] = new Chart(document.getElementById('ch-lost-time'), {
+      type: 'bar',
+      data: {
+        labels: res.timeline.map(tl => tl.month),
+        datasets: hidePrices
+          ? [{ label: t('reports.legend.projects'), data: res.timeline.map(tl => tl.count), backgroundColor: RED, borderRadius: 4 }]
+          : [{ label: t('reports.legend.value'), data: res.timeline.map(tl => tl.value), backgroundColor: RED, borderRadius: 4 }],
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: '#f0f0f0' } }, x: { grid: { display: false } } } },
+    });
   }
 
   // ==================== INIT ====================
