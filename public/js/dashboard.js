@@ -118,7 +118,7 @@
         </div>
         <div class="db-card-meta">
           <span>${p.owner || ''}${p.order_number ? ' · #' + p.order_number : ''}</span>
-          <span>${p.estimated_decision_date ? String(p.estimated_decision_date).slice(0,7) : fmtDate(p.created_at)}</span>
+          <span>${I18N.t('dashboard.table.decisionDate')}: ${p.estimated_decision_date ? String(p.estimated_decision_date).slice(0,7) : '-'}</span>
         </div>
       </div>
     `).join('');
