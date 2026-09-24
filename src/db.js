@@ -150,7 +150,7 @@ for (const sql of migrations) {
   }
 
   // Set access_role for all users
-  const roleMap = { Cem:'mea_management', Ogün:'mea_management', Hakan:'mea_sales', Sefa:'mea_sales', Okan:'mea_sales', Monika:'admin', Pavla:'mea_management', Petr:'admin' };
+  const roleMap = { Cem:'mea_management', Ogün:'mea_management', Hakan:'mea_sales', Sefa:'mea_sales', Okan:'mea_sales', Monika:'admin', Pavla:'mea_management' };
   for (const [name, role] of Object.entries(roleMap)) {
     try { db.prepare("UPDATE users SET access_role = ? WHERE name = ?").run(role, name); } catch(e) {}
   }
@@ -159,7 +159,7 @@ for (const sql of migrations) {
   // This used to run unconditionally on every startup, which meant every
   // deploy silently reset anyone's password back to these defaults, wiping
   // out any password they'd since changed.
-  const passwords = { Petr:'Pashtika', Monika:'Trinity', Pavla:'Kleopatra', Cem:'MEA8547#C', Hakan:'MEA3921#H', Ogün:'MEA6284#O', Okan:'MEA7135#K', Sefa:'MEA4693#S' };
+  const passwords = { Monika:'Trinity', Pavla:'Kleopatra', Cem:'MEA8547#C', Hakan:'MEA3921#H', Ogün:'MEA6284#O', Okan:'MEA7135#K', Sefa:'MEA4693#S' };
   for (const [name, pw] of Object.entries(passwords)) {
     const existing = db.prepare("SELECT password_plain FROM users WHERE name = ?").get(name);
     if (existing && !existing.password_plain) {
@@ -168,15 +168,21 @@ for (const sql of migrations) {
   }
 })();
 
-// One-time: Petr forgot his changed password and requested a reset
-// (2026-08-06). Guarded by app_settings flag so it only ever fires once.
-(function resetPetrPassword20260806() {
-  const flag = db.prepare("SELECT value FROM app_settings WHERE key = 'petr_pw_reset_20260806'").get();
+// One-time: Petr's account is retired after the app moved to the company
+// Railway account — Monika is the sole admin. The user is deactivated, not
+// deleted, because comments, change history and country reports reference
+// him. Deactivated users can't log in and lose any live session immediately.
+// Skipped if no other active admin exists, so nobody gets locked out.
+(function retirePetrAccount() {
+  const flag = db.prepare("SELECT value FROM app_settings WHERE key = 'user_petr_retired'").get();
   if (flag) return;
-  const bcrypt = require('bcrypt');
-  const tempPw = '8AT1dIGD!1';
-  db.prepare("UPDATE users SET password_hash = ?, password_plain = ? WHERE name = 'Petr'").run(bcrypt.hashSync(tempPw, 10), tempPw);
-  db.prepare("INSERT INTO app_settings (key, value) VALUES ('petr_pw_reset_20260806', '1')").run();
+  const otherAdmin = db.prepare("SELECT id FROM users WHERE access_role = 'admin' AND is_active = 1 AND name != 'Petr'").get();
+  if (!otherAdmin) {
+    console.warn('Not retiring Petr: no other active admin exists.');
+    return;
+  }
+  db.prepare("UPDATE users SET is_active = 0, access_role = 'mea_sales' WHERE name = 'Petr'").run();
+  db.prepare("INSERT INTO app_settings (key, value) VALUES ('user_petr_retired', '1')").run();
 })();
 
 // One-time data sync from local export

@@ -17,7 +17,7 @@ const loginLimiter = rateLimit({
 });
 
 router.get('/users', (req, res) => {
-  const bottom = new Set(['Monika', 'Pavla', 'Petr']);
+  const bottom = new Set(['Monika', 'Pavla']);
   const all = db.prepare('SELECT id, name FROM users WHERE is_active = 1 ORDER BY name').all();
   const users = [...all.filter(u => !bottom.has(u.name)), ...all.filter(u => bottom.has(u.name))];
   res.json({ users });
