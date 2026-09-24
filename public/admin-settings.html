@@ -149,11 +149,19 @@
       try {
         const res = await App.api('/auth/admin/users');
         const tbody = document.getElementById('users-tbody');
-        tbody.innerHTML = res.users.map(u => `
+        // Deactivated users go last, greyed out, with no password shown.
+        const sortedUsers = [...res.users].sort((a, b) => (b.is_active ? 1 : 0) - (a.is_active ? 1 : 0));
+        tbody.innerHTML = sortedUsers.map(u => u.is_active ? `
           <tr>
             <td><strong>${u.name}</strong></td>
             <td><span class="role-badge role-${u.access_role}">${u.access_role}</span></td>
             <td>${u.password_plain ? `<span class="pw-value">${u.password_plain}</span>` : '<span style="color:#aaa;">—</span>'}</td>
+          </tr>
+        ` : `
+          <tr style="opacity:0.55;">
+            <td><strong>${u.name}</strong></td>
+            <td><span class="role-badge" style="background:#EEE;color:#777;">${I18N.t('admin.users.deactivated')}</span></td>
+            <td><span style="color:#aaa;">—</span></td>
           </tr>
         `).join('');
       } catch (e) {

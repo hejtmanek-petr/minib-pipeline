@@ -311,6 +311,7 @@
   "admin.settings.phases": "Phases",
   "admin.settings.statuses": "Statuses",
   "admin.settings.lossReasons": "Loss Reasons",
+  "admin.users.deactivated": "Deactivated",
   "lossReason.price": "Price too high",
   "lossReason.competitor": "Lost to competitor",
   "lossReason.budget_cancelled": "Budget cancelled",

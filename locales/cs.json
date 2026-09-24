@@ -311,6 +311,7 @@
   "admin.settings.phases": "Fáze",
   "admin.settings.statuses": "Statusy",
   "admin.settings.lossReasons": "Důvody prohry",
+  "admin.users.deactivated": "Deaktivován",
   "lossReason.price": "Vysoká cena",
   "lossReason.competitor": "Vyhrála konkurence",
   "lossReason.budget_cancelled": "Zrušený rozpočet",
